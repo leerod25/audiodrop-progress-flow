@@ -20,20 +20,7 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
   formatUserId,
   toggleFavorite
 }) => {
-  console.log('AgentDetailCard rendering with agent:', agent);
-  console.log('Agent ID type:', typeof agent.id, 'Value:', agent.id);
-  
   const { audioList, loading, error } = useAgentAudio(agent.id);
-  
-  console.log('Audio list:', audioList);
-  console.log('Audio loading:', loading);
-  console.log('Audio error:', error);
-
-  const copyAgentId = () => {
-    navigator.clipboard.writeText(agent.id)
-      .then(() => console.log('[AgentDetailCard] Agent ID copied'))
-      .catch(err => console.error('[AgentDetailCard] Copy failed:', err));
-  };
   
   return (
     <Card className="mb-6">
@@ -57,28 +44,6 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
             {agent.is_favorite ? 'Remove from Team' : 'Add to Team'}
           </Button>
         )}
-        
-        {/* Debug: Raw Audio Data Display */}
-        <div className="mt-4 p-3 bg-gray-100 rounded-md">
-          <h3 className="text-sm font-semibold mb-2">Debug: Audio Data</h3>
-          <pre className="text-xs overflow-auto max-h-40 whitespace-pre-wrap break-words">
-            {JSON.stringify({audioList, loading, error}, null, 2)}
-          </pre>
-          <h3 className="text-sm font-semibold mb-2 mt-3">Debug: Full Agent ID</h3>
-          <div className="flex items-center space-x-2">
-            <pre className="text-xs overflow-auto bg-gray-200 p-1 rounded whitespace-pre-wrap break-all flex-1">
-              {agent.id}
-            </pre>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={copyAgentId}
-              className="whitespace-nowrap"
-            >
-              Copy ID
-            </Button>
-          </div>
-        </div>
         
         {/* Audio recordings list */}
         <div className="mt-4">
