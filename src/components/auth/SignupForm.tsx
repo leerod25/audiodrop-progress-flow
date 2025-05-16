@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,13 +27,14 @@ const SignupForm = ({ setErrorMessage }: SignupFormProps) => {
     setLoading(true);
     setErrorMessage(null);
 
-    if (userRole === "business") {
-      // Instead of automatically navigating, we redirect only on form submission
-      navigate('/business-signup', { state: { email, password } });
-      return;
-    }
-
     try {
+      if (userRole === "business") {
+        // Navigate to business signup with email and password
+        navigate('/business-signup', { state: { email, password } });
+        return;
+      }
+
+      // Only proceed with regular signup if agent role is selected
       const { error, data } = await supabase.auth.signUp({ 
         email, 
         password,
@@ -156,7 +156,7 @@ const SignupForm = ({ setErrorMessage }: SignupFormProps) => {
       
       <CardFooter>
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Creating account..." : userRole === "agent" ? "Create Agent Account" : "Continue to Business Signup"}
+          {loading ? "Processing..." : userRole === "agent" ? "Create Agent Account" : "Continue to Business Signup"}
         </Button>
       </CardFooter>
     </form>
