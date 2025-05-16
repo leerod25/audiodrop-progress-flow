@@ -1,6 +1,6 @@
 
 import React, { FC, useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Play, Stop, AudioWaveform } from "lucide-react";
+import { Mic, MicOff, Play, Square as Stop, AudioWaveform } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
