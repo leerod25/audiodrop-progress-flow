@@ -45,10 +45,10 @@ export function useAgentAudio(agentId: string | null) {
             // If it's not an HTTP URL, attempt to generate public or signed URL
             if (!/^https?:\/\//.test(url)) {
               // Try public URL first
-              const { data: urlData, error: urlErr } = supabase.storage
+              const { data: urlData } = supabase.storage
                 .from('audio')
                 .getPublicUrl(url);
-              console.log('[useAgentAudio] getPublicUrl:', { urlData, urlErr });
+              console.log('[useAgentAudio] getPublicUrl:', { urlData });
               
               if (urlData?.publicUrl) {
                 url = urlData.publicUrl;
