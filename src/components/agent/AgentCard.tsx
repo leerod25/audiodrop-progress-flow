@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, FileAudio, CheckCircle, XCircle, Star, Play, Pause } from 'lucide-react';
+import { User, FileAudio, CheckCircle, XCircle, Star } from 'lucide-react';
 import { Agent } from '@/types/Agent';
 
 interface AgentCardProps {
@@ -93,42 +93,14 @@ const AgentCard: React.FC<AgentCardProps> = ({
             </Button>
           )}
           
-          <div className="flex space-x-2">
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={handleViewAllRecordings}
-              className="text-sm font-medium"
-            >
-              View All Recordings
-            </Button>
-            
-            <Button 
-              variant={agent.has_audio ? "default" : "ghost"}
-              size="sm"
-              disabled={!agent.has_audio}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (agent.has_audio) {
-                  console.log("Listen clicked for:", agent.id);
-                  openAudioModal(agent);
-                }
-              }}
-              className="text-sm"
-            >
-              {isPlaying && currentAudio === agent.audio_url ? (
-                <>
-                  <Pause className="mr-1 h-4 w-4" />
-                  Pause
-                </>
-              ) : (
-                <>
-                  <Play className="mr-1 h-4 w-4" />
-                  Listen
-                </>
-              )}
-            </Button>
-          </div>
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={handleViewAllRecordings}
+            className="text-sm font-medium"
+          >
+            View All Recordings
+          </Button>
         </div>
       </CardContent>
     </Card>
