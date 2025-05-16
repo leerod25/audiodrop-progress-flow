@@ -13,4 +13,5 @@ export interface Agent {
   // New fields to help with data validation
   profile_complete?: boolean;
   is_real?: boolean;
+  description?: string | null;
 }
