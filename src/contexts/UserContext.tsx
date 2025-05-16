@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 type UserContextType = {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
-  userRole: "agent" | "business" | null;
+  userRole: "agent" | "business" | "admin" | null;
 };
 
 // Create the context with a default value
@@ -24,7 +24,7 @@ interface UserProviderProps {
 
 export const UserProvider = ({ children }: UserProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
-  const [userRole, setUserRole] = useState<"agent" | "business" | null>(null);
+  const [userRole, setUserRole] = useState<"agent" | "business" | "admin" | null>(null);
 
   // Fetch user role when user changes
   useEffect(() => {
@@ -47,13 +47,14 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         }
 
         if (data) {
-          setUserRole(data.role as "agent" | "business");
+          setUserRole(data.role as "agent" | "business" | "admin");
           return;
         }
 
         // If not in table, try to get from user metadata
         const metadata = user.user_metadata;
-        if (metadata && metadata.role && (metadata.role === 'agent' || metadata.role === 'business')) {
+        if (metadata && metadata.role && 
+            (metadata.role === 'agent' || metadata.role === 'business' || metadata.role === 'admin')) {
           setUserRole(metadata.role);
           // Also save to database for future use
           await supabase

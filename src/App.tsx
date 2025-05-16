@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import LandingPage from "./pages/LandingPage";
 import AgentPreview from "./pages/AgentPreview";
 import BusinessSignup from "./pages/BusinessSignup";
+import AppLayout from "./layouts/AppLayout";
 
 const queryClient = new QueryClient();
 
@@ -24,15 +25,15 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/landing" element={<LandingPage />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/business-signup" element={<BusinessSignup />} />
-            <Route path="/upload" element={<UploadAudio />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/agents" element={<AgentPreview />} />
+            <Route path="/" element={<AppLayout><Index /></AppLayout>} />
+            <Route path="/landing" element={<AppLayout><LandingPage /></AppLayout>} />
+            <Route path="/auth" element={<AppLayout><Auth /></AppLayout>} />
+            <Route path="/business-signup" element={<AppLayout><BusinessSignup /></AppLayout>} />
+            <Route path="/upload" element={<AppLayout><UploadAudio /></AppLayout>} />
+            <Route path="/profile" element={<AppLayout><Profile /></AppLayout>} />
+            <Route path="/agents" element={<AppLayout><AgentPreview /></AppLayout>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<AppLayout><NotFound /></AppLayout>} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
