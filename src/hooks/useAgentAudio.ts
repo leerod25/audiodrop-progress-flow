@@ -37,22 +37,45 @@ export function useAgentAudio(agentId: string | null) {
 
         if (supaErr) throw supaErr;
 
-        // Normalize and get public URLs
-        const normalized: AgentAudio[] = (data || []).map(d => {
-          let url = d.audio_url;
-          if (!/^https?:\/\//.test(url)) {
-            const { data: urlData } = supabase.storage.from('audio').getPublicUrl(url);
-            url = urlData?.publicUrl || url;
-          }
-          return {
-            id: d.id,
-            title: d.title ?? 'Untitled',
-            url,
-            created_at: d.created_at,
-          };
-        });
+        // Use Promise.all to handle async URL generation
+        const normalized: AgentAudio[] = await Promise.all(
+          (data || []).map(async d => {
+            let url = d.audio_url;
+            
+            // If it's not an HTTP URL, attempt to generate public or signed URL
+            if (!/^https?:\/\//.test(url)) {
+              // Try public URL first
+              const { data: urlData, error: urlErr } = supabase.storage
+                .from('audio')
+                .getPublicUrl(url);
+              console.log('[useAgentAudio] getPublicUrl:', { urlData, urlErr });
+              
+              if (urlData?.publicUrl) {
+                url = urlData.publicUrl;
+              } else {
+                // Fallback to signed URL for private buckets
+                try {
+                  const { data: signedData, error: signedErr } = await supabase.storage
+                    .from('audio')
+                    .createSignedUrl(url, 60); // 60s expiry
+                  console.log('[useAgentAudio] createSignedUrl:', { signedData, signedErr });
+                  if (signedData?.signedUrl) url = signedData.signedUrl;
+                } catch (signErr) {
+                  console.warn('[useAgentAudio] signed URL error:', signErr);
+                }
+              }
+            }
+            
+            return {
+              id: d.id,
+              title: d.title ?? 'Untitled',
+              url,
+              created_at: d.created_at
+            };
+          })
+        );
 
-        console.log('[useAgentAudio] Normalized list:', normalized);
+        console.log('[useAgentAudio] Final normalized list:', normalized);
         setAudioList(normalized);
       } catch (err: any) {
         console.error('[useAgentAudio] Error:', err.message || err);
