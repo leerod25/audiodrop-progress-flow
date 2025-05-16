@@ -25,7 +25,12 @@ const BusinessSignup = () => {
         navigate("/"); // Redirect to home if already logged in
       }
     });
-  }, [navigate]);
+
+    // If no email provided in state, redirect back to auth page
+    if (!emailFromState) {
+      navigate('/auth');
+    }
+  }, [navigate, emailFromState]);
 
   return (
     <div className="container max-w-lg mx-auto py-10 px-4">

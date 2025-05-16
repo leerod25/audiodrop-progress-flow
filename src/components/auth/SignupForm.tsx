@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +31,12 @@ const SignupForm = ({ setErrorMessage }: SignupFormProps) => {
     try {
       if (userRole === "business") {
         // Navigate to business signup with email and password
-        navigate('/business-signup', { state: { email, password } });
+        navigate('/business-signup', { 
+          state: { 
+            email, 
+            password 
+          } 
+        });
         return;
       }
 
