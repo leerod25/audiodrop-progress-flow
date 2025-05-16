@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { toast } from 'sonner';
 import { useUserContext } from '@/contexts/UserContext';
 import { Agent } from '@/types/agent';
 import { generateFakeProfiles } from '@/utils/fakeProfiles';
 
 export function useAgentData(useFakeData: boolean) {
+  const supabase = useSupabaseClient() || window.supabase; // Fallback to window.supabase if auth-helpers not initialized
   const [agents, setAgents] = useState<Agent[]>([]);
   const [filteredAgents, setFilteredAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,28 +17,6 @@ export function useAgentData(useFakeData: boolean) {
   
   // Check if user is business role
   const isBusinessAccount = userRole === 'business';
-
-  // Improved URL construction function with better error handling
-  const constructAudioUrl = (url: string | null): string | null => {
-    if (!url) return null;
-    
-    try {
-      // If already a full URL, return it
-      if (url.startsWith('http')) return url;
-      
-      // If it's a storage path, construct the full URL
-      if (url.startsWith('audio/')) {
-        const baseUrl = 'https://icfdrrmmacnmdpnwimya.supabase.co/storage/v1/object/public/';
-        return `${baseUrl}${url}`;
-      }
-      
-      // For any other case, return as is
-      return url;
-    } catch (error) {
-      console.error('Error constructing audio URL:', error);
-      return null;
-    }
-  };
 
   // Fetch agents and populate filter options
   useEffect(() => {
@@ -112,7 +91,17 @@ export function useAgentData(useFakeData: boolean) {
           return;
         }
 
-        // Then check which ones have audio - with improved query
+        if (!profiles || profiles.length === 0) {
+          console.log('No profiles found in database');
+          setAgents([]);
+          setFilteredAgents([]);
+          setLoading(false);
+          return;
+        }
+
+        console.log('Profiles fetched:', profiles);
+
+        // Then fetch audio metadata without filtering by user_id so businesses can see all
         const { data: audioData, error: audioError } = await supabase
           .from('audio_metadata')
           .select('user_id, audio_url')
@@ -120,19 +109,31 @@ export function useAgentData(useFakeData: boolean) {
         
         if (audioError) {
           console.error('Error fetching audio data:', audioError);
+          toast.error('Failed to load audio metadata');
         }
         
-        // Create a map of user IDs to audio URLs with proper URL construction and logging
+        console.log('Audio metadata fetched:', audioData);
+        
+        // Create a map of user IDs to audio URLs
         const audioMap = new Map<string, string>();
+        
         if (audioData && audioData.length > 0) {
-          console.log('Audio data found:', audioData);
-          
           audioData.forEach(audio => {
             if (!audioMap.has(audio.user_id) && audio.audio_url) {
-              const fullUrl = constructAudioUrl(audio.audio_url);
-              console.log(`Processing audio for ${audio.user_id}: Original URL=${audio.audio_url}, Full URL=${fullUrl}`);
-              if (fullUrl) {
-                audioMap.set(audio.user_id, fullUrl);
+              // Get public URL from storage if it's a path
+              if (audio.audio_url.startsWith('audio/')) {
+                const { data } = supabase
+                  .storage
+                  .from('audio-bucket')
+                  .getPublicUrl(audio.audio_url);
+                
+                if (data.publicUrl) {
+                  console.log(`Generated public URL for ${audio.user_id}: ${data.publicUrl}`);
+                  audioMap.set(audio.user_id, data.publicUrl);
+                }
+              } else if (audio.audio_url.startsWith('http')) {
+                // Already a full URL
+                audioMap.set(audio.user_id, audio.audio_url);
               }
             }
           });
@@ -156,8 +157,8 @@ export function useAgentData(useFakeData: boolean) {
           }
         }
         
-        // Map profiles to agents with audio info and favorite status - with improved logging
-        const agentsWithAudioInfo = profiles?.map(profile => {
+        // Map profiles to agents with audio info and favorite status
+        const agentsWithAudioInfo = profiles.map(profile => {
           const hasAudio = audioMap.has(profile.id);
           const audioUrl = audioMap.get(profile.id) || null;
           
@@ -177,9 +178,8 @@ export function useAgentData(useFakeData: boolean) {
             is_real: true,
             description: profile.description
           };
-        }) || [];
+        });
         
-        // Log the fetched real profiles
         console.log("Real profiles fetched:", agentsWithAudioInfo);
         
         setAgents(agentsWithAudioInfo);
@@ -222,7 +222,7 @@ export function useAgentData(useFakeData: boolean) {
     };
 
     fetchAgents();
-  }, [user, userRole, isBusinessAccount, useFakeData]);
+  }, [user, userRole, isBusinessAccount, useFakeData, supabase]);
 
   // Toggle favorites
   const toggleFavorite = async (agentId: string, currentStatus: boolean) => {

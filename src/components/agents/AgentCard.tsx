@@ -26,6 +26,9 @@ const AgentCard: React.FC<AgentCardProps> = ({
     openAudioModal(agent);
   };
 
+  // Check if the agent has valid audio
+  const hasValidAudio = agent.has_audio && agent.audio_url;
+
   return (
     <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer" onClick={handleCardAction}>
       <CardContent className="p-5">
@@ -93,13 +96,13 @@ const AgentCard: React.FC<AgentCardProps> = ({
           <Button 
             variant="default"
             size="sm"
-            className={`text-sm ${agent.has_audio && agent.audio_url ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+            className={`text-sm ${hasValidAudio ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
             onClick={(e) => {
               e.stopPropagation();
               handleCardAction();
             }}
           >
-            {agent.has_audio && agent.audio_url ? (
+            {hasValidAudio ? (
               <>
                 <Volume2 className="mr-1 h-4 w-4" />
                 Listen

@@ -78,7 +78,7 @@ const AgentAudioModal: React.FC<AgentAudioModalProps> = ({
             )}
             
             {hasAudio ? (
-              <div className="flex justify-center">
+              <div className="flex flex-col items-center space-y-4">
                 <Button
                   onClick={() => agent.audio_url && toggleAudio(agent.audio_url)}
                   size="lg"
@@ -96,6 +96,17 @@ const AgentAudioModal: React.FC<AgentAudioModalProps> = ({
                     </>
                   )}
                 </Button>
+                
+                {/* Direct audio element as fallback */}
+                <audio 
+                  controls 
+                  src={agent.audio_url} 
+                  className="w-full mt-4 rounded-md" 
+                  style={{display: "none"}}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  If the play button doesn't work, your browser may block autoplay
+                </p>
               </div>
             ) : (
               <div className="flex justify-center">
