@@ -1,24 +1,20 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 const LandingPage: React.FC = () => {
   return (
     <main className="font-sans antialiased text-gray-900">
-      {/* Top Banner */}
-      <section className="w-full bg-gradient-to-r from-blue-600 to-teal-400 text-white py-10">
-        <div className="container mx-auto px-6 lg:px-20 text-center">
-          <h2 className="text-2xl font-bold mb-4">What is "Fons"?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            <div className="p-4 bg-white/10 rounded-lg backdrop-blur-sm">
-              <p className="text-xl font-semibold mb-2">1. A SOURCE</p>
-              <p className="italic">The origin or spring from which something flows.</p>
-            </div>
-            <div className="p-4 bg-white/10 rounded-lg backdrop-blur-sm">
-              <p className="text-xl font-semibold mb-2">2. A wellspring of growth</p>
-              <p className="italic">Power, and elevation — built to take your company to the next level.</p>
-            </div>
-          </div>
-        </div>
+      {/* Banner Image */}
+      <section className="w-full">
+        <AspectRatio ratio={3/1} className="bg-muted">
+          <img
+            src="/lovable-uploads/e9841923-6670-49dd-9c82-bf7106882100.png"
+            alt="Call center headset on laptop"
+            className="w-full h-full object-cover"
+          />
+        </AspectRatio>
       </section>
       
       {/* Hero Section */}
@@ -30,6 +26,14 @@ const LandingPage: React.FC = () => {
           <p className="mt-4 text-xl lg:text-2xl max-w-2xl">
             Professional inbound & outbound calling services that source success for your business.
           </p>
+          <div className="mt-4 space-y-2">
+            <p className="italic text-gray-200">
+              <strong>1. A SOURCE</strong> — the origin or spring from which something flows.
+            </p>
+            <p className="italic text-gray-200">
+              <strong>2. A wellspring of growth, power, and elevation</strong> — built to take your company to the next level.
+            </p>
+          </div>
           <div className="mt-8">
             <a
               href="#services"
