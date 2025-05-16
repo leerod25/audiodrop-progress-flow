@@ -40,6 +40,7 @@ export type Database = {
         Row: {
           additional_skills: string[] | null
           availability: string[] | null
+          computer_skill_level: string | null
           created_at: string | null
           id: string
           languages: string[] | null
@@ -52,6 +53,7 @@ export type Database = {
         Insert: {
           additional_skills?: string[] | null
           availability?: string[] | null
+          computer_skill_level?: string | null
           created_at?: string | null
           id?: string
           languages?: string[] | null
@@ -64,6 +66,7 @@ export type Database = {
         Update: {
           additional_skills?: string[] | null
           availability?: string[] | null
+          computer_skill_level?: string | null
           created_at?: string | null
           id?: string
           languages?: string[] | null
