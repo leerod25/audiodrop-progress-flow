@@ -3,18 +3,24 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { useUserContext } from '@/contexts/UserContext';
 
 export interface Audio {
   id: string;
   title: string;
   audio_url: string;
   created_at: string;
+  user_id: string;
   is_playable?: boolean;
 }
 
 export function useUserAudios(user: User | null) {
   const [audios, setAudios] = useState<Audio[]>([]);
   const [loading, setLoading] = useState(true);
+  const { userRole } = useUserContext();
+  
+  // Check if the current user is a business account
+  const isBusinessAccount = userRole === 'business';
 
   useEffect(() => {
     if (!user) {
@@ -24,11 +30,18 @@ export function useUserAudios(user: User | null) {
 
     const fetchAudios = async () => {
       try {
-        const { data, error } = await supabase
+        // Create a query that starts with selecting all needed columns
+        let query = supabase
           .from('audio_metadata')
-          .select('id, title, audio_url, created_at')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+          .select('id, title, audio_url, created_at, user_id');
+        
+        // If user is not a business account, only show their own audio
+        if (!isBusinessAccount) {
+          query = query.eq('user_id', user.id);
+        }
+        
+        // Complete the query with ordering
+        const { data, error } = await query.order('created_at', { ascending: false });
           
         if (error) {
           console.error('Error fetching audio list:', error);
@@ -66,7 +79,7 @@ export function useUserAudios(user: User | null) {
     };
 
     fetchAudios();
-  }, [user]);
+  }, [user, isBusinessAccount]);
 
   const deleteAudio = async (id: string): Promise<boolean> => {
     if (!user) return false;
