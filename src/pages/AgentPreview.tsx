@@ -5,10 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, FileAudio, CheckCircle, XCircle, Filter } from 'lucide-react';
+import { User, FileAudio, CheckCircle, XCircle, Filter, Star, Play, Pause } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useUserContext } from "@/contexts/UserContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,13 +24,22 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Agent {
   id: string;
   has_audio: boolean;
+  audio_url?: string | null;
   country?: string | null;
   city?: string | null;
   computer_skill_level?: string | null;
+  is_favorite?: boolean;
 }
 
 interface FilterValues {
@@ -47,7 +57,13 @@ const AgentPreview: React.FC = () => {
   const [cities, setCities] = useState<string[]>([]);
   const [skillLevels, setSkillLevels] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [currentAudio, setCurrentAudio] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
+  const [showAudioModal, setShowAudioModal] = useState(false);
+  const [currentAgent, setCurrentAgent] = useState<Agent | null>(null);
   const navigate = useNavigate();
+  const { user, userRole } = useUserContext();
 
   const form = useForm<FilterValues>({
     defaultValues: {
@@ -57,6 +73,9 @@ const AgentPreview: React.FC = () => {
       skillLevel: '',
     },
   });
+
+  // Check if user is business role
+  const isBusinessAccount = userRole === 'business';
 
   // Fetch agents and populate filter options
   useEffect(() => {
@@ -78,23 +97,45 @@ const AgentPreview: React.FC = () => {
         // Then check which ones have audio
         const { data: audioData, error: audioError } = await supabase
           .from('audio_metadata')
-          .select('user_id')
+          .select('user_id, audio_url')
           .order('created_at', { ascending: false });
         
         if (audioError) {
           console.error('Error fetching audio data:', audioError);
         }
         
-        // Create a set of user IDs who have audio
-        const usersWithAudio = new Set(audioData?.map(a => a.user_id) || []);
+        // Create a map of user IDs to audio URLs
+        const audioMap = new Map<string, string>();
+        audioData?.forEach(audio => {
+          if (!audioMap.has(audio.user_id)) {
+            audioMap.set(audio.user_id, audio.audio_url);
+          }
+        });
+
+        // If business user, get favorites
+        let favorites: string[] = [];
+        if (isBusinessAccount && user) {
+          const { data: favoritesData, error: favoritesError } = await supabase
+            .from('business_favorites')
+            .select('agent_id')
+            .eq('business_id', user.id);
+
+          if (favoritesError) {
+            console.error('Error fetching favorites:', favoritesError);
+          } else {
+            favorites = favoritesData.map(fav => fav.agent_id);
+          }
+        }
         
-        // Map profiles to agents with audio info
+        // Map profiles to agents with audio info and favorite status
         const agentsWithAudioInfo = profiles?.map(profile => ({
           id: profile.id,
-          has_audio: usersWithAudio.has(profile.id),
+          has_audio: audioMap.has(profile.id),
+          audio_url: audioMap.get(profile.id) || null,
           country: profile.country,
           city: profile.city,
-          computer_skill_level: profile.computer_skill_level
+          computer_skill_level: profile.computer_skill_level,
+          is_favorite: favorites.includes(profile.id)
         })) || [];
         
         setAgents(agentsWithAudioInfo);
@@ -137,7 +178,7 @@ const AgentPreview: React.FC = () => {
     };
 
     fetchAgents();
-  }, []);
+  }, [user, userRole, isBusinessAccount]);
 
   // Apply filters whenever form values change
   const applyFilters = (values: FilterValues) => {
@@ -171,6 +212,122 @@ const AgentPreview: React.FC = () => {
     return () => subscription.unsubscribe();
   }, [form, agents]);
 
+  // Audio player setup
+  useEffect(() => {
+    if (audioPlayer) {
+      audioPlayer.onended = () => {
+        setIsPlaying(false);
+      };
+      
+      return () => {
+        audioPlayer.pause();
+        audioPlayer.onended = null;
+      };
+    }
+  }, [audioPlayer]);
+
+  // Play/pause audio
+  const toggleAudio = (audioUrl: string) => {
+    if (currentAudio === audioUrl && isPlaying && audioPlayer) {
+      audioPlayer.pause();
+      setIsPlaying(false);
+    } else {
+      if (audioPlayer) {
+        audioPlayer.pause();
+      }
+      
+      const newAudioPlayer = new Audio(audioUrl);
+      setAudioPlayer(newAudioPlayer);
+      setCurrentAudio(audioUrl);
+      newAudioPlayer.play().then(() => {
+        setIsPlaying(true);
+      }).catch(err => {
+        console.error('Error playing audio:', err);
+        toast.error('Failed to play audio');
+      });
+    }
+  };
+
+  // Handle favorites
+  const toggleFavorite = async (agentId: string, currentStatus: boolean) => {
+    if (!user) {
+      toast.error('You must be logged in to add favorites');
+      return;
+    }
+
+    if (userRole !== 'business') {
+      toast.error('Only business accounts can add agents to favorites');
+      return;
+    }
+
+    try {
+      if (currentStatus) {
+        // Remove from favorites
+        const { error } = await supabase
+          .from('business_favorites')
+          .delete()
+          .eq('business_id', user.id)
+          .eq('agent_id', agentId);
+
+        if (error) throw error;
+        toast.success('Agent removed from favorites');
+      } else {
+        // Add to favorites
+        const { error } = await supabase
+          .from('business_favorites')
+          .insert({
+            business_id: user.id,
+            agent_id: agentId
+          });
+
+        if (error) throw error;
+        toast.success('Agent added to favorites');
+      }
+
+      // Update local state
+      setAgents(prevAgents => 
+        prevAgents.map(agent => 
+          agent.id === agentId ? { ...agent, is_favorite: !currentStatus } : agent
+        )
+      );
+      
+      setFilteredAgents(prevAgents => 
+        prevAgents.map(agent => 
+          agent.id === agentId ? { ...agent, is_favorite: !currentStatus } : agent
+        )
+      );
+    } catch (error) {
+      console.error('Error updating favorites:', error);
+      toast.error('Failed to update favorites');
+    }
+  };
+
+  // Open audio player modal
+  const openAudioModal = (agent: Agent) => {
+    if (!agent.audio_url) {
+      toast.error('No audio available for this agent');
+      return;
+    }
+
+    setCurrentAgent(agent);
+    setShowAudioModal(true);
+    
+    // Auto-play in modal
+    if (audioPlayer) {
+      audioPlayer.pause();
+    }
+    
+    const newAudioPlayer = new Audio(agent.audio_url);
+    setAudioPlayer(newAudioPlayer);
+    setCurrentAudio(agent.audio_url);
+    newAudioPlayer.play().then(() => {
+      setIsPlaying(true);
+    }).catch(err => {
+      console.error('Error playing audio:', err);
+      toast.error('Failed to play audio');
+    });
+  };
+
   // Format the user ID to show only first 8 characters
   const formatUserId = (id: string) => `${id.substring(0, 8)}...`;
 
@@ -184,6 +341,16 @@ const AgentPreview: React.FC = () => {
     });
     setFilteredAgents(agents);
     setShowFilters(false);
+  };
+
+  // Close audio modal
+  const closeAudioModal = () => {
+    if (audioPlayer) {
+      audioPlayer.pause();
+      setIsPlaying(false);
+    }
+    setShowAudioModal(false);
+    setCurrentAgent(null);
   };
 
   return (
@@ -399,23 +566,47 @@ const AgentPreview: React.FC = () => {
                 </div>
                 
                 <div className="flex justify-between mt-4">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate(`/agent/${agent.id}`)}
-                    disabled={true} // Disabled until we implement individual agent view
-                    className="text-sm"
-                  >
-                    View Details
-                  </Button>
+                  {isBusinessAccount && (
+                    <Button 
+                      variant={agent.is_favorite ? "default" : "outline"} 
+                      size="sm"
+                      onClick={() => toggleFavorite(agent.id, !!agent.is_favorite)}
+                      className="text-sm"
+                    >
+                      <Star className={`mr-1 h-4 w-4 ${agent.is_favorite ? 'fill-white' : ''}`} />
+                      {agent.is_favorite ? 'Favorited' : 'Add to Team'}
+                    </Button>
+                  )}
+                  
+                  {!isBusinessAccount && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      disabled={true}
+                      className="text-sm invisible" // Hidden for non-business users
+                    >
+                      View Details
+                    </Button>
+                  )}
                   
                   <Button 
                     variant={agent.has_audio ? "default" : "ghost"}
                     size="sm"
                     disabled={!agent.has_audio}
+                    onClick={() => agent.has_audio && openAudioModal(agent)}
                     className="text-sm"
                   >
-                    Listen Audio
+                    {isPlaying && currentAudio === agent.audio_url ? (
+                      <>
+                        <Pause className="mr-1 h-4 w-4" />
+                        Pause
+                      </>
+                    ) : (
+                      <>
+                        <Play className="mr-1 h-4 w-4" />
+                        Listen
+                      </>
+                    )}
                   </Button>
                 </div>
               </CardContent>
@@ -423,6 +614,68 @@ const AgentPreview: React.FC = () => {
           ))}
         </div>
       )}
+
+      {/* Audio Player Modal */}
+      <Dialog open={showAudioModal} onOpenChange={setShowAudioModal}>
+        <DialogContent onCloseAutoFocus={closeAudioModal} className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Agent Audio Sample</DialogTitle>
+            <DialogDescription>
+              Listen to this agent's audio sample
+            </DialogDescription>
+          </DialogHeader>
+          
+          {currentAgent && (
+            <div className="flex flex-col items-center space-y-4">
+              <div className="w-full rounded-md bg-gray-100 p-4">
+                <div className="mb-2 text-sm text-gray-500">Agent ID: {formatUserId(currentAgent.id)}</div>
+                <div className="mb-4 text-sm text-gray-500">
+                  {currentAgent.country} {currentAgent.city ? `· ${currentAgent.city}` : ''}
+                </div>
+                
+                <div className="flex justify-center">
+                  <Button
+                    onClick={() => currentAgent.audio_url && toggleAudio(currentAgent.audio_url)}
+                    className="mx-auto"
+                  >
+                    {isPlaying ? (
+                      <>
+                        <Pause className="mr-2 h-4 w-4" />
+                        Pause
+                      </>
+                    ) : (
+                      <>
+                        <Play className="mr-2 h-4 w-4" />
+                        Play
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+              
+              {isBusinessAccount && !currentAgent.is_favorite && (
+                <Button 
+                  onClick={() => toggleFavorite(currentAgent.id, !!currentAgent.is_favorite)}
+                  variant="outline"
+                >
+                  <Star className="mr-2 h-4 w-4" />
+                  Add to Team
+                </Button>
+              )}
+              
+              {isBusinessAccount && currentAgent.is_favorite && (
+                <Button 
+                  onClick={() => toggleFavorite(currentAgent.id, !!currentAgent.is_favorite)}
+                  variant="default"
+                >
+                  <Star className="mr-2 h-4 w-4 fill-white" />
+                  Remove from Team
+                </Button>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
