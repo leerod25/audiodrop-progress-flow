@@ -6,13 +6,19 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from "@/components/ui/skeleton";
 import AudioRecordingItem from '@/components/AudioRecordingItem';
-import { Audio } from '@/hooks/useUserAudios';
+
+interface Audio {
+  id: string;
+  title: string;
+  audio_url: string;
+  created_at: string;
+}
 
 interface ProfileAudioListProps {
   audios: Audio[];
   loading: boolean;
-  deleteAudio: (id: string) => Promise<void>;
-  renameAudio: (id: string, title: string) => Promise<void>;
+  deleteAudio: (id: string) => Promise<boolean>;
+  renameAudio: (id: string, newTitle: string) => Promise<boolean>;
 }
 
 const ProfileAudioList = ({ audios, loading, deleteAudio, renameAudio }: ProfileAudioListProps) => {

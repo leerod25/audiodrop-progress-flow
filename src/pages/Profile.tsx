@@ -58,14 +58,14 @@ export default function Profile() {
       setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select('full_name, phone, city, country')
+        .select('full_name, phone, city, country, computer_skill_level')
         .eq('id', userId)
         .single();
       
       if (error) throw error;
       
       // Check if essential fields are completed
-      const isCompleted = data && data.full_name && data.phone && data.city && data.country;
+      const isCompleted = data && data.full_name && data.phone && data.city && data.country && data.computer_skill_level;
       setProfileCompleted(!!isCompleted);
     } catch (error) {
       console.error('Error checking profile completion:', error);
@@ -79,6 +79,17 @@ export default function Profile() {
   if (loading) {
     return <ProfileSkeleton />;
   }
+
+  // Adapter functions for type compatibility with ProfileAudioList
+  const handleDeleteAudio = async (id: string) => {
+    await deleteAudio(id);
+    return true;
+  };
+
+  const handleRenameAudio = async (id: string, newTitle: string) => {
+    await renameAudio(id, newTitle);
+    return true;
+  };
 
   return (
     <motion.div 
@@ -112,8 +123,8 @@ export default function Profile() {
             <ProfileAudioList 
               audios={audios} 
               loading={loadingAll} 
-              deleteAudio={deleteAudio} 
-              renameAudio={renameAudio} 
+              deleteAudio={handleDeleteAudio} 
+              renameAudio={handleRenameAudio} 
             />
           </>
         )}

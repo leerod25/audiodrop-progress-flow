@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
-interface AudioItem {
+export interface Audio {
   id: string;
   title: string;
   audio_url: string;
@@ -12,7 +12,7 @@ interface AudioItem {
 }
 
 export function useUserAudios(user: User | null) {
-  const [audios, setAudios] = useState<AudioItem[]>([]);
+  const [audios, setAudios] = useState<Audio[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,8 +44,8 @@ export function useUserAudios(user: User | null) {
     fetchAudios();
   }, [user]);
 
-  const deleteAudio = async (id: string) => {
-    if (!user) return;
+  const deleteAudio = async (id: string): Promise<boolean> => {
+    if (!user) return false;
     
     try {
       const { error } = await supabase
@@ -71,7 +71,7 @@ export function useUserAudios(user: User | null) {
     }
   };
 
-  const renameAudio = async (id: string, newTitle: string) => {
+  const renameAudio = async (id: string, newTitle: string): Promise<boolean> => {
     if (!user || !newTitle.trim()) return false;
     
     try {
