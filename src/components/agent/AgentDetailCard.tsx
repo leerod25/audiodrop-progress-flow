@@ -20,9 +20,11 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
   formatUserId,
   toggleFavorite
 }) => {
+  console.log('AgentDetailCard rendering with agent:', agent);
+  console.log('Agent ID type:', typeof agent.id, 'Value:', agent.id);
+  
   const { audioList, loading: audioLoading, error } = useAgentAudio(agent.id);
   
-  console.log('AgentDetailCard rendering for agent:', agent.id);
   console.log('Audio list:', audioList);
   console.log('Audio loading:', audioLoading);
   console.log('Audio error:', error);
