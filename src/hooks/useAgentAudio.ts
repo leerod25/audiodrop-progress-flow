@@ -16,7 +16,7 @@ export function useAgentAudio(agentId: string | null) {
 
   useEffect(() => {
     if (!agentId) {
-      console.warn('[useAgentAudio] No agentId provided.');
+      console.warn('[useAgentAudio] No agentId provided');
       setAudioList([]);
       return;
     }
@@ -24,10 +24,9 @@ export function useAgentAudio(agentId: string | null) {
     const fetchAudios = async () => {
       setLoading(true);
       setError(null);
-      console.groupCollapsed('[useAgentAudio] Fetching audio for user_id:', agentId);
+      console.groupCollapsed('[useAgentAudio] Querying user_id:', agentId);
 
       try {
-        // Query by the actual foreign key column 'user_id'
         const { data, error: supaErr } = await supabase
           .from('audio_metadata')
           .select('id, title, audio_url, created_at')
@@ -37,19 +36,16 @@ export function useAgentAudio(agentId: string | null) {
 
         if (supaErr) throw supaErr;
 
-        // Use Promise.all to handle async URL generation
         const normalized: AgentAudio[] = await Promise.all(
           (data || []).map(async d => {
             let url = d.audio_url;
-            
-            // If it's not an HTTP URL, attempt to generate public or signed URL
+            // If it's not an HTTP URL, generate public or signed URL from 'audio'
             if (!/^https?:\/\//.test(url)) {
               // Try public URL first
               const { data: urlData } = supabase.storage
                 .from('audio')
                 .getPublicUrl(url);
               console.log('[useAgentAudio] getPublicUrl:', { urlData });
-              
               if (urlData?.publicUrl) {
                 url = urlData.publicUrl;
               } else {
@@ -65,7 +61,6 @@ export function useAgentAudio(agentId: string | null) {
                 }
               }
             }
-            
             return {
               id: d.id,
               title: d.title ?? 'Untitled',
