@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,13 +10,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { LogIn, UserPlus, Mail, Key } from "lucide-react";
+import { toast } from "sonner";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,10 +31,27 @@ const Auth = () => {
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setUser(session?.user ?? null);
         if (event === "SIGNED_IN" && session) {
-          navigate("/");
+          // Check if this is a new user who needs to complete their profile
+          if (session.user) {
+            const { data } = await supabase
+              .from('profiles')
+              .select('full_name, phone, city, country')
+              .eq('id', session.user.id)
+              .single();
+            
+            // If profile data is incomplete, redirect to profile page
+            if (!data || !data.full_name || !data.phone || !data.city || !data.country) {
+              toast("Complete your agent profile", {
+                description: "Please fill out your profile information to continue.",
+              });
+              navigate("/profile");
+            } else {
+              navigate("/");
+            }
+          }
         }
       }
     );
@@ -47,7 +64,7 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({ 
+      const { error, data } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
@@ -57,12 +74,20 @@ const Auth = () => {
       
       if (error) throw error;
       
-      toast({
+      uiToast({
         title: "Account created!",
         description: "Please check your email for a confirmation link.",
       });
+      
+      // If no error and we have a user, immediately redirect to profile
+      if (data.user) {
+        toast("Complete your agent profile", {
+          description: "Please fill out your profile information to continue.",
+        });
+        navigate('/profile');
+      }
     } catch (error: any) {
-      toast({
+      uiToast({
         variant: "destructive",
         title: "Error creating account",
         description: error.message || "Something went wrong",
@@ -77,21 +102,40 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) throw error;
       
-      toast({
+      uiToast({
         title: "Welcome back!",
         description: "You've successfully logged in.",
       });
       
-      navigate("/");
+      // Check if the user has completed their profile
+      if (data.user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name, phone, city, country')
+          .eq('id', data.user.id)
+          .single();
+        
+        // If profile is incomplete, redirect to profile page
+        if (!profileData || !profileData.full_name || !profileData.phone || !profileData.city || !profileData.country) {
+          toast("Complete your agent profile", {
+            description: "Please fill out your profile information to continue.",
+          });
+          navigate("/profile");
+        } else {
+          navigate("/");
+        }
+      } else {
+        navigate("/");
+      }
     } catch (error: any) {
-      toast({
+      uiToast({
         variant: "destructive",
         title: "Login failed",
         description: error.message || "Invalid email or password",
@@ -107,7 +151,7 @@ const Auth = () => {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Welcome</CardTitle>
           <CardDescription>
-            Sign in to your account or create a new one
+            Sign in to your account or create a new agent profile
           </CardDescription>
         </CardHeader>
         
@@ -202,11 +246,16 @@ const Auth = () => {
                     Password must be at least 6 characters long
                   </p>
                 </div>
+                <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
+                  <p className="text-amber-800 text-sm">
+                    After sign up, you'll need to complete your agent profile before using the system.
+                  </p>
+                </div>
               </CardContent>
               
               <CardFooter>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Creating account..." : "Create Account"}
+                  {loading ? "Creating account..." : "Create Agent Account"}
                 </Button>
               </CardFooter>
             </form>
