@@ -1,13 +1,13 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-// Predefined sample audio URLs (chime/music sounds)
+// Predefined sample audio URLs (using standard audio formats that work across browsers)
 const sampleAudios = [
-  'https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3',
-  'https://assets.mixkit.co/sfx/preview/mixkit-positive-notification-951.mp3',
-  'https://assets.mixkit.co/sfx/preview/mixkit-clear-announce-tones-2861.mp3',
-  'https://assets.mixkit.co/sfx/preview/mixkit-happy-bells-notification-937.mp3',
-  'https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3',
+  '/lovable-uploads/sample-audio-1.mp3',
+  '/lovable-uploads/sample-audio-2.mp3',
+  '/lovable-uploads/sample-audio-3.mp3',
+  '/lovable-uploads/sample-audio-4.mp3',
+  '/lovable-uploads/sample-audio-5.mp3',
 ];
 
 // Avatar images for profiles
@@ -38,7 +38,9 @@ const generateFakeProfile = (index: number, gender: 'boy' | 'girl') => {
   const name = `${gender.toUpperCase()}${index}`;
   const location = locations[Math.floor(Math.random() * locations.length)];
   const skillLevel = skillLevels[Math.floor(Math.random() * skillLevels.length)];
-  const audioUrl = sampleAudios[Math.floor(Math.random() * sampleAudios.length)];
+  
+  // Instead of random selection, use a fixed audio URL for testing
+  const audioUrl = '/lovable-uploads/sample-notification.mp3';
   
   return {
     id: `fake-${gender}-${index}`,

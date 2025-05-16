@@ -137,7 +137,7 @@ const AgentPreview: React.FC = () => {
         // First get all profiles
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('id, country, city, computer_skill_level');
+          .select('id, country, city, computer_skill_level, avatar_url, name');
         
         if (profilesError) {
           console.error('Error fetching profiles:', profilesError);
@@ -266,21 +266,29 @@ const AgentPreview: React.FC = () => {
     return () => subscription.unsubscribe();
   }, [form, agents]);
 
-  // Audio player setup
+  // Audio player setup with improved error handling
   useEffect(() => {
     if (audioPlayer) {
       audioPlayer.onended = () => {
         setIsPlaying(false);
       };
       
+      // Add error handling
+      audioPlayer.onerror = (e) => {
+        console.error('Error playing audio:', e);
+        setIsPlaying(false);
+        toast.error('Failed to play audio');
+      };
+      
       return () => {
         audioPlayer.pause();
         audioPlayer.onended = null;
+        audioPlayer.onerror = null;
       };
     }
   }, [audioPlayer]);
 
-  // Play/pause audio
+  // Play/pause audio with improved error handling
   const toggleAudio = (audioUrl: string) => {
     if (currentAudio === audioUrl && isPlaying && audioPlayer) {
       audioPlayer.pause();
@@ -291,14 +299,26 @@ const AgentPreview: React.FC = () => {
       }
       
       const newAudioPlayer = new Audio(audioUrl);
+      
+      // Add error handler before attempting to play
+      newAudioPlayer.onerror = (e) => {
+        console.error('Error playing audio:', e);
+        toast.error('Failed to play audio');
+        setIsPlaying(false);
+      };
+      
       setAudioPlayer(newAudioPlayer);
       setCurrentAudio(audioUrl);
-      newAudioPlayer.play().then(() => {
-        setIsPlaying(true);
-      }).catch(err => {
-        console.error('Error playing audio:', err);
-        toast.error('Failed to play audio');
-      });
+      
+      // Try to play the audio
+      newAudioPlayer.play()
+        .then(() => {
+          setIsPlaying(true);
+        })
+        .catch(err => {
+          console.error('Error playing audio:', err);
+          toast.error('Failed to play audio');
+        });
     }
   };
 
@@ -372,7 +392,7 @@ const AgentPreview: React.FC = () => {
     }
   };
 
-  // Open audio player modal with improved visibility
+  // Open audio player modal with improved visibility and error handling
   const openAudioModal = (agent: Agent) => {
     if (!agent.audio_url) {
       toast.error('No audio available for this agent');
@@ -382,20 +402,31 @@ const AgentPreview: React.FC = () => {
     setCurrentAgent(agent);
     setShowAudioModal(true);
     
-    // Auto-play in modal
+    // Auto-play in modal with better error handling
     if (audioPlayer) {
       audioPlayer.pause();
     }
     
     const newAudioPlayer = new Audio(agent.audio_url);
+    
+    // Add error handler before attempting to play
+    newAudioPlayer.onerror = (e) => {
+      console.error('Error playing audio:', e);
+      toast.error('Failed to play audio');
+    };
+    
     setAudioPlayer(newAudioPlayer);
     setCurrentAudio(agent.audio_url);
-    newAudioPlayer.play().then(() => {
-      setIsPlaying(true);
-    }).catch(err => {
-      console.error('Error playing audio:', err);
-      toast.error('Failed to play audio');
-    });
+    
+    // Try to play the audio
+    newAudioPlayer.play()
+      .then(() => {
+        setIsPlaying(true);
+      })
+      .catch(err => {
+        console.error('Error playing audio:', err);
+        toast.error('Failed to play audio');
+      });
   };
 
   // Format the user ID to show only first 8 characters
