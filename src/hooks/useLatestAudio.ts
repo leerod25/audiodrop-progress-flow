@@ -13,18 +13,27 @@ export function useLatestAudio(user: User | null) {
       return;
     }
 
-    supabase
-      .from('audio_metadata')
-      .select('title,audio_url')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data, error }) => {
+    // Create a proper Promise by using async/await or then/catch
+    const fetchAudio = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('audio_metadata')
+          .select('title,audio_url')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+          
         if (error) console.error('Error fetching latest audio:', error);
         else if (data) setAudio({ title: data.title, url: data.audio_url });
-      })
-      .finally(() => setLoading(false));
+      } catch (err) {
+        console.error('Unexpected error in useLatestAudio:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAudio();
   }, [user]);
 
   return { audio, loading };
