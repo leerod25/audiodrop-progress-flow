@@ -48,7 +48,7 @@ const LandingPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { 
-                icon: '/lovable-uploads/f8e7309d-1c8f-4710-9de9-8e441da4c651.png', 
+                icon: '/lovable-uploads/ed5f97b2-1407-45b8-9bb1-28e6bd06b1b8.png', 
                 title: 'Inbound Support', 
                 desc: '24/7 customer care & helpdesk services.' 
               },
