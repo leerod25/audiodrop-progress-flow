@@ -9,12 +9,12 @@ import { User } from '@supabase/supabase-js';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Mic } from 'lucide-react';
-import DownloadButton from '@/components/DownloadButton';
+import AudioRecordingItem from '@/components/AudioRecordingItem';
 
 export default function Profile() {
   const [user, setUser] = useState<User | null>(null);
   const { audio, loading: loadingSingle } = useLatestAudio(user);
-  const { audios, loading: loadingAll } = useUserAudios(user);
+  const { audios, loading: loadingAll, deleteAudio, renameAudio } = useUserAudios(user);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -77,19 +77,15 @@ export default function Profile() {
             {!loadingAll && audios.length > 0 && (
               <div className="space-y-4">
                 {audios.map((item) => (
-                  <div key={item.id} className="p-4 border rounded-md space-y-2">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-medium">{item.title}</h3>
-                      <DownloadButton 
-                        url={item.audio_url} 
-                        filename={`${item.title}.webm`}
-                      />
-                    </div>
-                    <audio controls src={item.audio_url} className="w-full" />
-                    <p className="text-xs text-gray-500">
-                      Recorded on {new Date(item.created_at).toLocaleString()}
-                    </p>
-                  </div>
+                  <AudioRecordingItem
+                    key={item.id}
+                    id={item.id}
+                    title={item.title}
+                    audioUrl={item.audio_url}
+                    createdAt={item.created_at}
+                    onDelete={deleteAudio}
+                    onRename={renameAudio}
+                  />
                 ))}
               </div>
             )}
