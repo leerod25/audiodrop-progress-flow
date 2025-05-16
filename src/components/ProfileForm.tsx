@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Skeleton } from "@/components/ui/skeleton";
+import { MapPin, Flag, City } from 'lucide-react';
 
 type ProfileData = {
   id: string;
@@ -17,6 +18,8 @@ type ProfileData = {
   phone: string | null;
   gender: string | null;
   whatsapp: string | null;
+  country: string | null;
+  city: string | null;
 };
 
 interface ProfileFormProps {
@@ -53,7 +56,9 @@ const ProfileForm = ({ userId }: ProfileFormProps) => {
             email: null,
             phone: null,
             gender: null,
-            whatsapp: null
+            whatsapp: null,
+            country: null,
+            city: null
           };
           setProfile(newProfile);
         }
@@ -95,6 +100,8 @@ const ProfileForm = ({ userId }: ProfileFormProps) => {
           phone: profile.phone,
           gender: profile.gender,
           whatsapp: profile.whatsapp,
+          country: profile.country,
+          city: profile.city,
           updated_at: new Date().toISOString(),
         });
 
@@ -202,22 +209,60 @@ const ProfileForm = ({ userId }: ProfileFormProps) => {
           </div>
         </div>
 
-        <div>
-          <Label htmlFor="gender">Gender</Label>
-          <select
-            id="gender"
-            name="gender"
-            value={profile?.gender || ''}
-            onChange={handleChange}
-            disabled={!isEditing}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <option value="">Select gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="non-binary">Non-binary</option>
-            <option value="prefer-not-to-say">Prefer not to say</option>
-          </select>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <Label htmlFor="gender">Gender</Label>
+            <select
+              id="gender"
+              name="gender"
+              value={profile?.gender || ''}
+              onChange={handleChange}
+              disabled={!isEditing}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="">Select gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="non-binary">Non-binary</option>
+              <option value="prefer-not-to-say">Prefer not to say</option>
+            </select>
+          </div>
+
+          <div>
+            <Label htmlFor="country">
+              <div className="flex items-center gap-1">
+                <Flag className="h-4 w-4" />
+                <span>Country</span>
+              </div>
+            </Label>
+            <Input
+              id="country"
+              name="country"
+              value={profile?.country || ''}
+              onChange={handleChange}
+              disabled={!isEditing}
+              placeholder="Your country"
+              className="transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="city">
+              <div className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                <span>City</span>
+              </div>
+            </Label>
+            <Input
+              id="city"
+              name="city"
+              value={profile?.city || ''}
+              onChange={handleChange}
+              disabled={!isEditing}
+              placeholder="Your city"
+              className="transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
+            />
+          </div>
         </div>
 
         <div>
