@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import AudioRecorder from '@/components/AudioRecorder';
 import { useAudioSave } from '@/hooks/useAudioSave';
@@ -49,18 +50,26 @@ export default function UploadAudio() {
   };
 
   const handleSave = async () => {
+    console.log("🔍 handleSave fired");
+    console.log("   user:", user);
+    console.log("   blob:", blob);
+    console.log("   title:", title);
+    
     if (!blob || !title.trim()) {
+      console.warn("Missing blob or title");
       toast.error('Please provide a title for your audio');
       return;
     }
     
     try {
       await saveAudio(blob, title, user, setUploading);
+      console.log("✅ saveAudio resolved");
       // Reset state after successful save
       setBlob(null);
       setPreviewUrl(null);
       setTitle('');
-    } catch {
+    } catch (err) {
+      console.error("❌ saveAudio threw:", err);
       // Errors are already toasted in hook
     }
   };

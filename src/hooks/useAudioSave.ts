@@ -13,6 +13,12 @@ export function useAudioSave() {
     user: User | null,
     onUploading?: (uploading: boolean) => void
   ): Promise<string> => {
+    console.log("▶️ useAudioSave.saveAudio()", {
+      user: user?.id,
+      title,
+      blobSize: blob.size,
+    });
+    
     if (!user) {
       toast.error('You must be logged in to save audio.');
       throw new Error('Not authenticated');
