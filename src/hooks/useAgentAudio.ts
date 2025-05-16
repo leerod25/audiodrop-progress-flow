@@ -27,6 +27,7 @@ export function useAgentAudio(agentId: string | null) {
       console.log(`[useAgentAudio] fetching audio_metadata for user_id=${agentId}`);
 
       try {
+        // First attempt with user_id
         const { data, error: supaErr } = await supabase
           .from('audio_metadata')
           .select('id, title, audio_url, created_at')
@@ -39,12 +40,15 @@ export function useAgentAudio(agentId: string | null) {
           setAudioList([]);
         } else if (data) {
           console.log('[useAgentAudio] Data received:', data.length, 'entries');
+          console.log('[useAgentAudio] Raw data:', data);
+          
           const normalized: AgentAudio[] = data.map(d => ({
             id: d.id,
             title: d.title ?? 'Untitled',
             url: d.audio_url,
             created_at: d.created_at
           }));
+          
           console.log('[useAgentAudio] Normalized data:', normalized);
           setAudioList(normalized);
         }
