@@ -8,7 +8,7 @@ import { CardContent, CardFooter } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 
 interface SignupFormProps {
@@ -77,6 +77,11 @@ const SignupForm = ({ setErrorMessage }: SignupFormProps) => {
       setLoading(false);
     }
   };
+
+  if (userRole === "business") {
+    navigate('/business-signup');
+    return null;
+  }
 
   return (
     <form onSubmit={handleSignUp}>
@@ -150,7 +155,7 @@ const SignupForm = ({ setErrorMessage }: SignupFormProps) => {
       
       <CardFooter>
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Creating account..." : userRole === "agent" ? "Create Agent Account" : "Create Business Account"}
+          {loading ? "Creating account..." : "Create Agent Account"}
         </Button>
       </CardFooter>
     </form>

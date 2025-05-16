@@ -12,6 +12,7 @@ import UploadAudio from "./pages/UploadAudio";
 import Profile from "./pages/Profile";
 import LandingPage from "./pages/LandingPage";
 import AgentPreview from "./pages/AgentPreview";
+import BusinessSignup from "./pages/BusinessSignup";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/business-signup" element={<BusinessSignup />} />
             <Route path="/upload" element={<UploadAudio />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/agents" element={<AgentPreview />} />

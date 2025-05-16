@@ -1,13 +1,17 @@
 
 import React from "react";
-import { CardTitle, CardDescription, CardHeader } from "@/components/ui/card";
+import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
-const AuthHeading = () => {
+interface AuthHeadingProps {
+  title?: string;
+}
+
+const AuthHeading = ({ title = "Welcome Back" }: AuthHeadingProps) => {
   return (
-    <CardHeader className="text-center">
-      <CardTitle className="text-2xl">Welcome</CardTitle>
+    <CardHeader className="space-y-1">
+      <CardTitle className="text-2xl font-bold">{title}</CardTitle>
       <CardDescription>
-        Sign in to your account or create a new profile
+        Enter your details to continue
       </CardDescription>
     </CardHeader>
   );
