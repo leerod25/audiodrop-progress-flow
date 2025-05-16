@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -137,7 +138,7 @@ const AgentPreview: React.FC = () => {
         // First get all profiles
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('id, country, city, computer_skill_level, avatar_url, name');
+          .select('id, country, city, computer_skill_level, full_name');
         
         if (profilesError) {
           console.error('Error fetching profiles:', profilesError);
@@ -180,6 +181,7 @@ const AgentPreview: React.FC = () => {
         }
         
         // Map profiles to agents with audio info and favorite status
+        // Ensure we're only accessing properties that exist in the profiles table
         const agentsWithAudioInfo = profiles?.map(profile => ({
           id: profile.id,
           has_audio: audioMap.has(profile.id),
@@ -188,8 +190,8 @@ const AgentPreview: React.FC = () => {
           city: profile.city,
           computer_skill_level: profile.computer_skill_level,
           is_favorite: favorites.includes(profile.id),
-          avatar_url: profile.avatar_url,
-          name: profile.name
+          avatar_url: null, // Since this column doesn't exist, set to null
+          name: profile.full_name // Use full_name instead of name
         })) || [];
         
         setAgents(agentsWithAudioInfo);
