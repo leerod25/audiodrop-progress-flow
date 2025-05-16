@@ -10,18 +10,21 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { User } from "@supabase/supabase-js";
-import { LogIn, UserPlus, Mail, Key, Briefcase, UserCircle } from "lucide-react";
+import { LogIn, UserPlus, Mail, Key, Briefcase, UserCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useUserContext } from "@/contexts/UserContext";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<"agent" | "business">("agent");
   const { toast: uiToast } = useToast();
   const navigate = useNavigate();
+  const { user, setUser } = useUserContext();
 
   useEffect(() => {
     // Check if user is already logged in
@@ -35,10 +38,11 @@ const Auth = () => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ?? null);
-        if (event === "SIGNED_IN" && session) {
-          // Check if this is a new user who needs to complete their profile
-          if (session.user) {
+        if (session?.user) {
+          setUser(session.user);
+          
+          if (event === "SIGNED_IN") {
+            // Check if this is a new user who needs to complete their profile
             const { data } = await supabase
               .from('profiles')
               .select('full_name, phone, city, country')
@@ -55,16 +59,23 @@ const Auth = () => {
               navigate("/");
             }
           }
+        } else {
+          setUser(null);
         }
       }
     );
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, setUser]);
+
+  const clearError = () => {
+    setErrorMessage(null);
+  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    clearError();
 
     try {
       const { error, data } = await supabase.auth.signUp({ 
@@ -104,6 +115,8 @@ const Auth = () => {
         navigate('/profile');
       }
     } catch (error: any) {
+      console.error("Signup error:", error);
+      setErrorMessage(error.message || "Something went wrong during signup");
       uiToast({
         variant: "destructive",
         title: "Error creating account",
@@ -117,8 +130,10 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    clearError();
 
     try {
+      console.log("Attempting login with:", { email });
       const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -126,6 +141,7 @@ const Auth = () => {
       
       if (error) throw error;
       
+      console.log("Login successful:", data.user?.id);
       uiToast({
         title: "Welcome back!",
         description: "You've successfully logged in.",
@@ -133,11 +149,15 @@ const Auth = () => {
       
       // Check if the user has completed their profile
       if (data.user) {
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('full_name, phone, city, country')
           .eq('id', data.user.id)
           .single();
+        
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+        }
         
         // If profile is incomplete, redirect to profile page
         if (!profileData || !profileData.full_name || !profileData.phone || !profileData.city || !profileData.country) {
@@ -152,6 +172,8 @@ const Auth = () => {
         navigate("/");
       }
     } catch (error: any) {
+      console.error("Login error:", error);
+      setErrorMessage(error.message || "Invalid email or password");
       uiToast({
         variant: "destructive",
         title: "Login failed",
@@ -174,15 +196,22 @@ const Auth = () => {
         
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="login" className="flex items-center gap-2">
+            <TabsTrigger value="login" className="flex items-center gap-2" onClick={clearError}>
               <LogIn className="h-4 w-4" />
               Login
             </TabsTrigger>
-            <TabsTrigger value="signup" className="flex items-center gap-2">
+            <TabsTrigger value="signup" className="flex items-center gap-2" onClick={clearError}>
               <UserPlus className="h-4 w-4" />
               Sign Up
             </TabsTrigger>
           </TabsList>
+          
+          {errorMessage && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
           
           <TabsContent value="login">
             <form onSubmit={handleSignIn}>
@@ -306,6 +335,10 @@ const Auth = () => {
           </TabsContent>
         </Tabs>
       </Card>
+
+      <div className="mt-4 text-center text-sm text-muted-foreground">
+        <p>Having trouble logging in? Make sure your email has been confirmed.</p>
+      </div>
     </div>
   );
 };
