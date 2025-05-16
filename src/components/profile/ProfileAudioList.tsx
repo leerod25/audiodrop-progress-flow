@@ -7,7 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from "@/components/ui/skeleton";
 import AudioRecordingItem from '@/components/AudioRecordingItem';
 import { toast } from 'sonner';
-import { Audio } from '@/hooks/useUserAudios';
+// Use type-only import to avoid conflict with global Audio constructor
+import type { Audio } from '@/hooks/useUserAudios';
 
 interface ProfileAudioListProps {
   audios: Audio[];

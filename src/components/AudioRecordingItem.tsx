@@ -24,6 +24,8 @@ interface AudioRecordingItemProps {
   createdAt: string;
   onDelete: (id: string) => Promise<boolean>;
   onRename: (id: string, newTitle: string) => Promise<boolean>;
+  onPlay?: () => void;
+  isPlaying?: boolean;
 }
 
 const AudioRecordingItem = ({
@@ -32,7 +34,9 @@ const AudioRecordingItem = ({
   audioUrl,
   createdAt,
   onDelete,
-  onRename
+  onRename,
+  onPlay,
+  isPlaying = false
 }: AudioRecordingItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newTitle, setNewTitle] = useState(title);
@@ -173,7 +177,12 @@ const AudioRecordingItem = ({
         )}
       </div>
       
-      <audio controls src={audioUrl} className="w-full transition-all duration-200 hover:opacity-95" />
+      <audio 
+        controls 
+        src={audioUrl} 
+        className="w-full transition-all duration-200 hover:opacity-95" 
+        onClick={onPlay}
+      />
       
       <p className="text-xs text-gray-500">
         Recorded on {formattedDate}
