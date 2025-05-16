@@ -51,28 +51,6 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
           </Button>
         )}
         
-        {/* Debug UI: display raw audio data and full agent ID for copy-pasting */}
-        <div className="my-4 p-3 bg-gray-100 rounded-md">
-          <h3 className="text-lg font-medium">Debug: Audio Data</h3>
-          <pre className="bg-gray-100 p-2 rounded overflow-x-auto whitespace-pre-wrap break-words text-xs">
-            {JSON.stringify({ audioList, loading, error }, null, 2)}
-          </pre>
-          <h3 className="text-lg font-medium mt-4">Debug: Full Agent ID</h3>
-          <div className="flex items-center space-x-2">
-            <pre className="bg-gray-200 p-2 rounded whitespace-pre-wrap break-all text-xs flex-1">
-              {agent.id}
-            </pre>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={copyAgentId}
-              className="whitespace-nowrap"
-            >
-              Copy ID
-            </Button>
-          </div>
-        </div>
-        
         {/* Audio recordings list */}
         <div className="mt-4">
           <h3 className="text-lg font-medium mb-2">All Recordings</h3>
@@ -103,6 +81,28 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
           ) : (
             <p className="text-sm text-gray-500">No recordings available</p>
           )}
+        </div>
+        
+        {/* Debug UI: display raw audio data and full agent ID for copy-pasting */}
+        <div className="my-4 p-3 bg-gray-100 rounded-md">
+          <h3 className="text-lg font-medium">Debug: Audio Data</h3>
+          <pre className="bg-gray-100 p-2 rounded overflow-x-auto whitespace-pre-wrap break-words text-xs">
+            {JSON.stringify({ audioList, loading, error }, null, 2)}
+          </pre>
+          <h3 className="text-lg font-medium mt-4">Debug: Full Agent ID</h3>
+          <div className="flex items-center space-x-2">
+            <pre className="bg-gray-200 p-2 rounded whitespace-pre-wrap break-all text-xs flex-1">
+              {agent.id}
+            </pre>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyAgentId}
+              className="whitespace-nowrap"
+            >
+              Copy ID
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

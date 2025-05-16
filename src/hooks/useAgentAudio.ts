@@ -28,12 +28,15 @@ export function useAgentAudio(agentId: string | null) {
           .eq('user_id', agentId)
           .order('created_at', { ascending: false });
         if (supaErr) throw supaErr;
-        return (data || []).map(d => ({
-          id: d.id,
-          title: d.title ?? 'Untitled',
-          url: d.audio_url,
-          created_at: d.created_at ?? ''
-        }));
+        
+        return (data || [])
+          .map(d => ({
+            id: d.id,
+            title: d.title ?? 'Untitled',
+            url: d.audio_url,
+            created_at: d.created_at ?? ''
+          }))
+          .filter(d => d.url && /^https?:\/\//.test(d.url));
       } catch {
         return [];
       }
@@ -47,7 +50,7 @@ export function useAgentAudio(agentId: string | null) {
         if (listErr) throw listErr;
         
         return Promise.all(
-          files.map(async (file: any) => {
+          (files || []).map(async (file: any) => {
             const path = `${agentId}/${file.name}`;
             const { data: urlData } = supabase.storage
               .from('audio')
@@ -70,13 +73,11 @@ export function useAgentAudio(agentId: string | null) {
       setLoading(true);
       setError(null);
       try {
-        const meta = await fetchFromMetadata();
-        if (meta.length) {
-          setAudioList(meta);
-        } else {
-          const storage = await fetchFromStorage();
-          setAudioList(storage);
-        }
+        const [meta, storage] = await Promise.all([
+          fetchFromMetadata(),
+          fetchFromStorage()
+        ]);
+        setAudioList([...meta, ...storage]);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch audio');
       } finally {
