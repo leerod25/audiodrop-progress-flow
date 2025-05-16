@@ -13,6 +13,7 @@ import AudioRecordingItem from '@/components/AudioRecordingItem';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProfileForm from '@/components/ProfileForm';
+import ProfessionalDetailsForm from '@/components/ProfessionalDetailsForm';
 
 export default function Profile() {
   const [user, setUser] = useState<User | null>(null);
@@ -64,6 +65,15 @@ export default function Profile() {
           </CardHeader>
           <CardContent className="space-y-6">
             {user && <ProfileForm userId={user.id} />}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white shadow-md">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">Professional Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {user && <ProfessionalDetailsForm userId={user.id} />}
           </CardContent>
         </Card>
 
