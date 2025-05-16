@@ -9,7 +9,7 @@ import { Agent } from '@/types/agent';
 export function useAgentData(useFakeData: boolean) {
   const { user, userRole } = useUserContext();
   
-  // Use the specialized hooks to fetch raw (real or fake) list
+  // Fetch raw (real or fake) list
   const { 
     agents: fetchedAgents, 
     loading, 
@@ -19,24 +19,24 @@ export function useAgentData(useFakeData: boolean) {
     isBusinessAccount 
   } = useAgentFetch(useFakeData, userRole);
   
-  // Create internal states to manage agents
+  // Internal state
   const [agents, setAgents] = useState<Agent[]>([]);
   const [filteredAgents, setFilteredAgents] = useState<Agent[]>([]);
   
-  // Whenever the fetched data or the mode (fake/real) changes, reset both lists
+  // Whenever fetchedAgents OR fake-mode changes, reset both lists
   useEffect(() => {
-    console.log("Setting agents from fetched data:", fetchedAgents.length, "useFakeData:", useFakeData);
+    console.log("Resetting agents; fake=", useFakeData, "count=", fetchedAgents.length);
     setAgents(fetchedAgents);
     setFilteredAgents(fetchedAgents);
   }, [fetchedAgents, useFakeData]);
   
-  // Apply filtering on the freshly reset list
+  // Apply your filter hook against the "live" filteredAgents state
   const { 
     filteredAgents: afterFilter, 
     setFilteredAgents: setAfterFilter 
   } = useAgentFilter(filteredAgents);
   
-  // Wire up favorites toggles
+  // Favorites toggle
   const { toggleFavorite } = useAgentFavorites(
     agents, 
     setAgents, 
