@@ -1,18 +1,12 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-// Predefined sample audio URLs (using standard audio formats that work across browsers)
-const sampleAudios = [
-  '/lovable-uploads/sample-audio-1.mp3',
-  '/lovable-uploads/sample-audio-2.mp3',
-  '/lovable-uploads/sample-audio-3.mp3',
-  '/lovable-uploads/sample-audio-4.mp3',
-  '/lovable-uploads/sample-audio-5.mp3',
-];
+// Define a working sample audio URL (must use MP3 or other widely supported format)
+const sampleAudioUrl = '/lovable-uploads/sample-notification.mp3';
 
 // Avatar images for profiles
 const avatarImages = {
-  boy: '/lovable-uploads/8ae8fb9c-1ded-47ae-aa00-f2952d6a80b1.png',
+  boy: '/lovable-uploads/photo-1581092795360-fd1ca04f0952.jpg',
   girl: '/lovable-uploads/eeac5d8e-0ba7-49d3-9235-4e6b321390bd.png'
 };
 
@@ -39,13 +33,10 @@ const generateFakeProfile = (index: number, gender: 'boy' | 'girl') => {
   const location = locations[Math.floor(Math.random() * locations.length)];
   const skillLevel = skillLevels[Math.floor(Math.random() * skillLevels.length)];
   
-  // Instead of random selection, use a fixed audio URL for testing
-  const audioUrl = '/lovable-uploads/sample-notification.mp3';
-  
   return {
     id: `fake-${gender}-${index}`,
     has_audio: true,
-    audio_url: audioUrl,
+    audio_url: sampleAudioUrl,
     country: location.country,
     city: location.city,
     computer_skill_level: skillLevel,
