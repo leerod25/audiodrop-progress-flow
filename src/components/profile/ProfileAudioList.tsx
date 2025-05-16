@@ -1,18 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from "@/components/ui/skeleton";
 import AudioRecordingItem from '@/components/AudioRecordingItem';
-
-interface Audio {
-  id: string;
-  title: string;
-  audio_url: string;
-  created_at: string;
-}
+import { toast } from 'sonner';
+import { Audio } from '@/hooks/useUserAudios';
 
 interface ProfileAudioListProps {
   audios: Audio[];
@@ -22,6 +17,44 @@ interface ProfileAudioListProps {
 }
 
 const ProfileAudioList = ({ audios, loading, deleteAudio, renameAudio }: ProfileAudioListProps) => {
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+
+  // Handle audio playback and errors
+  const handlePlayAudio = (audioId: string, audioUrl: string) => {
+    try {
+      // Create an audio element to test if the URL is playable
+      const audio = new Audio(audioUrl);
+      
+      // Set event handlers
+      audio.onplay = () => {
+        setPlayingAudioId(audioId);
+      };
+      
+      audio.onended = audio.onpause = () => {
+        setPlayingAudioId(null);
+      };
+      
+      audio.onerror = (e) => {
+        console.error('Error playing audio:', e);
+        toast.error('Failed to play this audio recording. The file may be unavailable or in an unsupported format.');
+        setPlayingAudioId(null);
+      };
+      
+      // Log the URL we're trying to play
+      console.log('Attempting to play audio URL:', audioUrl);
+      
+      // Try to play the audio
+      audio.play().catch(err => {
+        console.error('Audio playback rejected:', err);
+        toast.error('Browser blocked autoplay. Please try again with a user interaction.');
+      });
+      
+    } catch (error) {
+      console.error('Error setting up audio playback:', error);
+      toast.error('Error playing audio recording');
+    }
+  };
+
   return (
     <Card className="bg-white shadow-md">
       <CardHeader>
@@ -79,6 +112,8 @@ const ProfileAudioList = ({ audios, loading, deleteAudio, renameAudio }: Profile
                     createdAt={item.created_at}
                     onDelete={deleteAudio}
                     onRename={renameAudio}
+                    onPlay={() => handlePlayAudio(item.id, item.audio_url)}
+                    isPlaying={playingAudioId === item.id}
                   />
                 </motion.div>
               ))}

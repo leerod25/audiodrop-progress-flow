@@ -9,6 +9,7 @@ export interface Audio {
   title: string;
   audio_url: string;
   created_at: string;
+  is_playable?: boolean;
 }
 
 export function useUserAudios(user: User | null) {
@@ -31,11 +32,34 @@ export function useUserAudios(user: User | null) {
           
         if (error) {
           console.error('Error fetching audio list:', error);
+          toast.error('Error loading audio recordings');
         } else if (data) {
-          setAudios(data);
+          // Validate each audio URL and ensure it's a complete URL
+          const processedAudios = data.map(audio => {
+            let audioUrl = audio.audio_url;
+            
+            // Check if the URL is a Supabase storage URL or needs to be constructed
+            if (audioUrl && !audioUrl.startsWith('http')) {
+              // If it's a storage path, construct the full URL
+              if (audioUrl.startsWith('audio/')) {
+                const baseUrl = 'https://icfdrrmmacnmdpnwimya.supabase.co/storage/v1/object/public/';
+                audioUrl = `${baseUrl}${audioUrl}`;
+              }
+            }
+            
+            return {
+              ...audio,
+              audio_url: audioUrl,
+              is_playable: Boolean(audioUrl)
+            };
+          });
+          
+          console.log('Processed audio URLs:', processedAudios.map(a => a.audio_url));
+          setAudios(processedAudios);
         }
       } catch (err) {
         console.error('Unexpected error in useUserAudios:', err);
+        toast.error('Error loading audio recordings');
       } finally {
         setLoading(false);
       }
@@ -102,5 +126,25 @@ export function useUserAudios(user: User | null) {
     }
   };
 
-  return { audios, loading, deleteAudio, renameAudio };
+  // Add a function to test if an audio URL is playable
+  const testAudioPlayback = (audioUrl: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const audio = new Audio(audioUrl);
+      
+      audio.oncanplaythrough = () => {
+        resolve(true);
+        audio.pause();
+        audio.src = '';
+      };
+      
+      audio.onerror = () => {
+        console.error('Audio playback test failed for:', audioUrl);
+        resolve(false);
+      };
+      
+      audio.load();
+    });
+  };
+
+  return { audios, loading, deleteAudio, renameAudio, testAudioPlayback };
 }
