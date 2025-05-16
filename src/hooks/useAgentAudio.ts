@@ -20,51 +20,34 @@ export function useAgentAudio(agentId: string | null) {
       return;
     }
 
-    const fetchFromMetadata = async (): Promise<AgentAudio[]> => {
-      try {
-        const { data, error: supaErr } = await supabase
-          .from('audio_metadata')
-          .select('id, title, audio_url, created_at')
-          .eq('user_id', agentId)
-          .order('created_at', { ascending: false });
-        if (supaErr) throw supaErr;
-        
-        return (data || [])
-          .map(d => ({
-            id: d.id,
-            title: d.title ?? 'Untitled',
-            url: d.audio_url,
-            created_at: d.created_at ?? ''
-          }))
-          .filter(d => d.url && /^https?:\/\//.test(d.url));
-      } catch {
-        return [];
-      }
-    };
-
     const fetchFromStorage = async (): Promise<AgentAudio[]> => {
+      const bucket = 'audio';
       try {
         const { data: files, error: listErr } = await supabase.storage
-          .from('audio')
+          .from(bucket)
           .list(agentId, { limit: 100 });
         if (listErr) throw listErr;
-        
-        return Promise.all(
-          (files || []).map(async (file: any) => {
-            const path = `${agentId}/${file.name}`;
-            const { data: urlData } = supabase.storage
-              .from('audio')
-              .getPublicUrl(path);
-              
-            return {
-              id: file.name,
-              title: file.name,
-              url: urlData.publicUrl,
-              created_at: file.updated_at ?? ''
-            };
-          })
-        );
-      } catch {
+
+        const audios = (files || []).map((file: any) => {
+          const path = `${agentId}/${file.name}`;
+          const { data: urlData } = supabase.storage
+            .from(bucket)
+            .getPublicUrl(path);
+          if (!urlData?.publicUrl) {
+            throw new Error('Failed to get public URL');
+          }
+          return {
+            id: file.name,
+            title: file.name,
+            url: urlData.publicUrl,
+            created_at: file.updated_at || ''
+          };
+        });
+
+        return audios;
+      } catch (err: any) {
+        console.error('[useAgentAudio] storage fetch error:', err);
+        setError(err.message || 'Failed to fetch recordings');
         return [];
       }
     };
@@ -73,11 +56,8 @@ export function useAgentAudio(agentId: string | null) {
       setLoading(true);
       setError(null);
       try {
-        const [meta, storage] = await Promise.all([
-          fetchFromMetadata(),
-          fetchFromStorage()
-        ]);
-        setAudioList([...meta, ...storage]);
+        const storageList = await fetchFromStorage();
+        setAudioList(storageList);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch audio');
       } finally {

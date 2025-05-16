@@ -3,7 +3,6 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star } from 'lucide-react';
-import AudioPlayer from '@/components/AudioPlayer';
 import { useAgentAudio } from '@/hooks/useAgentAudio';
 import { Agent } from '@/types/Agent';
 
@@ -61,20 +60,17 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
             <p className="text-sm text-red-500">Error loading recordings: {error}</p>
           ) : audioList.length > 0 ? (
             <div className="space-y-4">
-              {audioList.map(rec => (
-                <div key={rec.id} className="p-3 border rounded-lg">
+              {audioList.map(({ id, title, url, created_at }) => (
+                <div key={id} className="p-3 border rounded-lg">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium">{rec.title}</span>
-                    <span className="text-xs text-gray-400">
-                      {new Date(rec.created_at).toLocaleDateString()}
-                    </span>
+                    <div>
+                      <span className="font-medium">{title}</span><br />
+                      <small className="text-gray-500">{new Date(created_at).toLocaleString()}</small>
+                    </div>
+                    <audio controls src={url} preload="none">
+                      Your browser does not support audio playback.
+                    </audio>
                   </div>
-                  <AudioPlayer
-                    audioUrl={rec.url}
-                    requiresPermission={false}
-                    suppressErrors={false}
-                    className="w-full"
-                  />
                 </div>
               ))}
             </div>
