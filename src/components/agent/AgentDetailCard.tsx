@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star } from 'lucide-react';
 import { useAgentAudio } from '@/hooks/useAgentAudio';
 import { Agent } from '@/types/Agent';
+import { testAudioStorage } from '@/utils/testAudioStorage';
 
 interface AgentDetailCardProps {
   agent: Agent;
@@ -25,6 +26,13 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
     navigator.clipboard.writeText(agent.id)
       .then(() => console.log('[AgentDetailCard] Agent ID copied'))
       .catch(err => console.error('[AgentDetailCard] Copy failed:', err));
+  };
+  
+  const runStorageTest = () => {
+    if (agent.id) {
+      console.log('[AgentDetailCard] Running storage test for agent:', agent.id);
+      testAudioStorage(agent.id);
+    }
   };
   
   return (
@@ -54,6 +62,15 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
         <div className="mt-4">
           <h3 className="text-lg font-medium mb-2">All Recordings</h3>
           
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={runStorageTest}
+            className="mb-4"
+          >
+            Run Storage Test (Check Console)
+          </Button>
+          
           {loading ? (
             <p className="text-sm text-gray-500">Loading recordings...</p>
           ) : error ? (
@@ -62,15 +79,24 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
             <div className="space-y-4">
               {audioList.map(({ id, title, url, created_at }) => (
                 <div key={id} className="p-3 border rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
+                  <div className="flex flex-col space-y-2">
                     <div>
                       <span className="font-medium">{title}</span><br />
                       <small className="text-gray-500">{created_at ? new Date(created_at).toLocaleString() : ''}</small>
                     </div>
-                    <audio controls preload="none">
-                      <source src={url} />
-                      Your browser does not support audio playback.
-                    </audio>
+                    
+                    {/* Simple audio player without source tag */}
+                    <div className="w-full">
+                      <p className="text-xs text-gray-500 mb-1">Audio URL: {url}</p>
+                      <audio 
+                        controls 
+                        preload="none" 
+                        className="w-full"
+                        src={url}
+                      >
+                        Your browser does not support audio playback.
+                      </audio>
+                    </div>
                   </div>
                 </div>
               ))}
