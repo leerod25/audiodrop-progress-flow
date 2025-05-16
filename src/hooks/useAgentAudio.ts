@@ -23,6 +23,7 @@ export function useAgentAudio(agentId: string | null) {
 
     const fetchAudios = async () => {
       try {
+        setLoading(true);
         const { data, error } = await supabase
           .from('audio_metadata')
           .select('id, title, audio_url, created_at')

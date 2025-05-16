@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -627,7 +626,11 @@ const AgentPreview: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredAgents.map((agent) => (
-            <Card key={agent.id} className="shadow-md hover:shadow-lg transition-shadow duration-200">
+            <Card 
+              key={agent.id} 
+              className="shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+              onClick={() => agent.has_audio ? openAudioModal(agent) : showAgentDetails(agent)}
+            >
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4 mt-2">
                   <div className="flex items-center">
@@ -652,12 +655,15 @@ const AgentPreview: React.FC = () => {
                   )}
                 </div>
                 
-                <div className="flex justify-between mt-4">
+                <div className="flex justify-between mt-4" onClick={(e) => e.stopPropagation()}>
                   {isBusinessAccount && (
                     <Button 
                       variant={agent.is_favorite ? "default" : "outline"} 
                       size="sm"
-                      onClick={() => toggleFavorite(agent.id, !!agent.is_favorite)}
+                      onClick={(e) => {
+                        e.stopPropagation(); 
+                        toggleFavorite(agent.id, !!agent.is_favorite);
+                      }}
                       className="text-sm"
                     >
                       <Star className={`mr-1 h-4 w-4 ${agent.is_favorite ? 'fill-white' : ''}`} />
@@ -681,7 +687,10 @@ const AgentPreview: React.FC = () => {
                       <Button 
                         variant="outline"
                         size="sm"
-                        onClick={() => showAgentDetails(agent)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          showAgentDetails(agent);
+                        }}
                         className="text-sm"
                       >
                         View All Recordings
@@ -692,7 +701,10 @@ const AgentPreview: React.FC = () => {
                       variant={agent.has_audio ? "default" : "ghost"}
                       size="sm"
                       disabled={!agent.has_audio}
-                      onClick={() => agent.has_audio && openAudioModal(agent)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        agent.has_audio && openAudioModal(agent);
+                      }}
                       className="text-sm"
                     >
                       {isPlaying && currentAudio === agent.audio_url ? (
