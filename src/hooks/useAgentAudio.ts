@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { FileObject } from '@supabase/storage-js';
 
 export interface AgentAudio {
   id: string;
