@@ -1,12 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Filter } from 'lucide-react';
-import { toast } from 'sonner';
-import { useUserContext } from "@/contexts/UserContext";
 import { FilterValues } from '@/components/agents/AgentFilters';
 
-// Import new components
+// Import components
 import AgentCard from '@/components/agents/AgentCard';
 import AgentFilters from '@/components/agents/AgentFilters';
 import AgentAudioModal from '@/components/agents/AgentAudioModal';
@@ -20,7 +17,6 @@ import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 const AgentPreview: React.FC = () => {
   const [useFakeData, setUseFakeData] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
-  const { user } = useUserContext();
 
   // Use custom hooks
   const { 
