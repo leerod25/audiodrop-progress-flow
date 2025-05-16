@@ -24,11 +24,16 @@ export function useAgentAudio(agentId: string | null) {
       try {
         const { data, error: supaErr } = await supabase
           .from('audio_metadata')
-          .select('id, title, audio_url as url, created_at')
+          .select('id, title, audio_url, created_at')
           .eq('user_id', agentId)
           .order('created_at', { ascending: false });
         if (supaErr) throw supaErr;
-        return (data || []).map(d => ({ ...d, id: d.id, title: d.title ?? 'Untitled' }));
+        return (data || []).map(d => ({
+          id: d.id,
+          title: d.title ?? 'Untitled',
+          url: d.audio_url,
+          created_at: d.created_at ?? ''
+        }));
       } catch {
         return [];
       }
@@ -40,13 +45,14 @@ export function useAgentAudio(agentId: string | null) {
           .from('audio')
           .list(agentId, { limit: 100 });
         if (listErr) throw listErr;
+        
         return Promise.all(
           files.map(async (file: any) => {
             const path = `${agentId}/${file.name}`;
-            const { data: urlData, error: urlErr } = supabase.storage
+            const { data: urlData } = supabase.storage
               .from('audio')
               .getPublicUrl(path);
-            if (urlErr) throw urlErr;
+              
             return {
               id: file.name,
               title: file.name,
