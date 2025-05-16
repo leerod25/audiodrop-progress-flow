@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import UploadAudio from "./pages/UploadAudio";
 import Profile from "./pages/Profile";
 import LandingPage from "./pages/LandingPage";
+import AgentPreview from "./pages/AgentPreview";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/upload" element={<UploadAudio />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/agents" element={<AgentPreview />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

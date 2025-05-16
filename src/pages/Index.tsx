@@ -1,132 +1,123 @@
 
-import React, { useState, useEffect } from "react";
-import AudioUploader, { AudioFile } from "@/components/AudioUploader";
-import AudioRecorder from "@/components/AudioRecorder";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileAudio, Mic, LogIn, User, Save } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { User as SupabaseUser } from "@supabase/supabase-js";
+import { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useUserContext } from '@/contexts/UserContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FileAudio, Upload, UserCircle, Users, LogOut } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-const Index = () => {
-  const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
-  const [user, setUser] = useState<SupabaseUser | null>(null);
+export default function Index() {
+  const { user, setUser } = useUserContext();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Check current auth status
+    // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_, session) => {
         setUser(session?.user ?? null);
       }
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [setUser]);
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-  };
-
-  const handleFilesChange = (files: AudioFile[]) => {
-    setAudioFiles(files);
-    console.log("Files changed:", files);
-  };
-
-  const navigateToRecorder = () => {
-    if (user) {
-      navigate('/upload');
-    } else {
-      navigate('/auth');
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+      navigate('/landing');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   return (
-    <div className="container mx-auto py-10 px-4 md:px-6 max-w-4xl">
-      <header className="mb-8 flex justify-between items-center">
-        <div className="text-center md:text-left">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-            Audio Management
-          </h1>
-          <p className="text-gray-600 max-w-2xl">
-            Upload existing audio files or record new audio directly in your browser.
-          </p>
-        </div>
-        <div>
-          {user ? (
-            <div className="flex items-center gap-3">
-              <span className="text-sm hidden md:inline">{user.email}</span>
-              <Button asChild variant="outline" size="sm">
-                <Link to="/profile">
-                  <User className="mr-2 h-4 w-4" />
-                  My Profile
-                </Link>
-              </Button>
-              <Button onClick={handleSignOut} variant="outline" size="sm">
-                <User className="mr-2 h-4 w-4" />
-                Sign Out
-              </Button>
-            </div>
-          ) : (
-            <Button asChild>
-              <Link to="/auth">
-                <LogIn className="mr-2 h-4 w-4" />
-                Login / Sign Up
-              </Link>
-            </Button>
-          )}
-        </div>
-      </header>
-
-      <Tabs defaultValue="record" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="record" className="flex items-center gap-2">
-            <Mic className="h-4 w-4" />
-            Record Audio
-          </TabsTrigger>
-          <TabsTrigger value="upload" className="flex items-center gap-2">
-            <FileAudio className="h-4 w-4" />
-            Upload Files
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="record">
-          <div className="rounded-lg border border-gray-200 shadow-sm p-4 bg-white">
-            <h3 className="text-lg font-medium mb-4">Voice Recorder</h3>
-            <div className="flex justify-center">
-              <Button 
-                onClick={navigateToRecorder}
-                className="bg-purple-600 hover:bg-purple-700 h-16 w-16 rounded-full"
-                aria-label="Start recording"
-              >
-                <Mic className="h-8 w-8" />
-              </Button>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="upload" className="bg-white rounded-xl shadow-md p-6">
-          <AudioUploader 
-            onFilesChange={handleFilesChange}
-            maxFiles={5}
-            maxSizeMB={20}
-          />
-        </TabsContent>
-      </Tabs>
-
-      <div className="mt-8 text-center text-sm text-gray-500">
-        <p>
-          This is a UI-only demonstration. Audio is stored temporarily in the browser.
-        </p>
+    <div className="container mx-auto py-12 px-4">
+      <div className="mb-8 text-center">
+        <h1 className="text-4xl font-extrabold mb-2">Welcome to Out-Fons</h1>
+        <p className="text-gray-600">Your professional call center solution</p>
       </div>
+
+      {user ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <Link to="/upload">
+              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Upload Audio</CardTitle>
+                  <Upload className="h-6 w-6" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">Upload or record your audio sample</p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link to="/profile">
+              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Your Profile</CardTitle>
+                  <UserCircle className="h-6 w-6" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">Update your profile information</p>
+                </CardContent>
+              </Card>
+            </Link>
+            
+            <Link to="/agents">
+              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Agent Preview</CardTitle>
+                  <Users className="h-6 w-6" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">Preview available agents and audio samples</p>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+
+          <div className="flex justify-center">
+            <Button 
+              variant="outline" 
+              onClick={handleLogout} 
+              className="flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
+          </div>
+        </>
+      ) : (
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-center mb-4">Please log in or sign up to continue</p>
+          <div className="flex gap-4">
+            <Button asChild>
+              <Link to="/auth">Login / Sign Up</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/landing">Back to Landing Page</Link>
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
-export default Index;
+}
