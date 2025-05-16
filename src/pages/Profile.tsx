@@ -99,9 +99,8 @@ export default function Profile() {
   const checkBusinessProfileCompletion = async (userId: string) => {
     try {
       setLoading(true);
-      // Using type assertion to work around the TypeScript error
       const { data, error } = await supabase
-        .from('business_profiles' as any)
+        .from('business_profiles')
         .select('business_name, phone, city, country, industry')
         .eq('id', userId)
         .maybeSingle();
@@ -113,12 +112,14 @@ export default function Profile() {
       }
       
       // Check if essential business fields are completed
+      // Use optional chaining and type narrowing to safely check properties
       const isCompleted = data && 
-                        data.business_name && 
-                        data.phone && 
-                        data.city && 
-                        data.country &&
-                        data.industry;
+                        typeof data === 'object' &&
+                        'business_name' in data && data.business_name && 
+                        'phone' in data && data.phone && 
+                        'city' in data && data.city && 
+                        'country' in data && data.country &&
+                        'industry' in data && data.industry;
       
       setProfileCompleted(!!isCompleted);
     } catch (error) {

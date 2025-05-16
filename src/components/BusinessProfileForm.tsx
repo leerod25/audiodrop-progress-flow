@@ -70,9 +70,8 @@ const BusinessProfileForm = ({ userId, onProfileUpdate }: BusinessProfileFormPro
       setLoading(true);
       try {
         // First check if business profile exists
-        // Using 'any' as a temporary workaround until types are regenerated
         const { data, error } = await supabase
-          .from('business_profiles' as any)
+          .from('business_profiles')
           .select('*')
           .eq('id', userId)
           .maybeSingle();
@@ -82,27 +81,28 @@ const BusinessProfileForm = ({ userId, onProfileUpdate }: BusinessProfileFormPro
           toast.error("Failed to load business profile data.");
         }
 
-        if (data) {
-          // Profile exists, set data
+        // Check if we have valid data with expected properties
+        if (data && typeof data === 'object') {
+          // Profile exists, set data - using optional chaining and nullish coalescing for safety
           setProfileData({
-            business_name: data.business_name || '',
-            email: data.email || '',
-            phone: data.phone || '',
-            website: data.website || '',
-            description: data.description || '',
-            industry: data.industry || '',
-            city: data.city || '',
-            country: data.country || '',
+            business_name: data.business_name ?? '',
+            email: data.email ?? '',
+            phone: data.phone ?? '',
+            website: data.website ?? '',
+            description: data.description ?? '',
+            industry: data.industry ?? '',
+            city: data.city ?? '',
+            country: data.country ?? '',
           });
         } else {
           // Business profile doesn't exist or is empty, create initial entry
           const { error: insertError } = await supabase
-            .from('business_profiles' as any)
+            .from('business_profiles')
             .upsert({
               id: userId,
               email: (await supabase.auth.getUser()).data.user?.email,
               updated_at: new Date().toISOString(),
-            }, { onConflict: 'id' });
+            });
           
           if (insertError) {
             console.error("Error creating initial business profile:", insertError);
@@ -143,7 +143,7 @@ const BusinessProfileForm = ({ userId, onProfileUpdate }: BusinessProfileFormPro
     setLoading(true);
     try {
       const { error } = await supabase
-        .from('business_profiles' as any)
+        .from('business_profiles')
         .upsert({
           id: userId,
           business_name: profileData.business_name,
@@ -155,7 +155,7 @@ const BusinessProfileForm = ({ userId, onProfileUpdate }: BusinessProfileFormPro
           city: profileData.city,
           country: profileData.country,
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'id' });
+        });
 
       if (error) {
         console.error("Error updating business profile:", error);
