@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { toast } from 'sonner';
@@ -83,6 +84,7 @@ export function useAgentFetch(useFakeData: boolean, userRole: string | null) {
         if (profilesError) {
           console.error('Error fetching profiles:', profilesError);
           toast.error('Failed to load agent profiles');
+          setLoading(false);
           return;
         }
 
@@ -95,7 +97,7 @@ export function useAgentFetch(useFakeData: boolean, userRole: string | null) {
 
         console.log('Profiles fetched:', profiles);
 
-        // Then fetch audio metadata without filtering by user_id so businesses can see all
+        // Fetch audio metadata without filtering by user_id so businesses can see all
         const { data: audioData, error: audioError } = await supabase
           .from('audio_metadata')
           .select('user_id, audio_url')
@@ -112,7 +114,8 @@ export function useAgentFetch(useFakeData: boolean, userRole: string | null) {
         const audioMap = new Map<string, string>();
         
         if (audioData && audioData.length > 0) {
-          audioData.forEach(audio => {
+          // Process each audio metadata entry
+          for (const audio of audioData) {
             if (!audioMap.has(audio.user_id) && audio.audio_url) {
               // Get public URL from storage if it's a path
               if (audio.audio_url.startsWith('audio/')) {
@@ -130,7 +133,7 @@ export function useAgentFetch(useFakeData: boolean, userRole: string | null) {
                 audioMap.set(audio.user_id, audio.audio_url);
               }
             }
-          });
+          }
         } else {
           console.log('No audio data found in the database');
         }

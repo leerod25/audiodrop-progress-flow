@@ -1,9 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { useAgentFetch } from './useAgentFetch';
 import { useAgentFilter } from './useAgentFilter';
 import { useAgentFavorites } from './useAgentFavorites';
+import { Agent } from '@/types/agent';
 
 export function useAgentData(useFakeData: boolean) {
   const { user, userRole } = useUserContext();
@@ -19,12 +20,15 @@ export function useAgentData(useFakeData: boolean) {
   } = useAgentFetch(useFakeData, userRole);
   
   // Create a state to manage agents internally
-  const [agents, setAgents] = useState(fetchedAgents);
+  const [agents, setAgents] = useState<Agent[]>(fetchedAgents);
   
   // Update internal agents state when fetched agents change
-  if (JSON.stringify(fetchedAgents) !== JSON.stringify(agents)) {
-    setAgents(fetchedAgents);
-  }
+  useEffect(() => {
+    if (fetchedAgents.length > 0) {
+      console.log("Setting agents from fetched data:", fetchedAgents.length);
+      setAgents(fetchedAgents);
+    }
+  }, [fetchedAgents]);
   
   // Get filtered agents
   const { filteredAgents, setFilteredAgents } = useAgentFilter(agents);
