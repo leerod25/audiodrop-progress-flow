@@ -39,10 +39,12 @@ export function useAgentAudio(agentId: string | null): AudioHookResult {
         if (files && files.length > 0) {
           const file = files[0];
           const path = `${agentId}/${file.name}`;
-          const { data: urlData, error: urlErr } = supabase.storage
+          // getPublicUrl only returns data, not error
+          const { data: urlData } = supabase.storage
             .from(bucket)
             .getPublicUrl(path);
-          if (urlErr || !urlData?.publicUrl) throw urlErr || new Error('Failed to get URL');
+            
+          if (!urlData?.publicUrl) throw new Error('Failed to get URL');
 
           setAudio({
             id: file.name,
