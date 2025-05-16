@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from "@/components/ui/button";
@@ -294,8 +293,12 @@ const AgentPreview: React.FC = () => {
 
   // Show agent details card with audio recordings
   const showAgentDetails = (agent: Agent) => {
+    console.log("showAgentDetails called with agent:", agent.id);
     setSelectedAgent(agent);
     setShowAgentCard(true);
+    
+    // Scroll to the top to ensure the detail card is visible
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Format the user ID to show only first 8 characters
@@ -342,13 +345,16 @@ const AgentPreview: React.FC = () => {
       
       {/* Show Agent Detail Card if Selected */}
       {showAgentCard && selectedAgent && (
-        <div className="mb-6">
+        <div className="mb-6 border-2 border-blue-100 p-4 rounded-lg bg-blue-50">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Agent Details</h2>
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => setShowAgentCard(false)}
+              onClick={() => {
+                console.log("Close Details clicked");
+                setShowAgentCard(false);
+              }}
             >
               Close Details
             </Button>

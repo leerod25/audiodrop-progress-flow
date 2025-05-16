@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,13 @@ const AgentCard: React.FC<AgentCardProps> = ({
   openAudioModal,
   formatUserId,
 }) => {
+  // Function to handle the "View All Recordings" button click
+  const handleViewAllRecordings = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent the card click from firing
+    console.log("View All Recordings clicked for agent:", agent.id);
+    showAgentDetails(agent);
+  };
+  
   return (
     <Card 
       className="shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
@@ -89,12 +97,8 @@ const AgentCard: React.FC<AgentCardProps> = ({
             <Button 
               variant="outline"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log("View All Recordings clicked for:", agent.id);
-                showAgentDetails(agent);
-              }}
-              className="text-sm"
+              onClick={handleViewAllRecordings}
+              className="text-sm font-medium"
             >
               View All Recordings
             </Button>
