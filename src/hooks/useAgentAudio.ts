@@ -17,13 +17,12 @@ interface AudioHookResult {
 
 export function useAgentAudio(agentId: string | null): AudioHookResult {
   const [audio, setAudio] = useState<AgentAudio | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!agentId) {
       setAudio(null);
-      setLoading(false);
       return;
     }
 
@@ -31,7 +30,7 @@ export function useAgentAudio(agentId: string | null): AudioHookResult {
       setLoading(true);
       setError(null);
       try {
-        // Get the most recent audio metadata for this agent
+        // Fetch the latest metadata record for this agent
         const { data, error: supaErr } = await supabase
           .from('audio_metadata')
           .select('id, title, audio_url, created_at')
@@ -41,22 +40,28 @@ export function useAgentAudio(agentId: string | null): AudioHookResult {
           .single();
 
         if (supaErr) {
-          if (supaErr.code === 'PGRST116') { // no rows
-            setAudio(null);
-          } else {
-            throw supaErr;
-          }
+          // No record found or error
+          setAudio(null);
         } else if (data) {
+          // Generate a fully qualified public URL
+          const { data: urlData, error: urlErr } = supabase.storage
+            .from('audio-bucket')
+            .getPublicUrl(data.audio_url);
+          if (urlErr || !urlData.publicUrl) {
+            throw urlErr || new Error('Failed to generate public URL');
+          }
+
           setAudio({
             id: data.id,
             title: data.title ?? 'Recording',
-            url: data.audio_url,
+            url: urlData.publicUrl,
             created_at: data.created_at
           });
         }
       } catch (err: any) {
         console.error('[useAgentAudio] error:', err);
         setError(err.message || 'Failed to fetch audio');
+        setAudio(null);
       } finally {
         setLoading(false);
       }

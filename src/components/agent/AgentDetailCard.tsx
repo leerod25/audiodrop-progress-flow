@@ -21,6 +21,13 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
 }) => {
   const { audio, loading, error } = useAgentAudio(agent.id);
   
+  const getMimeType = (url: string) => {
+    if (url.endsWith('.webm')) return 'audio/webm';
+    if (url.endsWith('.mp3')) return 'audio/mpeg';
+    if (url.endsWith('.wav')) return 'audio/wav';
+    return 'audio/mpeg';
+  };
+  
   const copyAgentId = () => {
     navigator.clipboard.writeText(agent.id)
       .then(() => console.log('[AgentDetailCard] Agent ID copied'))
@@ -71,8 +78,8 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
                     controls 
                     preload="none" 
                     className="w-full"
-                    src={audio.url}
                   >
+                    <source src={audio.url} type={getMimeType(audio.url)} />
                     Your browser does not support audio playback.
                   </audio>
                 </div>
