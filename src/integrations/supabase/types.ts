@@ -36,6 +36,27 @@ export type Database = {
         }
         Relationships: []
       }
+      business_favorites: {
+        Row: {
+          agent_id: string
+          business_id: string
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          agent_id: string
+          business_id: string
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          agent_id?: string
+          business_id?: string
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       professional_details: {
         Row: {
           additional_skills: string[] | null

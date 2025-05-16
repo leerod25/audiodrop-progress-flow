@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User, FileAudio, CheckCircle, XCircle, Filter, Star, Play, Pause } from 'lucide-react';
 import { toast } from 'sonner';
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUserContext } from "@/contexts/UserContext";
 import {
@@ -47,6 +46,14 @@ interface FilterValues {
   city: string;
   hasAudio: boolean;
   skillLevel: string;
+}
+
+// Define a type for the business_favorites table since it's not in the generated types yet
+interface BusinessFavorite {
+  id: string;
+  business_id: string;
+  agent_id: string;
+  created_at?: string;
 }
 
 const AgentPreview: React.FC = () => {
@@ -115,15 +122,14 @@ const AgentPreview: React.FC = () => {
         // If business user, get favorites
         let favorites: string[] = [];
         if (isBusinessAccount && user) {
+          // Use raw SQL query since the types don't include our new table yet
           const { data: favoritesData, error: favoritesError } = await supabase
-            .from('business_favorites')
-            .select('agent_id')
-            .eq('business_id', user.id);
+            .rpc('get_business_favorites', { business_user_id: user.id });
 
           if (favoritesError) {
             console.error('Error fetching favorites:', favoritesError);
-          } else {
-            favorites = favoritesData.map(fav => fav.agent_id);
+          } else if (favoritesData) {
+            favorites = favoritesData;
           }
         }
         
@@ -262,23 +268,20 @@ const AgentPreview: React.FC = () => {
 
     try {
       if (currentStatus) {
-        // Remove from favorites
-        const { error } = await supabase
-          .from('business_favorites')
-          .delete()
-          .eq('business_id', user.id)
-          .eq('agent_id', agentId);
+        // Remove from favorites using RPC function
+        const { error } = await supabase.rpc('remove_business_favorite', { 
+          business_user_id: user.id, 
+          agent_user_id: agentId 
+        });
 
         if (error) throw error;
         toast.success('Agent removed from favorites');
       } else {
-        // Add to favorites
-        const { error } = await supabase
-          .from('business_favorites')
-          .insert({
-            business_id: user.id,
-            agent_id: agentId
-          });
+        // Add to favorites using RPC function
+        const { error } = await supabase.rpc('add_business_favorite', { 
+          business_user_id: user.id, 
+          agent_user_id: agentId 
+        });
 
         if (error) throw error;
         toast.success('Agent added to favorites');
