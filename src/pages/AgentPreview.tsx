@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, FileAudio, CheckCircle, XCircle, Filter, Star, Play, Pause } from 'lucide-react';
+import { User, FileAudio, CheckCircle, XCircle, Filter, Star, Play, Pause, Volume2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Label } from "@/components/ui/label";
 import { useUserContext } from "@/contexts/UserContext";
@@ -367,7 +367,7 @@ const AgentPreview: React.FC = () => {
     }
   };
 
-  // Open audio player modal
+  // Open audio player modal with improved visibility
   const openAudioModal = (agent: Agent) => {
     if (!agent.audio_url) {
       toast.error('No audio available for this agent');
@@ -430,7 +430,7 @@ const AgentPreview: React.FC = () => {
         
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 mr-4">
-            <Label htmlFor="fake-data-toggle">Use Fake Data</Label>
+            <Label htmlFor="fake-data-toggle" className="text-sm font-medium">Use Fake Data</Label>
             <Switch
               id="fake-data-toggle"
               checked={useFakeData}
@@ -676,11 +676,11 @@ const AgentPreview: React.FC = () => {
                   )}
                   
                   <Button 
-                    variant={agent.has_audio ? "default" : "ghost"}
+                    variant={agent.has_audio ? "default" : "outline"}
                     size="sm"
                     disabled={!agent.has_audio}
-                    onClick={() => agent.has_audio && openAudioModal(agent)}
-                    className="text-sm"
+                    onClick={() => agent.has_audio && agent.audio_url && openAudioModal(agent)}
+                    className={`text-sm ${agent.has_audio ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
                   >
                     {isPlaying && currentAudio === agent.audio_url ? (
                       <>
@@ -689,7 +689,7 @@ const AgentPreview: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        <Play className="mr-1 h-4 w-4" />
+                        <Volume2 className="mr-1 h-4 w-4" />
                         Listen
                       </>
                     )}
@@ -713,7 +713,7 @@ const AgentPreview: React.FC = () => {
           
           {currentAgent && (
             <div className="flex flex-col items-center space-y-4">
-              <div className="w-full rounded-md bg-gray-100 p-4">
+              <div className="w-full rounded-md bg-gray-100 p-6">
                 <div className="mb-2 text-sm text-gray-500">Agent ID: {formatUserId(currentAgent.id)}</div>
                 <div className="mb-4 text-sm text-gray-500">
                   {currentAgent.country} {currentAgent.city ? `· ${currentAgent.city}` : ''}
@@ -722,17 +722,18 @@ const AgentPreview: React.FC = () => {
                 <div className="flex justify-center">
                   <Button
                     onClick={() => currentAgent.audio_url && toggleAudio(currentAgent.audio_url)}
-                    className="mx-auto"
+                    size="lg"
+                    className="mx-auto bg-blue-600 hover:bg-blue-700"
                   >
                     {isPlaying ? (
                       <>
-                        <Pause className="mr-2 h-4 w-4" />
-                        Pause
+                        <Pause className="mr-2 h-5 w-5" />
+                        Pause Audio
                       </>
                     ) : (
                       <>
-                        <Play className="mr-2 h-4 w-4" />
-                        Play
+                        <Play className="mr-2 h-5 w-5" />
+                        Play Audio
                       </>
                     )}
                   </Button>
@@ -743,6 +744,7 @@ const AgentPreview: React.FC = () => {
                 <Button 
                   onClick={() => toggleFavorite(currentAgent.id, !!currentAgent.is_favorite)}
                   variant="outline"
+                  className="w-full"
                 >
                   <Star className="mr-2 h-4 w-4" />
                   Add to Team
@@ -753,6 +755,7 @@ const AgentPreview: React.FC = () => {
                 <Button 
                   onClick={() => toggleFavorite(currentAgent.id, !!currentAgent.is_favorite)}
                   variant="default"
+                  className="w-full"
                 >
                   <Star className="mr-2 h-4 w-4 fill-white" />
                   Remove from Team
