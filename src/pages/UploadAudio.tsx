@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AudioRecorder from '@/components/AudioRecorder';
 import { useAudioSave } from '@/hooks/useAudioSave';
@@ -7,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
