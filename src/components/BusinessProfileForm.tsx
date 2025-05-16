@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Flag, Building } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import TeamInviteDialog from '@/components/auth/TeamInviteDialog';
 
 type BusinessProfileData = {
@@ -236,10 +235,11 @@ const BusinessProfileForm = ({ userId, onProfileUpdate }: BusinessProfileFormPro
           type="button"
           variant="outline" 
           size="sm" 
-          className="flex items-center gap-1"
+          className="flex items-center gap-2"
           onClick={() => setIsInviteDialogOpen(true)}
         >
-          <span>Invite Team Member</span>
+          <UserPlus size={16} />
+          <span>Invite Team</span>
         </Button>
         <TeamInviteDialog isOpen={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen} />
       </div>

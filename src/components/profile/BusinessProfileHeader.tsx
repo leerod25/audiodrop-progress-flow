@@ -19,11 +19,11 @@ const BusinessProfileHeader = ({ profileCompleted }: BusinessProfileHeaderProps)
         <Button 
           variant="outline" 
           size="sm" 
-          className="flex items-center gap-1"
+          className="flex items-center gap-2"
           onClick={() => setIsInviteDialogOpen(true)}
         >
           <UserPlus size={16} />
-          <span className="hidden sm:inline">Invite Team</span>
+          <span>Invite Team</span>
         </Button>
       )}
       <TeamInviteDialog isOpen={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen} />

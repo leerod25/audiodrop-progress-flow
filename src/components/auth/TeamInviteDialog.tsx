@@ -55,12 +55,6 @@ const TeamInviteDialog: React.FC<TeamInviteDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="flex items-center gap-1">
-          <UserPlus className="h-4 w-4" />
-          Invite Team Member
-        </Button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Invite Team Member</DialogTitle>
@@ -78,9 +72,10 @@ const TeamInviteDialog: React.FC<TeamInviteDialogProps> = ({
           </div>
           <Button 
             onClick={handleSendInvite} 
-            className="w-full"
+            className="w-full flex items-center justify-center gap-2"
           >
-            Send Invitation
+            <UserPlus size={16} />
+            <span>Send Invitation</span>
           </Button>
         </div>
       </DialogContent>
