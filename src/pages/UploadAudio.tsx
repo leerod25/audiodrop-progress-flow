@@ -68,6 +68,9 @@ export default function UploadAudio() {
       setBlob(null);
       setPreviewUrl(null);
       setTitle('');
+      
+      // Navigate to profile page after successful save
+      navigate('/profile');
     } catch (err) {
       console.error("❌ saveAudio threw:", err);
       // Errors are already toasted in hook
