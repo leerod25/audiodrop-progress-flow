@@ -8,6 +8,8 @@ import ProfessionalDetailsForm from '@/components/ProfessionalDetailsForm';
 import UserProfileHeader from '@/components/profile/UserProfileHeader';
 import ProfileIncompleteAlert from '@/components/profile/ProfileIncompleteAlert';
 import ProfileAudioList from '@/components/profile/ProfileAudioList';
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { User as UserIcon } from 'lucide-react';
 
 interface AgentProfileViewProps {
   user: User | null;
@@ -42,6 +44,15 @@ const AgentProfileView = ({
         <Card className="bg-white shadow-md">
           <UserProfileHeader profileCompleted={profileCompleted} />
           <CardContent className="space-y-6">
+            <div className="flex items-center justify-center mb-6">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src="/lovable-uploads/photo-1581092795360-fd1ca04f0952.jpg" alt="Profile" />
+                <AvatarFallback>
+                  <UserIcon className="h-12 w-12 text-gray-400" />
+                </AvatarFallback>
+              </Avatar>
+            </div>
+            
             <ProfileIncompleteAlert isVisible={!profileCompleted} />
             <ProfileForm 
               userId={user.id} 

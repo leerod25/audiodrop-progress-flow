@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -90,6 +89,23 @@ const AgentPreview: React.FC = () => {
   // Check if user is business role
   const isBusinessAccount = userRole === 'business';
 
+  // Fixed version of the audio URL construction function
+  const constructAudioUrl = (url: string | null): string | null => {
+    if (!url) return null;
+    
+    // If already a full URL, return it
+    if (url.startsWith('http')) return url;
+    
+    // If it's a storage path, construct the full URL
+    if (url.startsWith('audio/')) {
+      const baseUrl = 'https://icfdrrmmacnmdpnwimya.supabase.co/storage/v1/object/public/';
+      return `${baseUrl}${url}`;
+    }
+    
+    // For any other case, return as is
+    return url;
+  };
+
   // Fetch agents and populate filter options
   useEffect(() => {
     const fetchAgents = async () => {
@@ -99,6 +115,17 @@ const AgentPreview: React.FC = () => {
         // If using fake data, generate fake profiles
         if (useFakeData) {
           const fakeAgents = generateFakeProfiles();
+          
+          // Add male profile picture URL to first 5 agents (male profiles)
+          const agentsWithPictures = fakeAgents.map((agent, index) => {
+            if (index < 5) { // First 5 are males in the fake data
+              return {
+                ...agent,
+                avatar_url: '/lovable-uploads/photo-1581092795360-fd1ca04f0952.jpg'
+              };
+            }
+            return agent;
+          });
           
           // Extract unique values for filter dropdowns from fake data
           const uniqueCountries = Array.from(
@@ -125,8 +152,8 @@ const AgentPreview: React.FC = () => {
             )
           ).sort();
           
-          setAgents(fakeAgents);
-          setFilteredAgents(fakeAgents);
+          setAgents(agentsWithPictures);
+          setFilteredAgents(agentsWithPictures);
           setCountries(uniqueCountries);
           setCities(uniqueCities);
           setSkillLevels(uniqueSkillLevels);
@@ -156,11 +183,14 @@ const AgentPreview: React.FC = () => {
           console.error('Error fetching audio data:', audioError);
         }
         
-        // Create a map of user IDs to audio URLs
+        // Create a map of user IDs to audio URLs with proper URL construction
         const audioMap = new Map<string, string>();
         audioData?.forEach(audio => {
           if (!audioMap.has(audio.user_id)) {
-            audioMap.set(audio.user_id, audio.audio_url);
+            const fullUrl = constructAudioUrl(audio.audio_url);
+            if (fullUrl) {
+              audioMap.set(audio.user_id, fullUrl);
+            }
           }
         });
 
@@ -190,7 +220,7 @@ const AgentPreview: React.FC = () => {
           city: profile.city,
           computer_skill_level: profile.computer_skill_level,
           is_favorite: favorites.includes(profile.id),
-          avatar_url: null, // Since this column doesn't exist, set to null
+          avatar_url: '/lovable-uploads/photo-1581092795360-fd1ca04f0952.jpg', // Add male profile picture
           name: profile.full_name // Use full_name instead of name
         })) || [];
         
@@ -268,60 +298,76 @@ const AgentPreview: React.FC = () => {
     return () => subscription.unsubscribe();
   }, [form, agents]);
 
-  // Audio player setup with improved error handling
+  // Improved audio player setup with better error handling
   useEffect(() => {
-    if (audioPlayer) {
-      audioPlayer.onended = () => {
-        setIsPlaying(false);
-      };
-      
-      // Add error handling
-      audioPlayer.onerror = (e) => {
-        console.error('Error playing audio:', e);
-        setIsPlaying(false);
-        toast.error('Failed to play audio');
-      };
-      
-      return () => {
+    return () => {
+      // Clean up any playing audio when component unmounts
+      if (audioPlayer) {
         audioPlayer.pause();
         audioPlayer.onended = null;
         audioPlayer.onerror = null;
-      };
-    }
-  }, [audioPlayer]);
+      }
+    };
+  }, []);
 
   // Play/pause audio with improved error handling
   const toggleAudio = (audioUrl: string) => {
+    if (!audioUrl) {
+      toast.error('No valid audio URL provided');
+      return;
+    }
+
+    console.log('Attempting to play audio URL:', audioUrl);
+    
     if (currentAudio === audioUrl && isPlaying && audioPlayer) {
       audioPlayer.pause();
       setIsPlaying(false);
-    } else {
-      if (audioPlayer) {
-        audioPlayer.pause();
-      }
-      
-      const newAudioPlayer = new Audio(audioUrl);
-      
-      // Add error handler before attempting to play
-      newAudioPlayer.onerror = (e) => {
-        console.error('Error playing audio:', e);
-        toast.error('Failed to play audio');
-        setIsPlaying(false);
-      };
-      
-      setAudioPlayer(newAudioPlayer);
-      setCurrentAudio(audioUrl);
-      
-      // Try to play the audio
-      newAudioPlayer.play()
-        .then(() => {
-          setIsPlaying(true);
-        })
-        .catch(err => {
-          console.error('Error playing audio:', err);
-          toast.error('Failed to play audio');
-        });
+      return;
     }
+    
+    // If there's a current audio player, pause it
+    if (audioPlayer) {
+      audioPlayer.pause();
+    }
+    
+    // Create a new audio player
+    const newAudioPlayer = new Audio(audioUrl);
+    
+    // Set up event listeners
+    newAudioPlayer.onplay = () => {
+      console.log('Audio playback started');
+      setIsPlaying(true);
+    };
+    
+    newAudioPlayer.onended = () => {
+      console.log('Audio playback ended');
+      setIsPlaying(false);
+    };
+    
+    newAudioPlayer.onpause = () => {
+      console.log('Audio playback paused');
+      setIsPlaying(false);
+    };
+    
+    newAudioPlayer.onerror = (e) => {
+      console.error('Error playing audio:', e);
+      console.error('Error details:', newAudioPlayer.error);
+      toast.error(`Failed to play audio: ${newAudioPlayer.error?.message || 'Unknown error'}`);
+      setIsPlaying(false);
+    };
+    
+    setAudioPlayer(newAudioPlayer);
+    setCurrentAudio(audioUrl);
+    
+    // Try to play the audio
+    newAudioPlayer.play()
+      .then(() => {
+        console.log('Audio playback initiated successfully');
+      })
+      .catch(err => {
+        console.error('Error initiating audio playback:', err);
+        toast.error(`Could not play audio: ${err.message}`);
+      });
   };
 
   // Handle favorites
@@ -401,34 +447,15 @@ const AgentPreview: React.FC = () => {
       return;
     }
 
+    console.log('Opening audio modal with URL:', agent.audio_url);
     setCurrentAgent(agent);
     setShowAudioModal(true);
     
-    // Auto-play in modal with better error handling
+    // Don't auto-play in modal, let user click the play button
     if (audioPlayer) {
       audioPlayer.pause();
+      setIsPlaying(false);
     }
-    
-    const newAudioPlayer = new Audio(agent.audio_url);
-    
-    // Add error handler before attempting to play
-    newAudioPlayer.onerror = (e) => {
-      console.error('Error playing audio:', e);
-      toast.error('Failed to play audio');
-    };
-    
-    setAudioPlayer(newAudioPlayer);
-    setCurrentAudio(agent.audio_url);
-    
-    // Try to play the audio
-    newAudioPlayer.play()
-      .then(() => {
-        setIsPlaying(true);
-      })
-      .catch(err => {
-        console.error('Error playing audio:', err);
-        toast.error('Failed to play audio');
-      });
   };
 
   // Format the user ID to show only first 8 characters
@@ -446,7 +473,7 @@ const AgentPreview: React.FC = () => {
     setShowFilters(false);
   };
 
-  // Close audio modal
+  // Close audio modal and clean up audio
   const closeAudioModal = () => {
     if (audioPlayer) {
       audioPlayer.pause();
@@ -731,17 +758,8 @@ const AgentPreview: React.FC = () => {
                     onClick={() => agent.has_audio && agent.audio_url && openAudioModal(agent)}
                     className={`text-sm ${agent.has_audio ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
                   >
-                    {isPlaying && currentAudio === agent.audio_url ? (
-                      <>
-                        <Pause className="mr-1 h-4 w-4" />
-                        Pause
-                      </>
-                    ) : (
-                      <>
-                        <Volume2 className="mr-1 h-4 w-4" />
-                        Listen
-                      </>
-                    )}
+                    <Volume2 className="mr-1 h-4 w-4" />
+                    Listen
                   </Button>
                 </div>
               </CardContent>

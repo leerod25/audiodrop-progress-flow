@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import BusinessProfileForm from '@/components/BusinessProfileForm';
 import BusinessProfileHeader from '@/components/profile/BusinessProfileHeader';
 import BusinessProfileIncompleteAlert from '@/components/profile/BusinessProfileIncompleteAlert';
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { User as UserIcon } from 'lucide-react';
 
 interface BusinessProfileViewProps {
   user: User | null;
@@ -32,6 +34,15 @@ const BusinessProfileView = ({
         <Card className="bg-white shadow-md">
           <BusinessProfileHeader profileCompleted={profileCompleted} />
           <CardContent className="space-y-6">
+            <div className="flex items-center justify-center mb-6">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src="/lovable-uploads/photo-1581092795360-fd1ca04f0952.jpg" alt="Profile" />
+                <AvatarFallback>
+                  <UserIcon className="h-12 w-12 text-gray-400" />
+                </AvatarFallback>
+              </Avatar>
+            </div>
+            
             <BusinessProfileIncompleteAlert isVisible={!profileCompleted} />
             <BusinessProfileForm 
               userId={user.id} 
