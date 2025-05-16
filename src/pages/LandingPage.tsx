@@ -101,8 +101,8 @@ const LandingPage: React.FC = () => {
           </div>
           <div className="lg:w-1/2">
             <img
-              src="/lovable-uploads/9139b58b-efe1-4fa6-a944-4d008ab5cdf1.png"
-              alt="Call center team member"  
+              src="/lovable-uploads/c725df06-8571-496d-90fe-a8ae1ef80799.png"
+              alt="Digital globe network"  
               className="w-full rounded-xl shadow-md"
             />
           </div>
