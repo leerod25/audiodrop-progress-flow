@@ -9,84 +9,61 @@ export interface AgentAudio {
   created_at: string;
 }
 
-export function useAgentAudio(agentId: string | null) {
-  const [audioList, setAudioList] = useState<AgentAudio[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+interface AudioHookResult {
+  audio: AgentAudio | null;
+  loading: boolean;
+  error: string | null;
+}
+
+export function useAgentAudio(agentId: string | null): AudioHookResult {
+  const [audio, setAudio] = useState<AgentAudio | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!agentId) {
-      setAudioList([]);
+      setAudio(null);
+      setLoading(false);
       return;
     }
 
-    const fetchFromStorage = async (): Promise<AgentAudio[]> => {
-      // Use 'audio' bucket - the one that exists in the project
-      const bucket = 'audio';
-      try {
-        console.log(`[useAgentAudio] Fetching audio files from ${bucket}/${agentId}`);
-        
-        const { data: files, error: listErr } = await supabase.storage
-          .from(bucket)
-          .list(agentId, { limit: 100 });
-          
-        if (listErr) {
-          console.error('[useAgentAudio] List error:', listErr);
-          throw listErr;
-        }
-        
-        if (!files || files.length === 0) {
-          console.log('[useAgentAudio] No files found');
-          return [];
-        }
-
-        console.log('[useAgentAudio] Files found:', files);
-        
-        const audios: AgentAudio[] = [];
-        for (const file of files) {
-          const path = `${agentId}/${file.name}`;
-          const { data: urlData } = supabase.storage
-            .from(bucket)
-            .getPublicUrl(path);
-            
-          if (!urlData?.publicUrl) {
-            console.error('[useAgentAudio] getPublicUrl error for', path);
-            continue;
-          }
-          
-          console.log('[useAgentAudio] Got URL:', file.name, urlData.publicUrl);
-          
-          audios.push({
-            id: file.name,
-            title: file.name,
-            url: urlData.publicUrl,
-            created_at: file.updated_at || ''
-          });
-        }
-
-        return audios;
-      } catch (err: any) {
-        console.error('[useAgentAudio] storage fetch error:', err);
-        throw err;
-      }
-    };
-
-    const fetchAudios = async () => {
+    const fetchAudio = async () => {
       setLoading(true);
       setError(null);
       try {
-        const storageList = await fetchFromStorage();
-        console.log('[useAgentAudio] Setting audioList:', storageList);
-        setAudioList(storageList);
+        // Get the most recent audio metadata for this agent
+        const { data, error: supaErr } = await supabase
+          .from('audio_metadata')
+          .select('id, title, audio_url, created_at')
+          .eq('user_id', agentId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (supaErr) {
+          if (supaErr.code === 'PGRST116') { // no rows
+            setAudio(null);
+          } else {
+            throw supaErr;
+          }
+        } else if (data) {
+          setAudio({
+            id: data.id,
+            title: data.title ?? 'Recording',
+            url: data.audio_url,
+            created_at: data.created_at
+          });
+        }
       } catch (err: any) {
+        console.error('[useAgentAudio] error:', err);
         setError(err.message || 'Failed to fetch audio');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAudios();
+    fetchAudio();
   }, [agentId]);
 
-  return { audioList, loading, error };
+  return { audio, loading, error };
 }
