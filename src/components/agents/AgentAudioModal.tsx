@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Play, Pause, Star, User } from 'lucide-react';
+import { Play, Pause, Star, User, ExternalLink } from 'lucide-react';
 import { Agent } from '@/types/agent';
 
 interface AgentAudioModalProps {
@@ -31,13 +31,17 @@ const AgentAudioModal: React.FC<AgentAudioModalProps> = ({
 }) => {
   if (!agent) return null;
 
+  const hasAudio = agent.has_audio && agent.audio_url;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent onCloseAutoFocus={onCloseAutoFocus} className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Agent Audio Sample</DialogTitle>
+          <DialogTitle>{hasAudio ? 'Agent Audio Sample' : 'Agent Profile'}</DialogTitle>
           <DialogDescription>
-            Listen to this agent's audio sample
+            {hasAudio 
+              ? 'Listen to this agent\'s audio sample'
+              : 'View agent profile details'}
           </DialogDescription>
         </DialogHeader>
         
@@ -61,27 +65,45 @@ const AgentAudioModal: React.FC<AgentAudioModalProps> = ({
             </div>
             <div className="mb-4 text-sm text-gray-500">
               {agent.country} {agent.city ? `· ${agent.city}` : ''}
+              {agent.computer_skill_level && (
+                <p className="mt-1">Skill level: {agent.computer_skill_level}</p>
+              )}
             </div>
             
-            <div className="flex justify-center">
-              <Button
-                onClick={() => agent.audio_url && toggleAudio(agent.audio_url)}
-                size="lg"
-                className="mx-auto bg-blue-600 hover:bg-blue-700"
-              >
-                {isPlaying ? (
-                  <>
-                    <Pause className="mr-2 h-5 w-5" />
-                    Pause Audio
-                  </>
-                ) : (
-                  <>
-                    <Play className="mr-2 h-5 w-5" />
-                    Play Audio
-                  </>
-                )}
-              </Button>
-            </div>
+            {agent.description && (
+              <div className="mb-4 mt-2 text-sm text-gray-700">
+                <p className="font-medium mb-1">About:</p>
+                <p>{agent.description}</p>
+              </div>
+            )}
+            
+            {hasAudio ? (
+              <div className="flex justify-center">
+                <Button
+                  onClick={() => agent.audio_url && toggleAudio(agent.audio_url)}
+                  size="lg"
+                  className="mx-auto bg-blue-600 hover:bg-blue-700"
+                >
+                  {isPlaying ? (
+                    <>
+                      <Pause className="mr-2 h-5 w-5" />
+                      Pause Audio
+                    </>
+                  ) : (
+                    <>
+                      <Play className="mr-2 h-5 w-5" />
+                      Play Audio
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex justify-center">
+                <p className="text-gray-500 text-sm italic">
+                  No audio sample available for this agent
+                </p>
+              </div>
+            )}
           </div>
           
           {isBusinessAccount && !agent.is_favorite && (

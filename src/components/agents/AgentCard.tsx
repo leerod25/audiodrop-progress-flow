@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileAudio, CheckCircle, XCircle, Star, Volume2, User } from 'lucide-react';
+import { FileAudio, CheckCircle, XCircle, Star, Volume2, User, ExternalLink } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Agent } from '@/types/agent';
 
@@ -21,8 +21,17 @@ const AgentCard: React.FC<AgentCardProps> = ({
   toggleFavorite,
   openAudioModal
 }) => {
+  const handleCardAction = () => {
+    if (agent.has_audio && agent.audio_url) {
+      openAudioModal(agent);
+    } else {
+      // Just show info for profiles without audio
+      openAudioModal(agent);
+    }
+  };
+
   return (
-    <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
+    <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer" onClick={handleCardAction}>
       <CardContent className="p-5">
         <div className="flex items-center justify-between mb-4 mt-2">
           <div className="flex items-center">
@@ -63,7 +72,10 @@ const AgentCard: React.FC<AgentCardProps> = ({
             <Button 
               variant={agent.is_favorite ? "default" : "outline"} 
               size="sm"
-              onClick={() => toggleFavorite(agent.id, !!agent.is_favorite)}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFavorite(agent.id, !!agent.is_favorite);
+              }}
               className="text-sm"
             >
               <Star className={`mr-1 h-4 w-4 ${agent.is_favorite ? 'fill-white' : ''}`} />
@@ -83,14 +95,25 @@ const AgentCard: React.FC<AgentCardProps> = ({
           )}
           
           <Button 
-            variant={agent.has_audio ? "default" : "outline"}
+            variant="default"
             size="sm"
-            disabled={!agent.has_audio}
-            onClick={() => agent.has_audio && agent.audio_url && openAudioModal(agent)}
-            className={`text-sm ${agent.has_audio ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+            className={`text-sm ${agent.has_audio && agent.audio_url ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCardAction();
+            }}
           >
-            <Volume2 className="mr-1 h-4 w-4" />
-            Listen
+            {agent.has_audio && agent.audio_url ? (
+              <>
+                <Volume2 className="mr-1 h-4 w-4" />
+                Listen
+              </>
+            ) : (
+              <>
+                <ExternalLink className="mr-1 h-4 w-4" />
+                View
+              </>
+            )}
           </Button>
         </div>
       </CardContent>

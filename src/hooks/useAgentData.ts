@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -49,10 +50,16 @@ export function useAgentData(useFakeData: boolean) {
             if (index < 5) { // First 5 are males in the fake data
               return {
                 ...agent,
-                avatar_url: '/lovable-uploads/photo-1581092795360-fd1ca04f0952.jpg'
+                avatar_url: '/lovable-uploads/photo-1581092795360-fd1ca04f0952.jpg',
+                is_real: false,
+                profile_complete: true
               };
             }
-            return agent;
+            return {
+              ...agent,
+              is_real: false,
+              profile_complete: true
+            };
           });
           
           // Extract unique values for filter dropdowns from fake data
@@ -93,7 +100,7 @@ export function useAgentData(useFakeData: boolean) {
         // First get all profiles
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('id, country, city, computer_skill_level, full_name');
+          .select('id, country, city, computer_skill_level, full_name, description');
         
         if (profilesError) {
           console.error('Error fetching profiles:', profilesError);
@@ -148,8 +155,14 @@ export function useAgentData(useFakeData: boolean) {
           computer_skill_level: profile.computer_skill_level,
           is_favorite: favorites.includes(profile.id),
           avatar_url: '/lovable-uploads/photo-1581092795360-fd1ca04f0952.jpg', // Add male profile picture
-          name: profile.full_name // Use full_name instead of name
+          name: profile.full_name, // Use full_name instead of name
+          profile_complete: Boolean(profile.country && profile.city && profile.computer_skill_level),
+          is_real: true,
+          description: profile.description
         })) || [];
+        
+        // Log the fetched real profiles
+        console.log("Real profiles fetched:", agentsWithAudioInfo);
         
         setAgents(agentsWithAudioInfo);
         setFilteredAgents(agentsWithAudioInfo);

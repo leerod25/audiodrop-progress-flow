@@ -83,19 +83,25 @@ export function useAudioPlayer() {
 
   // Open audio player modal with improved visibility and error handling
   const openAudioModal = (agent: Agent) => {
-    if (!agent.audio_url) {
-      toast.error('No audio available for this agent');
-      return;
-    }
-
-    console.log('Opening audio modal with URL:', agent.audio_url);
+    console.log('Opening modal for agent:', agent);
     setCurrentAgent(agent);
     setShowAudioModal(true);
     
-    // Don't auto-play in modal, let user click the play button
-    if (audioPlayer) {
-      audioPlayer.pause();
-      setIsPlaying(false);
+    // If the agent has audio, prepare to play it but don't auto-play
+    if (agent.audio_url && agent.has_audio) {
+      console.log('Agent has audio URL:', agent.audio_url);
+      // Don't auto-play, let user click the play button
+      if (audioPlayer) {
+        audioPlayer.pause();
+        setIsPlaying(false);
+      }
+    } else {
+      console.log('Agent has no audio or invalid audio URL');
+      // Just show the profile info for agents without audio
+      if (audioPlayer) {
+        audioPlayer.pause();
+        setIsPlaying(false);
+      }
     }
   };
 

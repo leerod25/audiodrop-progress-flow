@@ -10,4 +10,7 @@ export interface Agent {
   is_favorite?: boolean;
   avatar_url?: string | null;
   name?: string | null;
+  // New fields to help with data validation
+  profile_complete?: boolean;
+  is_real?: boolean;
 }
