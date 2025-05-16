@@ -30,17 +30,21 @@ const Index = () => {
         </p>
       </header>
 
-      <Tabs defaultValue="upload" className="w-full">
+      <Tabs defaultValue="record" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="upload" className="flex items-center gap-2">
-            <FileAudio className="h-4 w-4" />
-            Upload Files
-          </TabsTrigger>
           <TabsTrigger value="record" className="flex items-center gap-2">
             <Mic className="h-4 w-4" />
             Record Audio
           </TabsTrigger>
+          <TabsTrigger value="upload" className="flex items-center gap-2">
+            <FileAudio className="h-4 w-4" />
+            Upload Files
+          </TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="record">
+          <AudioRecorder onRecordingComplete={handleRecordingComplete} />
+        </TabsContent>
         
         <TabsContent value="upload" className="bg-white rounded-xl shadow-md p-6">
           <AudioUploader 
@@ -48,10 +52,6 @@ const Index = () => {
             maxFiles={5}
             maxSizeMB={20}
           />
-        </TabsContent>
-        
-        <TabsContent value="record">
-          <AudioRecorder onRecordingComplete={handleRecordingComplete} />
         </TabsContent>
       </Tabs>
 
