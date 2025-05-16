@@ -34,13 +34,13 @@ export function useAudioSave() {
       }
 
       // 2) Get public URL
-      const { data: { publicUrl }, error: urlErr } = supabase
+      const { data: { publicUrl } } = supabase
         .storage
         .from('audio-bucket')
         .getPublicUrl(uploadData.path);
 
-      if (urlErr || !publicUrl) {
-        throw urlErr || new Error('Failed to get public URL');
+      if (!publicUrl) {
+        throw new Error('Failed to get public URL');
       }
 
       // 3) Insert metadata
