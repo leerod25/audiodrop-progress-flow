@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import { Languages, Briefcase, Calendar, DollarSign, Clock } from "lucide-react";
+import { Languages, Briefcase, Calendar, DollarSign, Clock, Computer } from "lucide-react";
 
 type ProfessionalDetailsData = {
   languages: string[];
@@ -20,6 +20,7 @@ type ProfessionalDetailsData = {
   years_experience: string;
   availability: string[];
   salary_expectation: number | null;
+  computer_skill_level: string;
 };
 
 interface ProfessionalDetailsFormProps {
@@ -35,6 +36,7 @@ const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
     years_experience: '',
     availability: [],
     salary_expectation: 500, // Set default to 500 USD
+    computer_skill_level: '',
   });
 
   const form = useForm<ProfessionalDetailsData>({
@@ -64,6 +66,7 @@ const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
             years_experience: data.years_experience || '',
             availability: data.availability || [],
             salary_expectation: data.salary_expectation || 500, // Default to 500 if null
+            computer_skill_level: data.computer_skill_level || '',
           };
           
           setData(formattedData);
@@ -92,6 +95,7 @@ const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
           years_experience: formData.years_experience,
           availability: formData.availability,
           salary_expectation: formData.salary_expectation,
+          computer_skill_level: formData.computer_skill_level,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
 
@@ -403,6 +407,50 @@ const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="more_than_10_years" id="more_than_10_years" />
               <Label htmlFor="more_than_10_years">More than 10 years</Label>
+            </div>
+          </RadioGroup>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Computer className="h-4 w-4 text-muted-foreground" />
+            <Label className="text-lg font-medium">Computer Skills</Label>
+          </div>
+          <RadioGroup 
+            value={data.computer_skill_level} 
+            onValueChange={(value) => setData({...data, computer_skill_level: value})}
+            className="space-y-4"
+          >
+            <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-slate-50">
+              <RadioGroupItem value="beginner" id="beginner_level" className="mt-1" />
+              <div className="space-y-1">
+                <Label htmlFor="beginner_level" className="font-medium">Beginner</Label>
+                <p className="text-sm text-muted-foreground">Can browse the internet, check emails, and use basic applications like word processors. Familiar with fundamental computer operations and simple file management.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-slate-50">
+              <RadioGroupItem value="intermediate" id="intermediate_level" className="mt-1" />
+              <div className="space-y-1">
+                <Label htmlFor="intermediate_level" className="font-medium">Intermediate</Label>
+                <p className="text-sm text-muted-foreground">Comfortable with various software applications, spreadsheet manipulation, online collaboration tools, and basic troubleshooting. Can learn new applications quickly and adapt to different systems.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-slate-50">
+              <RadioGroupItem value="advanced" id="advanced_level" className="mt-1" />
+              <div className="space-y-1">
+                <Label htmlFor="advanced_level" className="font-medium">Advanced</Label>
+                <p className="text-sm text-muted-foreground">Proficient with CRM systems, project management software, and advanced data analysis tools. Can quickly master complex applications, manage databases, and customize software settings for optimal performance.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-slate-50">
+              <RadioGroupItem value="expert" id="expert_level" className="mt-1" />
+              <div className="space-y-1">
+                <Label htmlFor="expert_level" className="font-medium">Expert</Label>
+                <p className="text-sm text-muted-foreground">Highly skilled with enterprise-level systems, specialized industry software, automation tools, and advanced data processing. Can develop macros, create workflows, integrate systems, and provide technical support to others.</p>
+              </div>
             </div>
           </RadioGroup>
         </div>
