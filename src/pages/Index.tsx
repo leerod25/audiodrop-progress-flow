@@ -5,13 +5,14 @@ import AudioRecorder from "@/components/AudioRecorder";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileAudio, Mic, LogIn, User, Save } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 
 const Index = () => {
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check current auth status
@@ -38,9 +39,12 @@ const Index = () => {
     console.log("Files changed:", files);
   };
 
-  const handleRecordingComplete = (blob: Blob, url: string) => {
-    console.log("Recording completed:", { blob, url });
-    // You can process the recorded audio here or add it to your file list
+  const navigateToRecorder = () => {
+    if (user) {
+      navigate('/upload');
+    } else {
+      navigate('/auth');
+    }
   };
 
   return (
@@ -93,7 +97,18 @@ const Index = () => {
         </TabsList>
         
         <TabsContent value="record">
-          <AudioRecorder onRecordingComplete={handleRecordingComplete} />
+          <div className="rounded-lg border border-gray-200 shadow-sm p-4 bg-white">
+            <h3 className="text-lg font-medium mb-4">Voice Recorder</h3>
+            <div className="flex justify-center">
+              <Button 
+                onClick={navigateToRecorder}
+                className="bg-purple-600 hover:bg-purple-700 h-16 w-16 rounded-full"
+                aria-label="Start recording"
+              >
+                <Mic className="h-8 w-8" />
+              </Button>
+            </div>
+          </div>
         </TabsContent>
         
         <TabsContent value="upload" className="bg-white rounded-xl shadow-md p-6">
