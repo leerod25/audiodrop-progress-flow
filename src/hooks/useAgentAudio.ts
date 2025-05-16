@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { FileObject } from '@supabase/storage-js';
 
 export interface AgentAudio {
   id: string;
@@ -40,7 +39,7 @@ export function useAgentAudio(agentId: string | null): AudioHookResult {
           console.error('[useAgentAudio] list error:', listErr);
           setAudio(null);
         } else if (files && files.length > 0) {
-          const file = files[0] as FileObject;
+          const file = files[0];
           const path = `${agentId}/${file.name}`;
           const { data } = supabase.storage
             .from(bucket)
