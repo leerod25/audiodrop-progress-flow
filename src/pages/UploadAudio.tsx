@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
 export default function UploadAudio() {
   const [blob, setBlob] = useState<Blob|null>(null);
@@ -78,7 +79,13 @@ export default function UploadAudio() {
   };
 
   return (
-    <div className="container mx-auto py-10 px-4 md:px-6 max-w-3xl">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+      className="container mx-auto py-10 px-4 md:px-6 max-w-3xl"
+    >
       <Card className="bg-white shadow-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">Record & Save Audio</CardTitle>
@@ -96,23 +103,29 @@ export default function UploadAudio() {
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   placeholder="Enter a title for your recording"
-                  className="w-full"
+                  className="w-full transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
                 />
               </div>
               
               <audio controls src={previewUrl} className="w-full" />
               
-              <Button 
-                onClick={handleSave} 
-                disabled={uploading || !title.trim()} 
-                className="w-full"
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: 'spring', stiffness: 300 }}
               >
-                {uploading ? 'Saving...' : 'Save Recording'}
-              </Button>
+                <Button 
+                  onClick={handleSave} 
+                  disabled={uploading || !title.trim()} 
+                  className="w-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                >
+                  {uploading ? 'Saving...' : 'Save Recording'}
+                </Button>
+              </motion.div>
             </div>
           )}
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 }
