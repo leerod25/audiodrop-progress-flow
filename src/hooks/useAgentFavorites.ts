@@ -24,19 +24,19 @@ export function useAgentFavorites(
       if (useFakeData) return; // Don't load favorites for fake data
       
       try {
-        // Use RPC function to get favorites
+        // Directly query the business_favorites table instead of using RPC
         const { data, error } = await supabase
-          .rpc('get_business_favorites', { 
-            business_user_id: userId 
-          });
+          .from('business_favorites')
+          .select('agent_id')
+          .eq('business_id', userId);
 
         if (error) {
           console.error('Error fetching favorites:', error);
           return;
         }
         
-        if (data) {
-          const favorites = data as unknown as string[];
+        if (data && data.length > 0) {
+          const favorites = data.map(item => item.agent_id);
           
           // Update agents with favorite status
           setAgents(prevAgents => 
@@ -95,20 +95,23 @@ export function useAgentFavorites(
       }
 
       if (currentStatus) {
-        // Remove from favorites using RPC function with proper typing
-        const { error } = await supabase.rpc('remove_business_favorite', { 
-          business_user_id: userId, 
-          agent_user_id: agentId 
-        } as any); // Use type assertion to bypass TypeScript error
+        // Remove from favorites by directly querying the business_favorites table
+        const { error } = await supabase
+          .from('business_favorites')
+          .delete()
+          .eq('business_id', userId)
+          .eq('agent_id', agentId);
 
         if (error) throw error;
         toast.success('Agent removed from favorites');
       } else {
-        // Add to favorites using RPC function with proper typing
-        const { error } = await supabase.rpc('add_business_favorite', { 
-          business_user_id: userId, 
-          agent_user_id: agentId 
-        } as any); // Use type assertion to bypass TypeScript error
+        // Add to favorites by directly inserting into the business_favorites table
+        const { error } = await supabase
+          .from('business_favorites')
+          .insert({
+            business_id: userId,
+            agent_id: agentId
+          });
 
         if (error) throw error;
         toast.success('Agent added to favorites');
