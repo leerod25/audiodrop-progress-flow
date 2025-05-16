@@ -28,7 +28,7 @@ const LandingPage: React.FC = () => {
         </div>
         <div className="absolute bottom-0 right-0 w-1/2 h-1/2">
           <img
-            src="https://source.unsplash.com/collection/190727/800x800"
+            src="https://images.unsplash.com/photo-1566753323558-f4e0952af115?q=80&w=1000&auto=format&fit=crop"
             alt="Call center team"
             className="w-full h-full object-cover rounded-tl-3xl"
           />
@@ -71,7 +71,7 @@ const LandingPage: React.FC = () => {
           </div>
           <div className="lg:w-1/2">
             <img
-              src="https://source.unsplash.com/collection/864044/800x600"
+              src="https://images.unsplash.com/photo-1575936123452-b67c3203c357?q=80&w=1000&auto=format&fit=crop"
               alt="Fountain origin"  
               className="w-full rounded-xl shadow-md"
             />
