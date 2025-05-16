@@ -1,25 +1,24 @@
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useUserContext } from '@/contexts/UserContext';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Flag, City } from 'lucide-react';
+import { MapPin, Flag } from 'lucide-react';
 
 type ProfileData = {
-  id: string;
   full_name: string | null;
-  description: string | null;
   email: string | null;
   phone: string | null;
-  gender: string | null;
   whatsapp: string | null;
-  country: string | null;
+  description: string | null;
   city: string | null;
+  country: string | null;
+  gender: string | null;
 };
 
 interface ProfileFormProps {
@@ -27,43 +26,46 @@ interface ProfileFormProps {
 }
 
 const ProfileForm = ({ userId }: ProfileFormProps) => {
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [profileData, setProfileData] = useState<ProfileData>({
+    full_name: '',
+    email: '',
+    phone: '',
+    whatsapp: '',
+    description: '',
+    city: '',
+    country: '',
+    gender: '',
+  });
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const { setUser } = useUserContext();
 
   useEffect(() => {
     const fetchProfile = async () => {
+      setLoading(true);
       try {
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', userId)
-          .maybeSingle();
+          .single();
 
         if (error) {
-          console.error('Error fetching profile:', error);
-          toast.error('Could not load profile information');
-        } else if (data) {
-          setProfile(data);
-        } else {
-          // Handle case where no profile exists yet
-          console.log('No profile found for user, creating a new one');
-          const newProfile: ProfileData = {
-            id: userId,
-            full_name: null,
-            description: null,
-            email: null,
-            phone: null,
-            gender: null,
-            whatsapp: null,
-            country: null,
-            city: null
-          };
-          setProfile(newProfile);
+          console.error("Error fetching profile:", error);
+          toast.error("Failed to load profile data.");
         }
-      } catch (err) {
-        console.error('Unexpected error in fetchProfile:', err);
+
+        if (data) {
+          setProfileData({
+            full_name: data.full_name || '',
+            email: data.email || '',
+            phone: data.phone || '',
+            whatsapp: data.whatsapp || '',
+            description: data.description || '',
+            city: data.city || '',
+            country: data.country || '',
+            gender: data.gender || '',
+          });
+        }
       } finally {
         setLoading(false);
       }
@@ -74,244 +76,179 @@ const ProfileForm = ({ userId }: ProfileFormProps) => {
     }
   }, [userId]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    if (profile) {
-      setProfile({
-        ...profile,
-        [name]: value,
-      });
-    }
+    setProfileData(prevData => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profile) return;
-
-    setSaving(true);
+    setLoading(true);
     try {
       const { error } = await supabase
         .from('profiles')
         .upsert({
           id: userId,
-          full_name: profile.full_name,
-          description: profile.description,
-          email: profile.email,
-          phone: profile.phone,
-          gender: profile.gender,
-          whatsapp: profile.whatsapp,
-          country: profile.country,
-          city: profile.city,
+          full_name: profileData.full_name,
+          email: profileData.email,
+          phone: profileData.phone,
+          whatsapp: profileData.whatsapp,
+          description: profileData.description,
+          city: profileData.city,
+          country: profileData.country,
+          gender: profileData.gender,
           updated_at: new Date().toISOString(),
-        });
+        }, { onConflict: 'id' });
 
       if (error) {
-        console.error('Error updating profile:', error);
-        toast.error('Failed to update profile');
+        console.error("Error updating profile:", error);
+        toast.error("Failed to update profile.");
       } else {
-        toast.success('Profile updated successfully');
-        setIsEditing(false);
+        toast.success("Profile updated successfully!");
+        // Optimistically update the user context
+        setUser(prevUser => ({
+          ...prevUser,
+          full_name: profileData.full_name,
+          email: profileData.email,
+        }));
       }
-    } catch (err) {
-      console.error('Unexpected error in handleSubmit:', err);
-      toast.error('An error occurred');
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-1/3" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="space-y-4"
+      >
+        <div className="flex items-center space-x-2">
+          <MapPin className="text-muted-foreground h-4 w-4" />
+          <Label htmlFor="city">City</Label>
+          <Skeleton className="h-9 w-[200px]" />
+        </div>
+        <div className="flex items-center space-x-2">
+          <Flag className="text-muted-foreground h-4 w-4" />
+          <Label htmlFor="country">Country</Label>
+          <Skeleton className="h-9 w-[200px]" />
+        </div>
+        <div>
+          <Label htmlFor="full_name">Full Name</Label>
+          <Skeleton className="h-9 w-[300px]" />
+        </div>
+        <div>
+          <Label htmlFor="email">Email</Label>
+          <Skeleton className="h-9 w-[300px]" />
+        </div>
+        <div>
+          <Label htmlFor="phone">Phone</Label>
+          <Skeleton className="h-9 w-[300px]" />
+        </div>
+        <div>
+          <Label htmlFor="whatsapp">WhatsApp</Label>
+          <Skeleton className="h-9 w-[300px]" />
+        </div>
+        <div>
+          <Label htmlFor="description">Description</Label>
+          <Skeleton className="h-[60px] w-[300px]" />
+        </div>
+        <Skeleton className="h-10 w-[100px]" />
+      </motion.div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-medium">Profile Information</h2>
-        {!isEditing ? (
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 300 }}
-          >
-            <Button 
-              type="button" 
-              onClick={() => setIsEditing(true)}
-              variant="outline" 
-              className="transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300"
-            >
-              Edit Profile
-            </Button>
-          </motion.div>
-        ) : null}
+    <motion.form
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      onSubmit={handleSubmit}
+      className="space-y-4"
+    >
+      <div className="grid gap-2">
+        <Label htmlFor="city">City</Label>
+        <Input
+          id="city"
+          name="city"
+          value={profileData.city || ''}
+          onChange={handleChange}
+          placeholder="Your city"
+        />
       </div>
-      
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="full_name">Full Name</Label>
-          <Input
-            id="full_name"
-            name="full_name"
-            value={profile?.full_name || ''}
-            onChange={handleChange}
-            disabled={!isEditing}
-            className="transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            value={profile?.email || ''}
-            onChange={handleChange}
-            disabled={!isEditing}
-            className="transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="phone">Phone</Label>
-            <Input
-              id="phone"
-              name="phone"
-              type="tel"
-              value={profile?.phone || ''}
-              onChange={handleChange}
-              disabled={!isEditing}
-              className="transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="whatsapp">WhatsApp</Label>
-            <Input
-              id="whatsapp"
-              name="whatsapp"
-              value={profile?.whatsapp || ''}
-              onChange={handleChange}
-              disabled={!isEditing}
-              className="transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="gender">Gender</Label>
-            <select
-              id="gender"
-              name="gender"
-              value={profile?.gender || ''}
-              onChange={handleChange}
-              disabled={!isEditing}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="">Select gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="non-binary">Non-binary</option>
-              <option value="prefer-not-to-say">Prefer not to say</option>
-            </select>
-          </div>
-
-          <div>
-            <Label htmlFor="country">
-              <div className="flex items-center gap-1">
-                <Flag className="h-4 w-4" />
-                <span>Country</span>
-              </div>
-            </Label>
-            <Input
-              id="country"
-              name="country"
-              value={profile?.country || ''}
-              onChange={handleChange}
-              disabled={!isEditing}
-              placeholder="Your country"
-              className="transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="city">
-              <div className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                <span>City</span>
-              </div>
-            </Label>
-            <Input
-              id="city"
-              name="city"
-              value={profile?.city || ''}
-              onChange={handleChange}
-              disabled={!isEditing}
-              placeholder="Your city"
-              className="transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
-            />
-          </div>
-        </div>
-
-        <div>
-          <Label htmlFor="description">About Me</Label>
-          <Textarea
-            id="description"
-            name="description"
-            value={profile?.description || ''}
-            onChange={handleChange}
-            disabled={!isEditing}
-            className="min-h-[100px] transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
-          />
-        </div>
-
-        {isEditing && (
-          <div className="flex gap-2 pt-4">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: 'spring', stiffness: 300 }}
-              className="flex-1"
-            >
-              <Button 
-                type="submit" 
-                disabled={saving}
-                className="w-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300"
-              >
-                {saving ? 'Saving...' : 'Save Profile'}
-              </Button>
-            </motion.div>
-            
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: 'spring', stiffness: 300 }}
-            >
-              <Button 
-                type="button" 
-                onClick={() => setIsEditing(false)}
-                variant="outline"
-                className="transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300"
-              >
-                Cancel
-              </Button>
-            </motion.div>
-          </div>
-        )}
+      <div className="grid gap-2">
+        <Label htmlFor="country">Country</Label>
+        <Input
+          id="country"
+          name="country"
+          value={profileData.country || ''}
+          onChange={handleChange}
+          placeholder="Your country"
+        />
       </div>
-    </form>
+      <div className="grid gap-2">
+        <Label htmlFor="full_name">Full Name</Label>
+        <Input
+          type="text"
+          id="full_name"
+          name="full_name"
+          value={profileData.full_name || ''}
+          onChange={handleChange}
+          placeholder="Your full name"
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          type="email"
+          id="email"
+          name="email"
+          value={profileData.email || ''}
+          onChange={handleChange}
+          placeholder="Your email"
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="phone">Phone</Label>
+        <Input
+          type="tel"
+          id="phone"
+          name="phone"
+          value={profileData.phone || ''}
+          onChange={handleChange}
+          placeholder="Your phone number"
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="whatsapp">WhatsApp</Label>
+        <Input
+          type="tel"
+          id="whatsapp"
+          name="whatsapp"
+          value={profileData.whatsapp || ''}
+          onChange={handleChange}
+          placeholder="Your WhatsApp number"
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          name="description"
+          value={profileData.description || ''}
+          onChange={handleChange}
+          placeholder="A brief description about yourself"
+        />
+      </div>
+      <Button type="submit" disabled={loading}>
+        Update Profile
+      </Button>
+    </motion.form>
   );
 };
 

@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import UploadAudio from "./pages/UploadAudio";
 import Profile from "./pages/Profile";
+import LandingPage from "./pages/LandingPage";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/landing" element={<LandingPage />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/upload" element={<UploadAudio />} />
           <Route path="/profile" element={<Profile />} />
