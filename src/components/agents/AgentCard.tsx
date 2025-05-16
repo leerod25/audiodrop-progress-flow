@@ -22,12 +22,8 @@ const AgentCard: React.FC<AgentCardProps> = ({
   openAudioModal
 }) => {
   const handleCardAction = () => {
-    if (agent.has_audio && agent.audio_url) {
-      openAudioModal(agent);
-    } else {
-      // Just show info for profiles without audio
-      openAudioModal(agent);
-    }
+    // Always open modal, regardless of audio availability
+    openAudioModal(agent);
   };
 
   return (

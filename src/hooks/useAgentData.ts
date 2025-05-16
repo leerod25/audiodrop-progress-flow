@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -18,21 +17,26 @@ export function useAgentData(useFakeData: boolean) {
   // Check if user is business role
   const isBusinessAccount = userRole === 'business';
 
-  // Fixed version of the audio URL construction function
+  // Improved URL construction function with better error handling
   const constructAudioUrl = (url: string | null): string | null => {
     if (!url) return null;
     
-    // If already a full URL, return it
-    if (url.startsWith('http')) return url;
-    
-    // If it's a storage path, construct the full URL
-    if (url.startsWith('audio/')) {
-      const baseUrl = 'https://icfdrrmmacnmdpnwimya.supabase.co/storage/v1/object/public/';
-      return `${baseUrl}${url}`;
+    try {
+      // If already a full URL, return it
+      if (url.startsWith('http')) return url;
+      
+      // If it's a storage path, construct the full URL
+      if (url.startsWith('audio/')) {
+        const baseUrl = 'https://icfdrrmmacnmdpnwimya.supabase.co/storage/v1/object/public/';
+        return `${baseUrl}${url}`;
+      }
+      
+      // For any other case, return as is
+      return url;
+    } catch (error) {
+      console.error('Error constructing audio URL:', error);
+      return null;
     }
-    
-    // For any other case, return as is
-    return url;
   };
 
   // Fetch agents and populate filter options
@@ -108,7 +112,7 @@ export function useAgentData(useFakeData: boolean) {
           return;
         }
 
-        // Then check which ones have audio
+        // Then check which ones have audio - with improved query
         const { data: audioData, error: audioError } = await supabase
           .from('audio_metadata')
           .select('user_id, audio_url')
@@ -118,16 +122,23 @@ export function useAgentData(useFakeData: boolean) {
           console.error('Error fetching audio data:', audioError);
         }
         
-        // Create a map of user IDs to audio URLs with proper URL construction
+        // Create a map of user IDs to audio URLs with proper URL construction and logging
         const audioMap = new Map<string, string>();
-        audioData?.forEach(audio => {
-          if (!audioMap.has(audio.user_id)) {
-            const fullUrl = constructAudioUrl(audio.audio_url);
-            if (fullUrl) {
-              audioMap.set(audio.user_id, fullUrl);
+        if (audioData && audioData.length > 0) {
+          console.log('Audio data found:', audioData);
+          
+          audioData.forEach(audio => {
+            if (!audioMap.has(audio.user_id) && audio.audio_url) {
+              const fullUrl = constructAudioUrl(audio.audio_url);
+              console.log(`Processing audio for ${audio.user_id}: Original URL=${audio.audio_url}, Full URL=${fullUrl}`);
+              if (fullUrl) {
+                audioMap.set(audio.user_id, fullUrl);
+              }
             }
-          }
-        });
+          });
+        } else {
+          console.log('No audio data found in the database');
+        }
 
         // If business user, get favorites
         let favorites: string[] = [];
@@ -145,21 +156,28 @@ export function useAgentData(useFakeData: boolean) {
           }
         }
         
-        // Map profiles to agents with audio info and favorite status
-        const agentsWithAudioInfo = profiles?.map(profile => ({
-          id: profile.id,
-          has_audio: audioMap.has(profile.id),
-          audio_url: audioMap.get(profile.id) || null,
-          country: profile.country,
-          city: profile.city,
-          computer_skill_level: profile.computer_skill_level,
-          is_favorite: favorites.includes(profile.id),
-          avatar_url: '/lovable-uploads/photo-1581092795360-fd1ca04f0952.jpg', // Add male profile picture
-          name: profile.full_name, // Use full_name instead of name
-          profile_complete: Boolean(profile.country && profile.city && profile.computer_skill_level),
-          is_real: true,
-          description: profile.description
-        })) || [];
+        // Map profiles to agents with audio info and favorite status - with improved logging
+        const agentsWithAudioInfo = profiles?.map(profile => {
+          const hasAudio = audioMap.has(profile.id);
+          const audioUrl = audioMap.get(profile.id) || null;
+          
+          console.log(`Agent ${profile.id} (${profile.full_name}): has_audio=${hasAudio}, audio_url=${audioUrl}`);
+          
+          return {
+            id: profile.id,
+            has_audio: hasAudio,
+            audio_url: audioUrl,
+            country: profile.country,
+            city: profile.city,
+            computer_skill_level: profile.computer_skill_level,
+            is_favorite: favorites.includes(profile.id),
+            avatar_url: '/lovable-uploads/photo-1581092795360-fd1ca04f0952.jpg',
+            name: profile.full_name,
+            profile_complete: Boolean(profile.country && profile.city && profile.computer_skill_level),
+            is_real: true,
+            description: profile.description
+          };
+        }) || [];
         
         // Log the fetched real profiles
         console.log("Real profiles fetched:", agentsWithAudioInfo);
