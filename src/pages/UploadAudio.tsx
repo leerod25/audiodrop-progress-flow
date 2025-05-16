@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AudioRecorder from '@/components/AudioRecorder';
 import { useAudioSave } from '@/hooks/useAudioSave';
 import { Button } from "@/components/ui/button";
