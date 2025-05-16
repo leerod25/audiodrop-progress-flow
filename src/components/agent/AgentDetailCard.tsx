@@ -23,10 +23,10 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
   console.log('AgentDetailCard rendering with agent:', agent);
   console.log('Agent ID type:', typeof agent.id, 'Value:', agent.id);
   
-  const { audioList, loading: audioLoading, error } = useAgentAudio(agent.id);
+  const { audioList, loading, error } = useAgentAudio(agent.id);
   
   console.log('Audio list:', audioList);
-  console.log('Audio loading:', audioLoading);
+  console.log('Audio loading:', loading);
   console.log('Audio error:', error);
   
   return (
@@ -56,7 +56,7 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
         <div className="mt-4">
           <h3 className="text-lg font-medium mb-2">All Recordings</h3>
           
-          {audioLoading ? (
+          {loading ? (
             <p className="text-sm text-gray-500">Loading recordings...</p>
           ) : error ? (
             <p className="text-sm text-red-500">Error loading recordings: {error}</p>

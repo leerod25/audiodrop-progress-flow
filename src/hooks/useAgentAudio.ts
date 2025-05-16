@@ -11,22 +11,21 @@ export interface AgentAudio {
 
 export function useAgentAudio(agentId: string | null) {
   const [audioList, setAudioList] = useState<AgentAudio[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string|null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!agentId) {
-      console.warn('[useAgentAudio] called with null agentId, skipping fetch');
+      console.warn('[useAgentAudio] No agentId provided.');
       setAudioList([]);
-      setLoading(false);
       return;
     }
 
     const fetchAudios = async () => {
       setLoading(true);
       setError(null);
+      console.log(`[useAgentAudio] fetching audio_metadata for user_id=${agentId}`);
 
-      console.log(`[useAgentAudio] fetching audio_metadata for user_id = ${agentId}`);
       try {
         const { data, error: supaErr } = await supabase
           .from('audio_metadata')
@@ -38,22 +37,20 @@ export function useAgentAudio(agentId: string | null) {
           console.error('[useAgentAudio] Supabase error:', supaErr);
           setError(supaErr.message);
           setAudioList([]);
-          return;
+        } else if (data) {
+          console.log('[useAgentAudio] Data received:', data.length, 'entries');
+          const normalized: AgentAudio[] = data.map(d => ({
+            id: d.id,
+            title: d.title ?? 'Untitled',
+            url: d.audio_url,
+            created_at: d.created_at
+          }));
+          console.log('[useAgentAudio] Normalized data:', normalized);
+          setAudioList(normalized);
         }
-
-        console.log('[useAgentAudio] raw data:', data);
-        const normalized: AgentAudio[] = (data ?? []).map(d => ({
-          id: d.id,
-          title: d.title || 'Untitled',
-          url: d.audio_url,
-          created_at: d.created_at,
-        }));
-        console.log('[useAgentAudio] normalized:', normalized);
-
-        setAudioList(normalized);
       } catch (err: any) {
         console.error('[useAgentAudio] unexpected error:', err);
-        setError(err.message || 'Unknown error');
+        setError(err.message || 'Unexpected error occurred');
         setAudioList([]);
       } finally {
         setLoading(false);
