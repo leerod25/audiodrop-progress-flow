@@ -4,7 +4,7 @@ import AudioUploader, { AudioFile } from "@/components/AudioUploader";
 import AudioRecorder from "@/components/AudioRecorder";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileAudio, Mic, LogIn, User } from "lucide-react";
+import { FileAudio, Mic, LogIn, User, Save } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
@@ -58,6 +58,12 @@ const Index = () => {
           {user ? (
             <div className="flex items-center gap-3">
               <span className="text-sm hidden md:inline">{user.email}</span>
+              <Button asChild variant="outline" size="sm">
+                <Link to="/upload">
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Audio
+                </Link>
+              </Button>
               <Button onClick={handleSignOut} variant="outline" size="sm">
                 <User className="mr-2 h-4 w-4" />
                 Sign Out
