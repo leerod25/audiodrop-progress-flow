@@ -60,12 +60,22 @@ export default function Profile() {
         .from('profiles')
         .select('full_name, phone, city, country, computer_skill_level')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error checking profile completion:', error);
+        setProfileCompleted(false);
+        return;
+      }
       
       // Check if essential fields are completed
-      const isCompleted = data && data.full_name && data.phone && data.city && data.country && data.computer_skill_level;
+      const isCompleted = data && 
+                          data.full_name && 
+                          data.phone && 
+                          data.city && 
+                          data.country && 
+                          data.computer_skill_level;
+      
       setProfileCompleted(!!isCompleted);
     } catch (error) {
       console.error('Error checking profile completion:', error);
@@ -112,7 +122,7 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        {(profileCompleted || true) && (
+        {profileCompleted && (
           <>
             <Card className="bg-white shadow-md">
               <CardContent className="space-y-6">

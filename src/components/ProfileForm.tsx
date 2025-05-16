@@ -215,13 +215,11 @@ const ProfileForm = ({ userId, onProfileUpdate }: ProfileFormProps) => {
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-center space-x-2">
-            <MapPin className="text-muted-foreground h-4 w-4" />
+          <div>
             <Label htmlFor="city">City</Label>
             <Skeleton className="h-9 w-full" />
           </div>
-          <div className="flex items-center space-x-2">
-            <Flag className="text-muted-foreground h-4 w-4" />
+          <div>
             <Label htmlFor="country">Country</Label>
             <Skeleton className="h-9 w-full" />
           </div>
@@ -247,6 +245,7 @@ const ProfileForm = ({ userId, onProfileUpdate }: ProfileFormProps) => {
       onSubmit={handleSubmit}
       className="space-y-4"
     >
+      {/* Name (first) */}
       <div className="grid gap-2">
         <Label htmlFor="full_name">Full Name <span className="text-red-500">*</span></Label>
         <Input
@@ -260,6 +259,7 @@ const ProfileForm = ({ userId, onProfileUpdate }: ProfileFormProps) => {
         />
       </div>
       
+      {/* Email (second) */}
       <div className="grid gap-2">
         <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
         <Input
@@ -273,6 +273,7 @@ const ProfileForm = ({ userId, onProfileUpdate }: ProfileFormProps) => {
         />
       </div>
       
+      {/* Phone and WhatsApp on same line */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="grid gap-2">
           <Label htmlFor="phone">Phone <span className="text-red-500">*</span></Label>
@@ -299,18 +300,8 @@ const ProfileForm = ({ userId, onProfileUpdate }: ProfileFormProps) => {
         </div>
       </div>
       
+      {/* Country and City on same line */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="city">City <span className="text-red-500">*</span></Label>
-          <Input
-            id="city"
-            name="city"
-            value={profileData.city || ''}
-            onChange={handleChange}
-            placeholder="Your city"
-            required
-          />
-        </div>
         <div className="grid gap-2">
           <Label htmlFor="country">Country <span className="text-red-500">*</span></Label>
           <Input
@@ -322,8 +313,20 @@ const ProfileForm = ({ userId, onProfileUpdate }: ProfileFormProps) => {
             required
           />
         </div>
+        <div className="grid gap-2">
+          <Label htmlFor="city">City <span className="text-red-500">*</span></Label>
+          <Input
+            id="city"
+            name="city"
+            value={profileData.city || ''}
+            onChange={handleChange}
+            placeholder="Your city"
+            required
+          />
+        </div>
       </div>
       
+      {/* Computer Skills as mandatory field */}
       <div className="grid gap-2">
         <Label htmlFor="computer_skill_level">Computer Skills <span className="text-red-500">*</span></Label>
         <Select 
@@ -343,6 +346,7 @@ const ProfileForm = ({ userId, onProfileUpdate }: ProfileFormProps) => {
         </Select>
       </div>
       
+      {/* Description */}
       <div className="grid gap-2">
         <Label htmlFor="description">Description</Label>
         <Textarea
@@ -355,7 +359,7 @@ const ProfileForm = ({ userId, onProfileUpdate }: ProfileFormProps) => {
       </div>
       
       <Button type="submit" disabled={loading}>
-        {loading ? "Saving..." : "Create Profile"}
+        {loading ? "Saving..." : "Update Profile"}
       </Button>
     </motion.form>
   );

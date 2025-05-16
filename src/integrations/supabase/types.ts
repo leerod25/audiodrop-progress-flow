@@ -81,6 +81,7 @@ export type Database = {
       profiles: {
         Row: {
           city: string | null
+          computer_skill_level: string | null
           country: string | null
           created_at: string | null
           description: string | null
@@ -94,6 +95,7 @@ export type Database = {
         }
         Insert: {
           city?: string | null
+          computer_skill_level?: string | null
           country?: string | null
           created_at?: string | null
           description?: string | null
@@ -107,6 +109,7 @@ export type Database = {
         }
         Update: {
           city?: string | null
+          computer_skill_level?: string | null
           country?: string | null
           created_at?: string | null
           description?: string | null
