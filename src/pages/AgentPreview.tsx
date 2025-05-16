@@ -5,8 +5,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, FileAudio, CheckCircle, XCircle } from 'lucide-react';
+import { User, FileAudio, CheckCircle, XCircle, Filter } from 'lucide-react';
 import { toast } from 'sonner';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Agent {
   id: string;
@@ -16,11 +32,33 @@ interface Agent {
   computer_skill_level?: string | null;
 }
 
+interface FilterValues {
+  country: string;
+  city: string;
+  hasAudio: boolean;
+  skillLevel: string;
+}
+
 const AgentPreview: React.FC = () => {
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [filteredAgents, setFilteredAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [countries, setCountries] = useState<string[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+  const [skillLevels, setSkillLevels] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
   const navigate = useNavigate();
 
+  const form = useForm<FilterValues>({
+    defaultValues: {
+      country: '',
+      city: '',
+      hasAudio: false,
+      skillLevel: '',
+    },
+  });
+
+  // Fetch agents and populate filter options
   useEffect(() => {
     const fetchAgents = async () => {
       try {
@@ -60,6 +98,36 @@ const AgentPreview: React.FC = () => {
         })) || [];
         
         setAgents(agentsWithAudioInfo);
+        setFilteredAgents(agentsWithAudioInfo);
+
+        // Extract unique values for filter dropdowns
+        const uniqueCountries = Array.from(
+          new Set(
+            agentsWithAudioInfo
+              .map(agent => agent.country)
+              .filter(Boolean) as string[]
+          )
+        ).sort();
+        
+        const uniqueCities = Array.from(
+          new Set(
+            agentsWithAudioInfo
+              .map(agent => agent.city)
+              .filter(Boolean) as string[]
+          )
+        ).sort();
+        
+        const uniqueSkillLevels = Array.from(
+          new Set(
+            agentsWithAudioInfo
+              .map(agent => agent.computer_skill_level)
+              .filter(Boolean) as string[]
+          )
+        ).sort();
+
+        setCountries(uniqueCountries);
+        setCities(uniqueCities);
+        setSkillLevels(uniqueSkillLevels);
       } catch (err) {
         console.error('Unexpected error in AgentPreview:', err);
         toast.error('An error occurred while loading agents');
@@ -71,12 +139,206 @@ const AgentPreview: React.FC = () => {
     fetchAgents();
   }, []);
 
+  // Apply filters whenever form values change
+  const applyFilters = (values: FilterValues) => {
+    let result = [...agents];
+    
+    if (values.country) {
+      result = result.filter(agent => agent.country === values.country);
+    }
+    
+    if (values.city) {
+      result = result.filter(agent => agent.city === values.city);
+    }
+    
+    if (values.hasAudio) {
+      result = result.filter(agent => agent.has_audio);
+    }
+    
+    if (values.skillLevel) {
+      result = result.filter(agent => agent.computer_skill_level === values.skillLevel);
+    }
+    
+    setFilteredAgents(result);
+  };
+
+  // Watch form changes and update filters
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      applyFilters(value as FilterValues);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form, agents]);
+
   // Format the user ID to show only first 8 characters
   const formatUserId = (id: string) => `${id.substring(0, 8)}...`;
 
+  // Reset all filters
+  const resetFilters = () => {
+    form.reset({
+      country: '',
+      city: '',
+      hasAudio: false,
+      skillLevel: '',
+    });
+    setFilteredAgents(agents);
+    setShowFilters(false);
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-6">Agent Preview</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Agent Preview</h1>
+        
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-1"
+          >
+            <Filter className="h-4 w-4" />
+            Filters {showFilters ? '↑' : '↓'}
+          </Button>
+          
+          {showFilters && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={resetFilters}
+            >
+              Reset
+            </Button>
+          )}
+        </div>
+      </div>
+      
+      {showFilters && (
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <Form {...form}>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Country dropdown */}
+                <FormField
+                  control={form.control}
+                  name="country"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label>Country</Label>
+                      <FormControl>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-full justify-start">
+                              {field.value || "Select country"}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-56">
+                            <DropdownMenuItem onClick={() => field.onChange("")}>
+                              Any
+                            </DropdownMenuItem>
+                            {countries.map((country) => (
+                              <DropdownMenuItem 
+                                key={country} 
+                                onClick={() => field.onChange(country)}
+                              >
+                                {country}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                {/* City dropdown */}
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label>City</Label>
+                      <FormControl>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-full justify-start">
+                              {field.value || "Select city"}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-56">
+                            <DropdownMenuItem onClick={() => field.onChange("")}>
+                              Any
+                            </DropdownMenuItem>
+                            {cities.map((city) => (
+                              <DropdownMenuItem 
+                                key={city} 
+                                onClick={() => field.onChange(city)}
+                              >
+                                {city}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Skill level dropdown */}
+                <FormField
+                  control={form.control}
+                  name="skillLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label>Skill Level</Label>
+                      <FormControl>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-full justify-start">
+                              {field.value || "Select skill level"}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-56">
+                            <DropdownMenuItem onClick={() => field.onChange("")}>
+                              Any
+                            </DropdownMenuItem>
+                            {skillLevels.map((level) => (
+                              <DropdownMenuItem 
+                                key={level} 
+                                onClick={() => field.onChange(level)}
+                              >
+                                {level}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Has Audio checkbox */}
+                <FormField
+                  control={form.control}
+                  name="hasAudio"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-end space-x-3 space-y-0 pt-6">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <Label>Has Audio Only</Label>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </Form>
+          </CardContent>
+        </Card>
+      )}
       
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -97,13 +359,20 @@ const AgentPreview: React.FC = () => {
             </Card>
           ))}
         </div>
-      ) : agents.length === 0 ? (
+      ) : filteredAgents.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-600 text-lg">No agents found.</p>
+          <p className="text-gray-600 text-lg">No agents found matching your filters.</p>
+          <Button 
+            variant="outline" 
+            className="mt-4" 
+            onClick={resetFilters}
+          >
+            Reset Filters
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {agents.map((agent) => (
+          {filteredAgents.map((agent) => (
             <Card key={agent.id} className="shadow-md hover:shadow-lg transition-shadow duration-200">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4 mt-2">
