@@ -34,7 +34,7 @@ const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
     additional_skills: [],
     years_experience: '',
     availability: [],
-    salary_expectation: null,
+    salary_expectation: 500, // Set default to 500 USD
   });
 
   const form = useForm<ProfessionalDetailsData>({
@@ -63,7 +63,7 @@ const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
             additional_skills: data.additional_skills || [],
             years_experience: data.years_experience || '',
             availability: data.availability || [],
-            salary_expectation: data.salary_expectation || null,
+            salary_expectation: data.salary_expectation || 500, // Default to 500 if null
           };
           
           setData(formattedData);
@@ -504,9 +504,9 @@ const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
               type="number"
               id="salary_expectation"
               placeholder="e.g., 3000"
-              value={data.salary_expectation || ''}
+              value={data.salary_expectation || 500}
               onChange={(e) => {
-                const value = e.target.value ? Number(e.target.value) : null;
+                const value = e.target.value ? Number(e.target.value) : 500; // Default to 500 if empty
                 setData({ ...data, salary_expectation: value });
               }}
               className="w-full"
