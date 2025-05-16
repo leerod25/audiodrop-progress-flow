@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Skeleton } from "@/components/ui/skeleton";
-import { UserPlus } from 'lucide-react';
 import TeamInviteDialog from '@/components/auth/TeamInviteDialog';
 
 type BusinessProfileData = {
@@ -231,17 +230,7 @@ const BusinessProfileForm = ({ userId, onProfileUpdate }: BusinessProfileFormPro
     >
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-medium">Business Information</h3>
-        <Button 
-          type="button"
-          variant="outline" 
-          size="sm" 
-          className="flex items-center gap-2"
-          onClick={() => setIsInviteDialogOpen(true)}
-        >
-          <UserPlus size={16} />
-          <span>Invite Team</span>
-        </Button>
-        <TeamInviteDialog isOpen={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen} />
+        {/* Remove the Invite Team button from here since it's already in the header */}
       </div>
 
       {/* Business Name */}
