@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import AuthHeading from "@/components/auth/AuthHeading";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -17,6 +17,20 @@ const BusinessSignup = () => {
   // Get email and password from location state if available
   const emailFromState = location.state?.email || "";
   const passwordFromState = location.state?.password || "";
+
+  useEffect(() => {
+    // Check if user is already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate("/"); // Redirect to home if already logged in
+      }
+    });
+
+    // If no email was provided in state, redirect back to auth page
+    if (!emailFromState) {
+      navigate('/auth', { state: { tabIndex: 'signup' } });
+    }
+  }, [navigate, emailFromState]);
 
   return (
     <div className="container max-w-lg mx-auto py-10 px-4">

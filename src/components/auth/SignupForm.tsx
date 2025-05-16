@@ -25,22 +25,27 @@ const SignupForm = ({ setErrorMessage }: SignupFormProps) => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setErrorMessage(null);
 
-    try {
-      if (userRole === "business") {
-        // Navigate to business signup with email and password
-        navigate('/business-signup', { 
-          state: { 
-            email, 
-            password 
-          } 
-        });
-        return;
-      }
+    if (!email || !password) {
+      setErrorMessage("Please enter both email and password");
+      return;
+    }
 
-      // Only proceed with regular signup if agent role is selected
+    if (userRole === "business") {
+      // For business role, directly navigate to business signup form
+      navigate('/business-signup', { 
+        state: { 
+          email, 
+          password 
+        } 
+      });
+      return;
+    }
+
+    // Only proceed with regular agent signup
+    setLoading(true);
+    try {
       const { error, data } = await supabase.auth.signUp({ 
         email, 
         password,
