@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { toast } from 'sonner';
 import { Agent } from '@/types/agent';
+import { extractFilterData } from './extractFilterData';
 
 export function useRealAgents() {
   const supabase = useSupabaseClient();
@@ -16,6 +17,13 @@ export function useRealAgents() {
     const fetchRealAgents = async () => {
       try {
         setLoading(true);
+        
+        // First check if Supabase client is available
+        if (!supabase) {
+          console.error('Supabase client is not initialized');
+          setLoading(false);
+          return;
+        }
         
         // First get all profiles
         const { data: profiles, error: profilesError } = await supabase
@@ -105,37 +113,14 @@ export function useRealAgents() {
         console.log("Real profiles fetched:", agentsWithAudioInfo);
         
         setAgents(agentsWithAudioInfo);
-
-        // Extract unique values for filter dropdowns
-        const uniqueCountries = Array.from(
-          new Set(
-            agentsWithAudioInfo
-              .map(agent => agent.country)
-              .filter(Boolean) as string[]
-          )
-        ).sort();
         
-        const uniqueCities = Array.from(
-          new Set(
-            agentsWithAudioInfo
-              .map(agent => agent.city)
-              .filter(Boolean) as string[]
-          )
-        ).sort();
-        
-        const uniqueSkillLevels = Array.from(
-          new Set(
-            agentsWithAudioInfo
-              .map(agent => agent.computer_skill_level)
-              .filter(Boolean) as string[]
-          )
-        ).sort();
-
-        setCountries(uniqueCountries);
-        setCities(uniqueCities);
-        setSkillLevels(uniqueSkillLevels);
+        // Extract filter data
+        const filterData = extractFilterData(agentsWithAudioInfo);
+        setCountries(filterData.countries);
+        setCities(filterData.cities);
+        setSkillLevels(filterData.skillLevels);
       } catch (err) {
-        console.error('Unexpected error in AgentPreview:', err);
+        console.error('Unexpected error in useRealAgents:', err);
         toast.error('An error occurred while loading agents');
       } finally {
         setLoading(false);
