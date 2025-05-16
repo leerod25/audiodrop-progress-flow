@@ -22,6 +22,11 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
 }) => {
   const { audioList, loading: audioLoading, error } = useAgentAudio(agent.id);
   
+  console.log('AgentDetailCard rendering for agent:', agent.id);
+  console.log('Audio list:', audioList);
+  console.log('Audio loading:', audioLoading);
+  console.log('Audio error:', error);
+  
   return (
     <Card className="mb-6">
       <CardHeader>

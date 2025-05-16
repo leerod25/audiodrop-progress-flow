@@ -24,6 +24,8 @@ export function useAgentAudio(agentId: string | null) {
     const fetchAudios = async () => {
       try {
         setLoading(true);
+        console.log('Fetching audio for agent:', agentId);
+        
         const { data, error } = await supabase
           .from('audio_metadata')
           .select('id, title, audio_url, created_at')
@@ -34,6 +36,7 @@ export function useAgentAudio(agentId: string | null) {
           console.error('Error loading agent audio:', error);
           setError(error.message);
         } else if (data) {
+          console.log('Audio data received:', data.length, 'recordings');
           // normalize into our shape
           setAudioList(
             data.map(d => ({
