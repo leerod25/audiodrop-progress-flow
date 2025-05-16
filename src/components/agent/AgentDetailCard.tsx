@@ -60,19 +60,31 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
             <p className="text-sm text-red-500">Error loading recordings: {error}</p>
           ) : audioList.length > 0 ? (
             <div className="space-y-4">
-              {audioList.map(({ id, title, url, created_at }) => (
-                <div key={id} className="p-3 border rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <div>
-                      <span className="font-medium">{title}</span><br />
-                      <small className="text-gray-500">{new Date(created_at).toLocaleString()}</small>
+              {audioList.map(({ id, title, url, created_at }) => {
+                // Determine MIME type based on extension
+                const ext = url.split('.').pop()?.toLowerCase();
+                let type = '';
+                if (ext === 'mp3') type = 'audio/mpeg';
+                else if (ext === 'webm') type = 'audio/webm';
+                else if (ext === 'wav') type = 'audio/wav';
+                else if (ext === 'ogg') type = 'audio/ogg';
+                else if (ext === 'm4a') type = 'audio/mp4';
+
+                return (
+                  <div key={id} className="p-3 border rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <div>
+                        <span className="font-medium">{title}</span><br />
+                        <small className="text-gray-500">{created_at ? new Date(created_at).toLocaleString() : ''}</small>
+                      </div>
+                      <audio controls preload="none">
+                        <source src={url} type={type} />
+                        Your browser does not support audio playback.
+                      </audio>
                     </div>
-                    <audio controls src={url} preload="none">
-                      Your browser does not support audio playback.
-                    </audio>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="text-sm text-gray-500">No recordings available</p>
