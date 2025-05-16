@@ -6,10 +6,10 @@ import { useAgentFilter } from './useAgentFilter';
 import { useAgentFavorites } from './useAgentFavorites';
 import { Agent } from '@/types/agent';
 
-export function useAgentData(useFakeData: boolean) {
+export function useAgentData() {
   const { user, userRole } = useUserContext();
   
-  // Fetch raw (real or fake) list
+  // Fetch real agents list
   const { 
     agents: fetchedAgents, 
     loading, 
@@ -17,18 +17,18 @@ export function useAgentData(useFakeData: boolean) {
     cities, 
     skillLevels,
     isBusinessAccount 
-  } = useAgentFetch(useFakeData, userRole);
+  } = useAgentFetch(userRole);
   
   // Internal state
   const [agents, setAgents] = useState<Agent[]>([]);
   const [filteredAgents, setFilteredAgents] = useState<Agent[]>([]);
   
-  // Whenever fetchedAgents OR fake-mode changes, reset both lists
+  // Whenever fetchedAgents changes, reset both lists
   useEffect(() => {
-    console.log("Resetting agents; fake=", useFakeData, "count=", fetchedAgents.length);
+    console.log("Resetting agents; count=", fetchedAgents.length);
     setAgents(fetchedAgents);
     setFilteredAgents(fetchedAgents);
-  }, [fetchedAgents, useFakeData]);
+  }, [fetchedAgents]);
   
   // Apply your filter hook against the "live" filteredAgents state
   const { 
@@ -43,8 +43,7 @@ export function useAgentData(useFakeData: boolean) {
     afterFilter, 
     setAfterFilter, 
     user?.id, 
-    userRole,
-    useFakeData
+    userRole
   );
 
   return {

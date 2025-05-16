@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Filter } from 'lucide-react';
@@ -7,7 +8,6 @@ import { FilterValues } from '@/components/agents/AgentFilters';
 import AgentCard from '@/components/agents/AgentCard';
 import AgentFilters from '@/components/agents/AgentFilters';
 import AgentAudioModal from '@/components/agents/AgentAudioModal';
-import DataSourceToggle from '@/components/agents/DataSourceToggle';
 import AgentLoadingSkeleton from '@/components/agents/AgentLoadingSkeleton';
 
 // Import hooks
@@ -15,7 +15,6 @@ import { useAgentData } from '@/hooks/useAgentData';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 
 const AgentPreview: React.FC = () => {
-  const [useFakeData, setUseFakeData] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
 
   // Use custom hooks
@@ -29,7 +28,7 @@ const AgentPreview: React.FC = () => {
     agents,
     isBusinessAccount, 
     toggleFavorite 
-  } = useAgentData(useFakeData);
+  } = useAgentData();
   
   const {
     isPlaying,
@@ -70,22 +69,12 @@ const AgentPreview: React.FC = () => {
     setShowFilters(false);
   };
 
-  // Toggle between real and fake data
-  const toggleDataSource = () => {
-    setUseFakeData(!useFakeData);
-  };
-
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Agent Preview</h1>
         
         <div className="flex items-center gap-2">
-          <DataSourceToggle 
-            useFakeData={useFakeData} 
-            onToggleDataSource={toggleDataSource} 
-          />
-          
           <Button 
             variant="outline" 
             size="sm" 
@@ -107,14 +96,6 @@ const AgentPreview: React.FC = () => {
           )}
         </div>
       </div>
-      
-      {useFakeData && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-6">
-          <p className="text-yellow-700 text-sm">
-            <strong>Test Mode:</strong> Showing 10 fake profiles (5 boys and 5 girls) with sample audio for testing purposes.
-          </p>
-        </div>
-      )}
       
       {showFilters && (
         <AgentFilters

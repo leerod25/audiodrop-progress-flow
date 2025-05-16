@@ -10,8 +10,7 @@ export function useAgentFavorites(
   filteredAgents: Agent[], 
   setFilteredAgents: React.Dispatch<React.SetStateAction<Agent[]>>,
   userId: string | undefined, 
-  userRole: string | null,
-  useFakeData: boolean
+  userRole: string | null
 ) {
   const supabase = useSupabaseClient();
   const isBusinessAccount = userRole === 'business';
@@ -21,10 +20,8 @@ export function useAgentFavorites(
     const loadFavorites = async () => {
       if (!userId || userRole !== 'business') return;
       
-      if (useFakeData) return; // Don't load favorites for fake data
-      
       try {
-        // Directly query the business_favorites table instead of using RPC
+        // Directly query the business_favorites table
         const { data, error } = await supabase
           .from('business_favorites')
           .select('agent_id')
@@ -60,7 +57,7 @@ export function useAgentFavorites(
     };
     
     loadFavorites();
-  }, [userId, userRole, useFakeData, setAgents, setFilteredAgents, supabase]);
+  }, [userId, userRole, setAgents, setFilteredAgents, supabase]);
   
   // Toggle favorites
   const toggleFavorite = async (agentId: string, currentStatus: boolean) => {
@@ -75,27 +72,8 @@ export function useAgentFavorites(
     }
 
     try {
-      // If using fake data, just update the local state
-      if (useFakeData) {
-        // Update local state
-        setAgents(prevAgents => 
-          prevAgents.map(agent => 
-            agent.id === agentId ? { ...agent, is_favorite: !currentStatus } : agent
-          )
-        );
-        
-        setFilteredAgents(prevAgents => 
-          prevAgents.map(agent => 
-            agent.id === agentId ? { ...agent, is_favorite: !currentStatus } : agent
-          )
-        );
-        
-        toast.success(currentStatus ? 'Agent removed from favorites' : 'Agent added to favorites');
-        return;
-      }
-
       if (currentStatus) {
-        // Remove from favorites by directly querying the business_favorites table
+        // Remove from favorites
         const { error } = await supabase
           .from('business_favorites')
           .delete()
@@ -105,7 +83,7 @@ export function useAgentFavorites(
         if (error) throw error;
         toast.success('Agent removed from favorites');
       } else {
-        // Add to favorites by directly inserting into the business_favorites table
+        // Add to favorites
         const { error } = await supabase
           .from('business_favorites')
           .insert({
