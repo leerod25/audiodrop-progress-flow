@@ -34,33 +34,28 @@ export function useAgentAudio(agentId: string | null): AudioHookResult {
         const { data: files, error: listErr } = await supabase.storage
           .from(bucket)
           .list(agentId, { limit: 1, sortBy: { column: 'updated_at', order: 'desc' } });
-        
-        if (listErr) {
-          console.error('[useAgentAudio] list error:', listErr);
-          setAudio(null);
-        } else if (files && files.length > 0) {
+        if (listErr) throw listErr;
+
+        if (files && files.length > 0) {
           const file = files[0];
           const path = `${agentId}/${file.name}`;
-          const { data } = supabase.storage
+          const { data: urlData, error: urlErr } = supabase.storage
             .from(bucket)
             .getPublicUrl(path);
-            
-          if (!data?.publicUrl) {
-            throw new Error('Failed to get public URL');
-          }
-          
+          if (urlErr || !urlData?.publicUrl) throw urlErr || new Error('Failed to get URL');
+
           setAudio({
             id: file.name,
             title: file.name,
-            url: data.publicUrl,
-            updated_at: file.updated_at || new Date().toISOString()
+            url: urlData.publicUrl,
+            updated_at: file.updated_at || file.created_at || ''
           });
         } else {
           setAudio(null);
         }
       } catch (err: any) {
         console.error('[useAgentAudio] error:', err);
-        setError(err.message || 'Failed to fetch recording');
+        setError('Failed to load recording');
         setAudio(null);
       } finally {
         setLoading(false);

@@ -55,10 +55,25 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
           <h3 className="text-lg font-medium mb-2">Audio Recording</h3>
           
           {loading ? (
-            <p className="text-sm text-gray-500">Loading recording...</p>
+            <div className="animate-pulse space-y-2">
+              <div className="h-6 bg-gray-200 rounded w-1/3" />
+              <div className="h-4 bg-gray-200 rounded w-full" />
+            </div>
           ) : error ? (
-            <p className="text-sm text-red-500">Error loading recording: {error}</p>
-          ) : audio ? (
+            <div className="text-center text-red-500 py-4">
+              <p>{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded"
+              >
+                Retry
+              </button>
+            </div>
+          ) : !audio ? (
+            <div className="text-center text-gray-500 py-8">
+              <p>No recording available.</p>
+            </div>
+          ) : (
             <div className="p-3 border rounded-lg">
               <div className="flex flex-col space-y-2">
                 <div>
@@ -78,8 +93,6 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
                 </div>
               </div>
             </div>
-          ) : (
-            <p className="text-sm text-gray-500">No recording available</p>
           )}
         </div>
         
