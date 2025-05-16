@@ -46,15 +46,10 @@ export async function testAudioStorage(agentId: string) {
   console.log(`🔗 Getting URLs for ${files.length} files:`);
   for (const file of files) {
     const path = `${agentId}/${file.name}`;
-    const { data: urlData, error: urlErr } = supabase.storage
+    const { data: urlData } = supabase.storage
       .from(bucket)
       .getPublicUrl(path);
       
-    if (urlErr) {
-      console.error(`❌ Error getting URL for ${path}:`, urlErr);
-      continue;
-    }
-    
     console.log(`✅ ${file.name}:`, urlData?.publicUrl);
     
     // Test if URL is accessible
