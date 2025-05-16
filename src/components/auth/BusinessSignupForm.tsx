@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Key, Briefcase, Globe, Phone, Building, MapPin, User as UserCircle } from "lucide-react";
 import { CardContent, CardFooter } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +16,8 @@ import * as z from "zod";
 
 interface BusinessSignupFormProps {
   setErrorMessage: (message: string | null) => void;
+  initialEmail?: string;
+  initialPassword?: string;
 }
 
 const phoneRegex = /^(\+?1)?[-.\s]?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})$/;
@@ -34,7 +35,11 @@ const businessSignupSchema = z.object({
 
 type BusinessSignupFormValues = z.infer<typeof businessSignupSchema>;
 
-const BusinessSignupForm = ({ setErrorMessage }: BusinessSignupFormProps) => {
+const BusinessSignupForm = ({ 
+  setErrorMessage, 
+  initialEmail = "", 
+  initialPassword = "" 
+}: BusinessSignupFormProps) => {
   const [loading, setLoading] = useState(false);
   const { toast: uiToast } = useToast();
   const navigate = useNavigate();
@@ -42,8 +47,8 @@ const BusinessSignupForm = ({ setErrorMessage }: BusinessSignupFormProps) => {
   const form = useForm<BusinessSignupFormValues>({
     resolver: zodResolver(businessSignupSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: initialEmail,
+      password: initialPassword,
       contactName: "",
       companyName: "",
       website: "",

@@ -28,6 +28,12 @@ const SignupForm = ({ setErrorMessage }: SignupFormProps) => {
     setLoading(true);
     setErrorMessage(null);
 
+    if (userRole === "business") {
+      // Instead of automatically navigating, we redirect only on form submission
+      navigate('/business-signup', { state: { email, password } });
+      return;
+    }
+
     try {
       const { error, data } = await supabase.auth.signUp({ 
         email, 
@@ -77,11 +83,6 @@ const SignupForm = ({ setErrorMessage }: SignupFormProps) => {
       setLoading(false);
     }
   };
-
-  if (userRole === "business") {
-    navigate('/business-signup');
-    return null;
-  }
 
   return (
     <form onSubmit={handleSignUp}>
@@ -155,7 +156,7 @@ const SignupForm = ({ setErrorMessage }: SignupFormProps) => {
       
       <CardFooter>
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Creating account..." : "Create Agent Account"}
+          {loading ? "Creating account..." : userRole === "agent" ? "Create Agent Account" : "Continue to Business Signup"}
         </Button>
       </CardFooter>
     </form>
