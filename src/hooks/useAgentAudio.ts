@@ -28,21 +28,23 @@ export function useAgentAudio(agentId: string | null) {
           .list(agentId, { limit: 100 });
         if (listErr) throw listErr;
 
-        const audios = (files || []).map((file: any) => {
+        const audios: AgentAudio[] = [];
+        for (const file of files || []) {
           const path = `${agentId}/${file.name}`;
           const { data: urlData } = supabase.storage
             .from(bucket)
             .getPublicUrl(path);
           if (!urlData?.publicUrl) {
-            throw new Error('Failed to get public URL');
+            console.error('[useAgentAudio] getPublicUrl error for', path);
+            continue;
           }
-          return {
+          audios.push({
             id: file.name,
             title: file.name,
             url: urlData.publicUrl,
             created_at: file.updated_at || ''
-          };
-        });
+          });
+        }
 
         return audios;
       } catch (err: any) {
