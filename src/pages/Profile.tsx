@@ -14,11 +14,15 @@ import UserProfileHeader from '@/components/profile/UserProfileHeader';
 import ProfileSkeleton from '@/components/profile/ProfileSkeleton';
 import ProfileAudioList from '@/components/profile/ProfileAudioList';
 import ProfileIncompleteAlert from '@/components/profile/ProfileIncompleteAlert';
+import BusinessProfileForm from '@/components/BusinessProfileForm';
+import BusinessProfileHeader from '@/components/profile/BusinessProfileHeader';
+import BusinessProfileIncompleteAlert from '@/components/profile/BusinessProfileIncompleteAlert';
+import { useUserContext } from '@/contexts/UserContext';
 
 export default function Profile() {
-  const [user, setUser] = useState<User | null>(null);
   const [profileCompleted, setProfileCompleted] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const { user, userRole } = useUserContext();
   const { audio, loading: loadingSingle } = useLatestAudio(user);
   const { audios, loading: loadingAll, deleteAudio, renameAudio } = useUserAudios(user);
   const navigate = useNavigate();
@@ -27,13 +31,17 @@ export default function Profile() {
     setLoading(true);
     // Check if user is logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
       if (!session?.user) {
         toast.error('You must be logged in to view your profile');
         navigate('/auth');
       } else {
-        // Check if profile is completed
-        checkProfileCompletion(session.user.id);
+        // Check if profile is completed based on user role
+        if (userRole === 'business') {
+          checkBusinessProfileCompletion(session.user.id);
+        } else {
+          // Default to agent profile
+          checkAgentProfileCompletion(session.user.id);
+        }
       }
       setLoading(false);
     });
@@ -41,19 +49,22 @@ export default function Profile() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setUser(session?.user ?? null);
         if (!session?.user) {
           navigate('/auth');
         } else if (event === 'SIGNED_IN') {
-          checkProfileCompletion(session.user.id);
+          if (userRole === 'business') {
+            checkBusinessProfileCompletion(session.user.id);
+          } else {
+            checkAgentProfileCompletion(session.user.id);
+          }
         }
       }
     );
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, userRole]);
 
-  const checkProfileCompletion = async (userId: string) => {
+  const checkAgentProfileCompletion = async (userId: string) => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -70,15 +81,47 @@ export default function Profile() {
       
       // Check if essential fields are completed
       const isCompleted = data && 
-                          data.full_name && 
-                          data.phone && 
-                          data.city && 
-                          data.country && 
-                          data.computer_skill_level;
+                        data.full_name && 
+                        data.phone && 
+                        data.city && 
+                        data.country && 
+                        data.computer_skill_level;
       
       setProfileCompleted(!!isCompleted);
     } catch (error) {
       console.error('Error checking profile completion:', error);
+      setProfileCompleted(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkBusinessProfileCompletion = async (userId: string) => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('business_profiles')
+        .select('business_name, phone, city, country, industry')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking business profile completion:', error);
+        setProfileCompleted(false);
+        return;
+      }
+      
+      // Check if essential business fields are completed
+      const isCompleted = data && 
+                        data.business_name && 
+                        data.phone && 
+                        data.city && 
+                        data.country &&
+                        data.industry;
+      
+      setProfileCompleted(!!isCompleted);
+    } catch (error) {
+      console.error('Error checking business profile completion:', error);
       setProfileCompleted(false);
     } finally {
       setLoading(false);
@@ -101,6 +144,37 @@ export default function Profile() {
     return true;
   };
 
+  // Business profile view
+  if (userRole === 'business') {
+    return (
+      <motion.div 
+        className="container mx-auto py-10 px-4 md:px-6 max-w-3xl"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <div className="space-y-8">
+          <Card className="bg-white shadow-md">
+            <BusinessProfileHeader profileCompleted={profileCompleted} />
+            <CardContent className="space-y-6">
+              {user && (
+                <>
+                  <BusinessProfileIncompleteAlert isVisible={!profileCompleted} />
+                  <BusinessProfileForm 
+                    userId={user.id} 
+                    onProfileUpdate={() => checkBusinessProfileCompletion(user.id)} 
+                  />
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Agent profile view (default)
   return (
     <motion.div 
       className="container mx-auto py-10 px-4 md:px-6 max-w-3xl"
@@ -116,7 +190,7 @@ export default function Profile() {
             {user && (
               <>
                 <ProfileIncompleteAlert isVisible={!profileCompleted} />
-                <ProfileForm userId={user.id} onProfileUpdate={() => checkProfileCompletion(user.id)} />
+                <ProfileForm userId={user.id} onProfileUpdate={() => checkAgentProfileCompletion(user.id)} />
               </>
             )}
           </CardContent>
