@@ -14,9 +14,14 @@ const LandingPage: React.FC = () => {
           <p className="mt-4 text-xl lg:text-2xl max-w-2xl">
             Professional inbound & outbound calling services that source success for your business.
           </p>
-          <p className="mt-2 italic text-gray-200">
-            <strong>Fons</strong> (Latin): "source" or "fountain"
-          </p>
+          <div className="mt-4 space-y-2">
+            <p className="italic text-gray-200">
+              <strong>1. A SOURCE</strong> — the origin or spring from which something flows.
+            </p>
+            <p className="italic text-gray-200">
+              <strong>2. A wellspring of growth, power, and elevation</strong> — built to take your company to the next level.
+            </p>
+          </div>
           <div className="mt-8">
             <a
               href="#services"
@@ -63,11 +68,17 @@ const LandingPage: React.FC = () => {
         <div className="container mx-auto px-6 lg:px-20 flex flex-col lg:flex-row items-center">
           <div className="lg:w-1/2 mb-8 lg:mb-0">
             <h2 className="text-4xl font-bold mb-4">Why <span className="text-blue-600">Fons</span>?</h2>
-            <p className="text-gray-700 leading-relaxed">
-              In ancient Rome, <strong>fons</strong> referred to a spring or fountain—a source of life-giving water.
-              At Out-Fons, we're your source of high-quality voice services,
-              ensuring your business stays fueled with clear communication, meaningful connections, and growth.
+            <p className="text-gray-700 leading-relaxed mb-4">
+              Derived from the Latin word "fons" meaning "source," Out-Fons is your trusted partner in outsourced calling solutions. We specialize in both inbound and outbound calling services, helping businesses connect, support, and grow through powerful human interactions.
             </p>
+            <div className="space-y-2 text-gray-700">
+              <p className="italic">
+                <span className="font-semibold">"Fons potentiae"</span> – a source of strength.
+              </p>
+              <p className="italic">
+                <span className="font-semibold">"Fons progressionis"</span> – a source of growth.
+              </p>
+            </div>
           </div>
           <div className="lg:w-1/2">
             <img
