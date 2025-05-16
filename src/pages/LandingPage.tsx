@@ -1,12 +1,24 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 const LandingPage: React.FC = () => {
   return (
     <main className="font-sans antialiased text-gray-900">
+      {/* Banner Image */}
+      <section className="w-full">
+        <AspectRatio ratio={3/1} className="bg-muted">
+          <img
+            src="/lovable-uploads/e9841923-6670-49dd-9c82-bf7106882100.png"
+            alt="Call center headset on laptop"
+            className="w-full h-full object-cover"
+          />
+        </AspectRatio>
+      </section>
+      
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-blue-600 to-teal-400 text-white h-screen flex items-center">
+      <section className="relative bg-gradient-to-r from-blue-600 to-teal-400 text-white py-20">
         <div className="container mx-auto px-6 lg:px-20">
           <h1 className="text-5xl lg:text-7xl font-extrabold leading-tight">
             Out-Fons
