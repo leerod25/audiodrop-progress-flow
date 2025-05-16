@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,14 +10,16 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { User } from "@supabase/supabase-js";
-import { LogIn, UserPlus, Mail, Key } from "lucide-react";
+import { LogIn, UserPlus, Mail, Key, Briefcase, UserCircle } from "lucide-react";
 import { toast } from "sonner";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [userRole, setUserRole] = useState<"agent" | "business">("agent");
   const { toast: uiToast } = useToast();
   const navigate = useNavigate();
 
@@ -44,7 +47,7 @@ const Auth = () => {
             
             // If profile data is incomplete, redirect to profile page
             if (!data || !data.full_name || !data.phone || !data.city || !data.country) {
-              toast("Complete your agent profile", {
+              toast("Complete your profile", {
                 description: "Please fill out your profile information to continue.",
               });
               navigate("/profile");
@@ -69,10 +72,24 @@ const Auth = () => {
         password,
         options: {
           emailRedirectTo: window.location.origin,
+          data: {
+            role: userRole
+          }
         }
       });
       
       if (error) throw error;
+      
+      // Create role in dedicated table
+      if (data.user) {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({ user_id: data.user.id, role: userRole });
+        
+        if (roleError) {
+          console.error("Error setting user role:", roleError);
+        }
+      }
       
       uiToast({
         title: "Account created!",
@@ -81,7 +98,7 @@ const Auth = () => {
       
       // If no error and we have a user, immediately redirect to profile
       if (data.user) {
-        toast("Complete your agent profile", {
+        toast("Complete your profile", {
           description: "Please fill out your profile information to continue.",
         });
         navigate('/profile');
@@ -124,7 +141,7 @@ const Auth = () => {
         
         // If profile is incomplete, redirect to profile page
         if (!profileData || !profileData.full_name || !profileData.phone || !profileData.city || !profileData.country) {
-          toast("Complete your agent profile", {
+          toast("Complete your profile", {
             description: "Please fill out your profile information to continue.",
           });
           navigate("/profile");
@@ -151,7 +168,7 @@ const Auth = () => {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Welcome</CardTitle>
           <CardDescription>
-            Sign in to your account or create a new agent profile
+            Sign in to your account or create a new profile
           </CardDescription>
         </CardHeader>
         
@@ -246,16 +263,43 @@ const Auth = () => {
                     Password must be at least 6 characters long
                   </p>
                 </div>
+
+                <div className="space-y-3">
+                  <Label>Account Type</Label>
+                  <RadioGroup 
+                    value={userRole} 
+                    onValueChange={(value) => setUserRole(value as "agent" | "business")}
+                    className="flex flex-col space-y-2"
+                  >
+                    <div className="flex items-center space-x-2 rounded-md border p-3 hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="agent" id="agent" />
+                      <Label htmlFor="agent" className="flex items-center cursor-pointer">
+                        <UserCircle className="mr-2 h-5 w-5" />
+                        Agent
+                        <span className="ml-2 text-xs text-gray-500">(Work as an agent)</span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 rounded-md border p-3 hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="business" id="business" />
+                      <Label htmlFor="business" className="flex items-center cursor-pointer">
+                        <Briefcase className="mr-2 h-5 w-5" />
+                        Business Owner
+                        <span className="ml-2 text-xs text-gray-500">(Hire agents)</span>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
                 <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
                   <p className="text-amber-800 text-sm">
-                    After sign up, you'll need to complete your agent profile before using the system.
+                    After sign up, you'll need to complete your profile before using the system.
                   </p>
                 </div>
               </CardContent>
               
               <CardFooter>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Creating account..." : "Create Agent Account"}
+                  {loading ? "Creating account..." : userRole === "agent" ? "Create Agent Account" : "Create Business Account"}
                 </Button>
               </CardFooter>
             </form>
