@@ -16,68 +16,64 @@ export function useAgentAudio(agentId: string | null) {
 
   useEffect(() => {
     if (!agentId) {
-      console.warn('[useAgentAudio] No agentId provided');
       setAudioList([]);
       return;
     }
 
-    const fetchAudios = async () => {
-      setLoading(true);
-      setError(null);
-      console.groupCollapsed('[useAgentAudio] Querying user_id:', agentId);
-
+    const fetchFromMetadata = async (): Promise<AgentAudio[]> => {
       try {
         const { data, error: supaErr } = await supabase
           .from('audio_metadata')
-          .select('id, title, audio_url, created_at')
+          .select('id, title, audio_url as url, created_at')
           .eq('user_id', agentId)
           .order('created_at', { ascending: false });
-        console.log('[useAgentAudio] user_id query result:', { data, supaErr });
-
         if (supaErr) throw supaErr;
+        return (data || []).map(d => ({ ...d, id: d.id, title: d.title ?? 'Untitled' }));
+      } catch {
+        return [];
+      }
+    };
 
-        const normalized: AgentAudio[] = await Promise.all(
-          (data || []).map(async d => {
-            let url = d.audio_url;
-            // If it's not an HTTP URL, generate public or signed URL from 'audio'
-            if (!/^https?:\/\//.test(url)) {
-              // Try public URL first
-              const { data: urlData } = supabase.storage
-                .from('audio')
-                .getPublicUrl(url);
-              console.log('[useAgentAudio] getPublicUrl:', { urlData });
-              if (urlData?.publicUrl) {
-                url = urlData.publicUrl;
-              } else {
-                // Fallback to signed URL for private buckets
-                try {
-                  const { data: signedData, error: signedErr } = await supabase.storage
-                    .from('audio')
-                    .createSignedUrl(url, 60); // 60s expiry
-                  console.log('[useAgentAudio] createSignedUrl:', { signedData, signedErr });
-                  if (signedData?.signedUrl) url = signedData.signedUrl;
-                } catch (signErr) {
-                  console.warn('[useAgentAudio] signed URL error:', signErr);
-                }
-              }
-            }
+    const fetchFromStorage = async (): Promise<AgentAudio[]> => {
+      try {
+        const { data: files, error: listErr } = await supabase.storage
+          .from('audio')
+          .list(agentId, { limit: 100 });
+        if (listErr) throw listErr;
+        return Promise.all(
+          files.map(async (file: any) => {
+            const path = `${agentId}/${file.name}`;
+            const { data: urlData, error: urlErr } = supabase.storage
+              .from('audio')
+              .getPublicUrl(path);
+            if (urlErr) throw urlErr;
             return {
-              id: d.id,
-              title: d.title ?? 'Untitled',
-              url,
-              created_at: d.created_at
+              id: file.name,
+              title: file.name,
+              url: urlData.publicUrl,
+              created_at: file.updated_at ?? ''
             };
           })
         );
+      } catch {
+        return [];
+      }
+    };
 
-        console.log('[useAgentAudio] Final normalized list:', normalized);
-        setAudioList(normalized);
+    const fetchAudios = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const meta = await fetchFromMetadata();
+        if (meta.length) {
+          setAudioList(meta);
+        } else {
+          const storage = await fetchFromStorage();
+          setAudioList(storage);
+        }
       } catch (err: any) {
-        console.error('[useAgentAudio] Error:', err.message || err);
-        setError(err.message || 'Error fetching audio');
-        setAudioList([]);
+        setError(err.message || 'Failed to fetch audio');
       } finally {
-        console.groupEnd();
         setLoading(false);
       }
     };
