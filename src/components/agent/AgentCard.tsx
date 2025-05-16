@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,11 @@ const AgentCard: React.FC<AgentCardProps> = ({
   return (
     <Card 
       className="shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
-      onClick={() => agent.has_audio ? openAudioModal(agent) : showAgentDetails(agent)}
+      onClick={(e) => {
+        e.preventDefault();
+        console.log("Card clicked, showing agent details:", agent.id);
+        showAgentDetails(agent);
+      }}
     >
       <CardContent className="p-5">
         <div className="flex items-center justify-between mb-4 mt-2">
@@ -83,19 +86,18 @@ const AgentCard: React.FC<AgentCardProps> = ({
           )}
           
           <div className="flex space-x-2">
-            {agent.has_audio && (
-              <Button 
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  showAgentDetails(agent);
-                }}
-                className="text-sm"
-              >
-                View All Recordings
-              </Button>
-            )}
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log("View All Recordings clicked for:", agent.id);
+                showAgentDetails(agent);
+              }}
+              className="text-sm"
+            >
+              View All Recordings
+            </Button>
             
             <Button 
               variant={agent.has_audio ? "default" : "ghost"}
@@ -103,7 +105,10 @@ const AgentCard: React.FC<AgentCardProps> = ({
               disabled={!agent.has_audio}
               onClick={(e) => {
                 e.stopPropagation();
-                agent.has_audio && openAudioModal(agent);
+                if (agent.has_audio) {
+                  console.log("Listen clicked for:", agent.id);
+                  openAudioModal(agent);
+                }
               }}
               className="text-sm"
             >
