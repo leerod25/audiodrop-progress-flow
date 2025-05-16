@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,6 +29,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { generateFakeProfiles } from '@/utils/fakeProfiles';
 
 interface Agent {
   id: string;
@@ -69,6 +70,7 @@ const AgentPreview: React.FC = () => {
   const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
   const [showAudioModal, setShowAudioModal] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<Agent | null>(null);
+  const [useFakeData, setUseFakeData] = useState(true);
   const navigate = useNavigate();
   const { user, userRole } = useUserContext();
 
@@ -90,6 +92,45 @@ const AgentPreview: React.FC = () => {
       try {
         setLoading(true);
         
+        // If using fake data, generate fake profiles
+        if (useFakeData) {
+          const fakeAgents = generateFakeProfiles();
+          
+          // Extract unique values for filter dropdowns from fake data
+          const uniqueCountries = Array.from(
+            new Set(
+              fakeAgents
+                .map(agent => agent.country)
+                .filter(Boolean) as string[]
+            )
+          ).sort();
+          
+          const uniqueCities = Array.from(
+            new Set(
+              fakeAgents
+                .map(agent => agent.city)
+                .filter(Boolean) as string[]
+            )
+          ).sort();
+          
+          const uniqueSkillLevels = Array.from(
+            new Set(
+              fakeAgents
+                .map(agent => agent.computer_skill_level)
+                .filter(Boolean) as string[]
+            )
+          ).sort();
+          
+          setAgents(fakeAgents);
+          setFilteredAgents(fakeAgents);
+          setCountries(uniqueCountries);
+          setCities(uniqueCities);
+          setSkillLevels(uniqueSkillLevels);
+          setLoading(false);
+          return;
+        }
+        
+        // Otherwise fetch real data from Supabase
         // First get all profiles
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
@@ -186,7 +227,7 @@ const AgentPreview: React.FC = () => {
     };
 
     fetchAgents();
-  }, [user, userRole, isBusinessAccount]);
+  }, [user, userRole, isBusinessAccount, useFakeData]);
 
   // Apply filters whenever form values change
   const applyFilters = (values: FilterValues) => {
@@ -269,6 +310,25 @@ const AgentPreview: React.FC = () => {
     }
 
     try {
+      // If using fake data, just update the local state
+      if (useFakeData) {
+        // Update local state
+        setAgents(prevAgents => 
+          prevAgents.map(agent => 
+            agent.id === agentId ? { ...agent, is_favorite: !currentStatus } : agent
+          )
+        );
+        
+        setFilteredAgents(prevAgents => 
+          prevAgents.map(agent => 
+            agent.id === agentId ? { ...agent, is_favorite: !currentStatus } : agent
+          )
+        );
+        
+        toast.success(currentStatus ? 'Agent removed from favorites' : 'Agent added to favorites');
+        return;
+      }
+
       if (currentStatus) {
         // Remove from favorites using RPC function with proper typing
         const { error } = await supabase.rpc('remove_business_favorite', { 
@@ -358,12 +418,25 @@ const AgentPreview: React.FC = () => {
     setCurrentAgent(null);
   };
 
+  // Toggle between real and fake data
+  const toggleDataSource = () => {
+    setUseFakeData(!useFakeData);
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Agent Preview</h1>
         
         <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mr-4">
+            <Label htmlFor="fake-data-toggle">Use Fake Data</Label>
+            <Switch
+              id="fake-data-toggle"
+              checked={useFakeData}
+              onCheckedChange={toggleDataSource}
+            />
+          </div>
           <Button 
             variant="outline" 
             size="sm" 
@@ -385,6 +458,14 @@ const AgentPreview: React.FC = () => {
           )}
         </div>
       </div>
+      
+      {useFakeData && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-6">
+          <p className="text-yellow-700 text-sm">
+            <strong>Test Mode:</strong> Showing 10 fake profiles (5 boys and 5 girls) with sample audio for testing purposes.
+          </p>
+        </div>
+      )}
       
       {showFilters && (
         <Card className="mb-6">
