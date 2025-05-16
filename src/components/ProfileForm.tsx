@@ -150,18 +150,6 @@ const ProfileForm = ({ userId }: ProfileFormProps) => {
         </div>
 
         <div>
-          <Label htmlFor="description">About Me</Label>
-          <Textarea
-            id="description"
-            name="description"
-            value={profile?.description || ''}
-            onChange={handleChange}
-            disabled={!isEditing}
-            className="min-h-[100px] transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
-          />
-        </div>
-
-        <div>
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
@@ -174,17 +162,31 @@ const ProfileForm = ({ userId }: ProfileFormProps) => {
           />
         </div>
 
-        <div>
-          <Label htmlFor="phone">Phone</Label>
-          <Input
-            id="phone"
-            name="phone"
-            type="tel"
-            value={profile?.phone || ''}
-            onChange={handleChange}
-            disabled={!isEditing}
-            className="transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="phone">Phone</Label>
+            <Input
+              id="phone"
+              name="phone"
+              type="tel"
+              value={profile?.phone || ''}
+              onChange={handleChange}
+              disabled={!isEditing}
+              className="transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="whatsapp">WhatsApp</Label>
+            <Input
+              id="whatsapp"
+              name="whatsapp"
+              value={profile?.whatsapp || ''}
+              onChange={handleChange}
+              disabled={!isEditing}
+              className="transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
+            />
+          </div>
         </div>
 
         <div>
@@ -206,14 +208,14 @@ const ProfileForm = ({ userId }: ProfileFormProps) => {
         </div>
 
         <div>
-          <Label htmlFor="whatsapp">WhatsApp</Label>
-          <Input
-            id="whatsapp"
-            name="whatsapp"
-            value={profile?.whatsapp || ''}
+          <Label htmlFor="description">About Me</Label>
+          <Textarea
+            id="description"
+            name="description"
+            value={profile?.description || ''}
             onChange={handleChange}
             disabled={!isEditing}
-            className="transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
+            className="min-h-[100px] transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
           />
         </div>
 
