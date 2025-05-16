@@ -6,52 +6,36 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 const LandingPage: React.FC = () => {
   return (
     <main className="font-sans antialiased text-gray-900">
-      {/* Banner Image */}
-      <section className="w-full">
-        <AspectRatio ratio={3/1} className="bg-muted">
-          <img
-            src="/lovable-uploads/e9841923-6670-49dd-9c82-bf7106882100.png"
-            alt="Call center headset on laptop"
-            className="w-full h-full object-cover"
-          />
+      {/* Banner Image with Text Overlay */}
+      <section className="w-full relative">
+        <AspectRatio ratio={3/1} className="bg-gradient-to-r from-blue-600 to-teal-400">
+          <div className="absolute inset-0 flex flex-col justify-center px-6 lg:px-20 text-white">
+            <h1 className="text-5xl lg:text-7xl font-extrabold leading-tight">
+              Out-Fons
+            </h1>
+            <p className="mt-4 text-xl lg:text-2xl max-w-2xl">
+              Professional inbound & outbound calling services that source success for your business.
+            </p>
+            <div className="mt-4 space-y-2">
+              <p className="italic text-gray-200">
+                <strong>1. A SOURCE</strong> — the origin or spring from which something flows.
+              </p>
+              <p className="italic text-gray-200">
+                <strong>2. A wellspring of growth, power, and elevation</strong> — built to take your company to the next level.
+              </p>
+            </div>
+            <div className="mt-8">
+              <a
+                href="#services"
+                className="inline-block bg-white text-blue-600 font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
+              >
+                Our Services
+              </a>
+            </div>
+          </div>
         </AspectRatio>
       </section>
       
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-blue-600 to-teal-400 text-white py-20">
-        <div className="container mx-auto px-6 lg:px-20">
-          <h1 className="text-5xl lg:text-7xl font-extrabold leading-tight">
-            Out-Fons
-          </h1>
-          <p className="mt-4 text-xl lg:text-2xl max-w-2xl">
-            Professional inbound & outbound calling services that source success for your business.
-          </p>
-          <div className="mt-4 space-y-2">
-            <p className="italic text-gray-200">
-              <strong>1. A SOURCE</strong> — the origin or spring from which something flows.
-            </p>
-            <p className="italic text-gray-200">
-              <strong>2. A wellspring of growth, power, and elevation</strong> — built to take your company to the next level.
-            </p>
-          </div>
-          <div className="mt-8">
-            <a
-              href="#services"
-              className="inline-block bg-white text-blue-600 font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
-            >
-              Our Services
-            </a>
-          </div>
-        </div>
-        <div className="absolute bottom-0 right-0 w-1/2 h-1/2">
-          <img
-            src="/lovable-uploads/e27bc858-b9dc-4d9c-bcb8-e45d40d44623.png"
-            alt="Call center professional with headset"
-            className="w-full h-full object-cover rounded-tl-3xl"
-          />
-        </div>
-      </section>
-
       {/* Services Section */}
       <section id="services" className="py-20 bg-white">
         <div className="container mx-auto px-6 lg:px-20">
