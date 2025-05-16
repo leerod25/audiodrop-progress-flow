@@ -52,6 +52,14 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
           </Button>
         )}
         
+        {/* Debug: Raw Audio Data Display */}
+        <div className="mt-4 p-3 bg-gray-100 rounded-md">
+          <h3 className="text-sm font-semibold mb-2">Debug: Audio Data</h3>
+          <pre className="text-xs overflow-auto max-h-40">
+            {JSON.stringify({audioList, loading, error}, null, 2)}
+          </pre>
+        </div>
+        
         {/* Audio recordings list */}
         <div className="mt-4">
           <h3 className="text-lg font-medium mb-2">All Recordings</h3>
