@@ -12,6 +12,7 @@ import { Mic } from 'lucide-react';
 import AudioRecordingItem from '@/components/AudioRecordingItem';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
+import ProfileForm from '@/components/ProfileForm';
 
 export default function Profile() {
   const [user, setUser] = useState<User | null>(null);
@@ -50,27 +51,27 @@ export default function Profile() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Card className="bg-white shadow-md">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-2xl font-bold">My Profile</CardTitle>
-          <Button asChild variant="outline" size="sm" className="transition-colors duration-200 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-purple-300">
-            <Link to="/upload">
-              <Mic className="mr-2 h-4 w-4" />
-              Record New Audio
-            </Link>
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {user && (
-            <div className="border-b pb-4 mb-4">
-              <h2 className="text-lg font-medium mb-2">Account</h2>
-              <p className="text-gray-600">{user.email}</p>
-            </div>
-          )}
+      <div className="space-y-8">
+        <Card className="bg-white shadow-md">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-2xl font-bold">My Profile</CardTitle>
+            <Button asChild variant="outline" size="sm" className="transition-colors duration-200 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-purple-300">
+              <Link to="/upload">
+                <Mic className="mr-2 h-4 w-4" />
+                Record New Audio
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {user && <ProfileForm userId={user.id} />}
+          </CardContent>
+        </Card>
 
-          <div className="space-y-4">
-            <h2 className="text-lg font-medium">Your Recordings</h2>
-            
+        <Card className="bg-white shadow-md">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">Your Recordings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
             {loadingAll && (
               <div className="space-y-4">
                 {[0, 1, 2].map(i => (
@@ -128,9 +129,9 @@ export default function Profile() {
                 </div>
               </AnimatePresence>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </motion.div>
   );
 }

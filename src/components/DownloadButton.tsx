@@ -32,7 +32,7 @@ const DownloadButton = ({
         onClick={handleDownload} 
         variant="outline" 
         size="sm"
-        className="flex items-center gap-1 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        className="flex items-center gap-1 transition-colors duration-200 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-purple-300"
       >
         <Download className="h-4 w-4" />
         <span>Download</span>
