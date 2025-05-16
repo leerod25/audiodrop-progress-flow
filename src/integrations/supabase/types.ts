@@ -36,6 +36,45 @@ export type Database = {
         }
         Relationships: []
       }
+      professional_details: {
+        Row: {
+          additional_skills: string[] | null
+          availability: string[] | null
+          created_at: string | null
+          id: string
+          languages: string[] | null
+          salary_expectation: number | null
+          specialized_skills: string[] | null
+          updated_at: string | null
+          user_id: string
+          years_experience: string | null
+        }
+        Insert: {
+          additional_skills?: string[] | null
+          availability?: string[] | null
+          created_at?: string | null
+          id?: string
+          languages?: string[] | null
+          salary_expectation?: number | null
+          specialized_skills?: string[] | null
+          updated_at?: string | null
+          user_id: string
+          years_experience?: string | null
+        }
+        Update: {
+          additional_skills?: string[] | null
+          availability?: string[] | null
+          created_at?: string | null
+          id?: string
+          languages?: string[] | null
+          salary_expectation?: number | null
+          specialized_skills?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+          years_experience?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           city: string | null

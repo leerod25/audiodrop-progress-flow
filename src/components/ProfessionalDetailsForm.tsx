@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import { languages, briefcase, calendar, dollarSign, clock } from "lucide-react";
+import { Languages, Briefcase, Calendar, DollarSign, Clock } from "lucide-react";
 
 type ProfessionalDetailsData = {
   languages: string[];
@@ -115,7 +116,7 @@ const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
       >
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
-            <languages className="h-4 w-4 text-muted-foreground" />
+            <Languages className="h-4 w-4 text-muted-foreground" />
             <Label>Languages</Label>
           </div>
           <div className="grid grid-cols-3 gap-2">
@@ -130,7 +131,7 @@ const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
 
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
-            <briefcase className="h-4 w-4 text-muted-foreground" />
+            <Briefcase className="h-4 w-4 text-muted-foreground" />
             <Label>Specialized Skills</Label>
           </div>
           <div className="grid grid-cols-1 gap-2">
@@ -153,7 +154,7 @@ const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
-            <languages className="h-4 w-4 text-muted-foreground" />
+            <Languages className="h-4 w-4 text-muted-foreground" />
             <Label className="text-lg font-medium">Languages</Label>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -240,7 +241,7 @@ const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
 
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
-            <briefcase className="h-4 w-4 text-muted-foreground" />
+            <Briefcase className="h-4 w-4 text-muted-foreground" />
             <Label className="text-lg font-medium">Specialized Skills</Label>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -288,7 +289,7 @@ const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
 
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
-            <briefcase className="h-4 w-4 text-muted-foreground" />
+            <Briefcase className="h-4 w-4 text-muted-foreground" />
             <Label className="text-lg font-medium">Additional Skills</Label>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -375,7 +376,7 @@ const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
 
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
-            <calendar className="h-4 w-4 text-muted-foreground" />
+            <Calendar className="h-4 w-4 text-muted-foreground" />
             <Label className="text-lg font-medium">Years of Experience</Label>
           </div>
           <RadioGroup 
@@ -408,7 +409,7 @@ const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
 
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
-            <clock className="h-4 w-4 text-muted-foreground" />
+            <Clock className="h-4 w-4 text-muted-foreground" />
             <Label className="text-lg font-medium">Availability</Label>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -490,6 +491,26 @@ const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
               />
               <Label htmlFor="full-time">Full-time</Label>
             </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <Label className="text-lg font-medium">Desired Monthly Salary (USD)</Label>
+          </div>
+          <div className="max-w-xs">
+            <Input
+              type="number"
+              id="salary_expectation"
+              placeholder="e.g., 3000"
+              value={data.salary_expectation || ''}
+              onChange={(e) => {
+                const value = e.target.value ? Number(e.target.value) : null;
+                setData({ ...data, salary_expectation: value });
+              }}
+              className="w-full"
+            />
           </div>
         </div>
 
