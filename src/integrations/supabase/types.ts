@@ -170,7 +170,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      add_business_favorite: {
+        Args: { business_user_id: string; agent_user_id: string }
+        Returns: undefined
+      }
+      get_business_favorites: {
+        Args: { business_user_id: string }
+        Returns: string[]
+      }
+      remove_business_favorite: {
+        Args: { business_user_id: string; agent_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "agent" | "business"
