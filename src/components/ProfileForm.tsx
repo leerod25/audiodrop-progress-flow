@@ -36,13 +36,26 @@ const ProfileForm = ({ userId }: ProfileFormProps) => {
           .from('profiles')
           .select('*')
           .eq('id', userId)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error fetching profile:', error);
           toast.error('Could not load profile information');
-        } else {
+        } else if (data) {
           setProfile(data);
+        } else {
+          // Handle case where no profile exists yet
+          console.log('No profile found for user, creating a new one');
+          const newProfile: ProfileData = {
+            id: userId,
+            full_name: null,
+            description: null,
+            email: null,
+            phone: null,
+            gender: null,
+            whatsapp: null
+          };
+          setProfile(newProfile);
         }
       } catch (err) {
         console.error('Unexpected error in fetchProfile:', err);
@@ -74,7 +87,8 @@ const ProfileForm = ({ userId }: ProfileFormProps) => {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: userId,
           full_name: profile.full_name,
           description: profile.description,
           email: profile.email,
@@ -82,8 +96,7 @@ const ProfileForm = ({ userId }: ProfileFormProps) => {
           gender: profile.gender,
           whatsapp: profile.whatsapp,
           updated_at: new Date().toISOString(),
-        })
-        .eq('id', userId);
+        });
 
       if (error) {
         console.error('Error updating profile:', error);
@@ -197,7 +210,7 @@ const ProfileForm = ({ userId }: ProfileFormProps) => {
             value={profile?.gender || ''}
             onChange={handleChange}
             disabled={!isEditing}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 transition-colors duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           >
             <option value="">Select gender</option>
             <option value="male">Male</option>
