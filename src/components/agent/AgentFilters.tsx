@@ -6,12 +6,14 @@ import { Form, FormField } from "@/components/ui/form";
 import FilterDropdown from './filters/FilterDropdown';
 import HasAudioCheckbox from './filters/HasAudioCheckbox';
 import FilterHeader from './filters/FilterHeader';
+import FavoritesToggle from './filters/FavoritesToggle';
 
 export interface FilterValues {
   country: string;
   city: string;
   hasAudio: boolean;
   skillLevel: string;
+  favoritesOnly: boolean;
 }
 
 interface AgentFiltersProps {
@@ -23,6 +25,7 @@ interface AgentFiltersProps {
   applyFilters: (values: FilterValues) => void;
   resetFilters: () => void;
   form: ReturnType<typeof useForm<FilterValues>>;
+  isBusinessAccount: boolean;
 }
 
 const AgentFilters: React.FC<AgentFiltersProps> = ({
@@ -32,7 +35,8 @@ const AgentFilters: React.FC<AgentFiltersProps> = ({
   showFilters,
   setShowFilters,
   resetFilters,
-  form
+  form,
+  isBusinessAccount
 }) => {
   return (
     <>
@@ -95,6 +99,15 @@ const AgentFilters: React.FC<AgentFiltersProps> = ({
                   name="hasAudio"
                   render={({ field }) => (
                     <HasAudioCheckbox field={field} />
+                  )}
+                />
+
+                {/* Favorites toggle - only shown for business users */}
+                <FormField
+                  control={form.control}
+                  name="favoritesOnly"
+                  render={({ field }) => (
+                    <FavoritesToggle field={field} isBusinessAccount={isBusinessAccount} />
                   )}
                 />
               </div>

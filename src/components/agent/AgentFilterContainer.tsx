@@ -11,6 +11,7 @@ interface AgentFilterContainerProps {
   cities: string[];
   skillLevels: string[];
   onApplyFilters: (agents: Agent[]) => void;
+  isBusinessAccount: boolean;
 }
 
 const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
@@ -18,7 +19,8 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
   countries,
   cities,
   skillLevels,
-  onApplyFilters
+  onApplyFilters,
+  isBusinessAccount
 }) => {
   const [showFilters, setShowFilters] = React.useState(false);
   
@@ -28,6 +30,7 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
       city: '',
       hasAudio: false,
       skillLevel: '',
+      favoritesOnly: false,
     },
   });
 
@@ -51,6 +54,10 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
       result = result.filter(agent => agent.computer_skill_level === values.skillLevel);
     }
     
+    if (values.favoritesOnly && isBusinessAccount) {
+      result = result.filter(agent => agent.is_favorite);
+    }
+    
     onApplyFilters(result);
   };
 
@@ -70,6 +77,7 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
       city: '',
       hasAudio: false,
       skillLevel: '',
+      favoritesOnly: false,
     });
     onApplyFilters(agents);
     setShowFilters(false);
@@ -86,6 +94,7 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
         applyFilters={applyFilters}
         resetFilters={resetFilters}
         form={form}
+        isBusinessAccount={isBusinessAccount}
       />
 
       {/* No Results Message */}

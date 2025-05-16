@@ -83,15 +83,16 @@ const AgentPreview: React.FC = () => {
     <div className="container mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Agent Preview</h1>
-        
-        <AgentFilterContainer
-          agents={filteredAgents}
-          countries={countries}
-          cities={cities}
-          skillLevels={skillLevels}
-          onApplyFilters={setFilteredAgents}
-        />
       </div>
+      
+      <AgentFilterContainer
+        agents={filteredAgents}
+        countries={countries}
+        cities={cities}
+        skillLevels={skillLevels}
+        onApplyFilters={setFilteredAgents}
+        isBusinessAccount={isBusinessAccount}
+      />
       
       {/* Show Agent Detail Card if Selected */}
       {showAgentCard && selectedAgent && (
