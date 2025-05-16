@@ -2,13 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User, FileAudio, CheckCircle, XCircle, Filter, Star, Play, Pause } from 'lucide-react';
 import { toast } from 'sonner';
 import { Label } from "@/components/ui/label";
 import { useUserContext } from "@/contexts/UserContext";
+import { useAgentAudio } from '@/hooks/useAgentAudio'; 
+import AudioPlayer from '@/components/AudioPlayer';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,14 +50,6 @@ interface FilterValues {
   skillLevel: string;
 }
 
-// Define a type for the business_favorites table since it's not in the generated types yet
-interface BusinessFavorite {
-  id: string;
-  business_id: string;
-  agent_id: string;
-  created_at?: string;
-}
-
 const AgentPreview: React.FC = () => {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [filteredAgents, setFilteredAgents] = useState<Agent[]>([]);
@@ -69,6 +63,8 @@ const AgentPreview: React.FC = () => {
   const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
   const [showAudioModal, setShowAudioModal] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<Agent | null>(null);
+  const [showAgentCard, setShowAgentCard] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const navigate = useNavigate();
   const { user, userRole } = useUserContext();
 
@@ -333,6 +329,12 @@ const AgentPreview: React.FC = () => {
     });
   };
 
+  // Show agent details card with audio recordings
+  const showAgentDetails = (agent: Agent) => {
+    setSelectedAgent(agent);
+    setShowAgentCard(true);
+  };
+
   // Format the user ID to show only first 8 characters
   const formatUserId = (id: string) => `${id.substring(0, 8)}...`;
 
@@ -356,6 +358,69 @@ const AgentPreview: React.FC = () => {
     }
     setShowAudioModal(false);
     setCurrentAgent(null);
+  };
+
+  // Agent card component to display all audio recordings
+  const AgentCardWithAudios = ({ agent }: { agent: Agent }) => {
+    const { audioList, loading: audioLoading, error } = useAgentAudio(agent.id);
+    
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Agent: {formatUserId(agent.id)}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-500 mb-4">
+            {agent.country} {agent.city ? `· ${agent.city}` : ''}
+            {agent.computer_skill_level && <> · Skill level: {agent.computer_skill_level}</>}
+          </p>
+          
+          {isBusinessAccount && (
+            <Button 
+              variant={agent.is_favorite ? "default" : "outline"} 
+              size="sm"
+              onClick={() => toggleFavorite(agent.id, !!agent.is_favorite)}
+              className="mb-4"
+            >
+              <Star className={`mr-1 h-4 w-4 ${agent.is_favorite ? 'fill-white' : ''}`} />
+              {agent.is_favorite ? 'Remove from Team' : 'Add to Team'}
+            </Button>
+          )}
+          
+          {/* Audio recordings list */}
+          <div className="mt-4">
+            <h3 className="text-lg font-medium mb-2">All Recordings</h3>
+            
+            {audioLoading ? (
+              <p className="text-sm text-gray-500">Loading recordings...</p>
+            ) : error ? (
+              <p className="text-sm text-red-500">Error loading recordings: {error}</p>
+            ) : audioList.length > 0 ? (
+              <div className="space-y-4">
+                {audioList.map(rec => (
+                  <div key={rec.id} className="p-3 border rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium">{rec.title}</span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(rec.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <AudioPlayer
+                      audioUrl={rec.url}
+                      requiresPermission={false}
+                      suppressErrors={false}
+                      className="w-full"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No recordings available</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
@@ -511,6 +576,23 @@ const AgentPreview: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Show Agent Detail Card if Selected */}
+      {showAgentCard && selectedAgent && (
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Agent Details</h2>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowAgentCard(false)}
+            >
+              Close Details
+            </Button>
+          </div>
+          <AgentCardWithAudios agent={selectedAgent} />
+        </div>
+      )}
       
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -594,25 +676,38 @@ const AgentPreview: React.FC = () => {
                     </Button>
                   )}
                   
-                  <Button 
-                    variant={agent.has_audio ? "default" : "ghost"}
-                    size="sm"
-                    disabled={!agent.has_audio}
-                    onClick={() => agent.has_audio && openAudioModal(agent)}
-                    className="text-sm"
-                  >
-                    {isPlaying && currentAudio === agent.audio_url ? (
-                      <>
-                        <Pause className="mr-1 h-4 w-4" />
-                        Pause
-                      </>
-                    ) : (
-                      <>
-                        <Play className="mr-1 h-4 w-4" />
-                        Listen
-                      </>
+                  <div className="flex space-x-2">
+                    {agent.has_audio && (
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => showAgentDetails(agent)}
+                        className="text-sm"
+                      >
+                        View All Recordings
+                      </Button>
                     )}
-                  </Button>
+                    
+                    <Button 
+                      variant={agent.has_audio ? "default" : "ghost"}
+                      size="sm"
+                      disabled={!agent.has_audio}
+                      onClick={() => agent.has_audio && openAudioModal(agent)}
+                      className="text-sm"
+                    >
+                      {isPlaying && currentAudio === agent.audio_url ? (
+                        <>
+                          <Pause className="mr-1 h-4 w-4" />
+                          Pause
+                        </>
+                      ) : (
+                        <>
+                          <Play className="mr-1 h-4 w-4" />
+                          Listen
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -677,6 +772,18 @@ const AgentPreview: React.FC = () => {
                   Remove from Team
                 </Button>
               )}
+              
+              <Button
+                variant="outline" 
+                onClick={() => {
+                  closeAudioModal();
+                  if (currentAgent) {
+                    showAgentDetails(currentAgent);
+                  }
+                }}
+              >
+                View All Recordings
+              </Button>
             </div>
           )}
         </DialogContent>
