@@ -9,7 +9,7 @@ import { Agent } from '@/types/agent';
 export function useAgentData(useFakeData: boolean) {
   const { user, userRole } = useUserContext();
   
-  // Use the specialized hooks
+  // Use the specialized hooks to fetch raw (real or fake) list
   const { 
     agents: fetchedAgents, 
     loading, 
@@ -19,26 +19,29 @@ export function useAgentData(useFakeData: boolean) {
     isBusinessAccount 
   } = useAgentFetch(useFakeData, userRole);
   
-  // Create a state to manage agents internally
-  const [agents, setAgents] = useState<Agent[]>(fetchedAgents);
+  // Create internal states to manage agents
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [filteredAgents, setFilteredAgents] = useState<Agent[]>([]);
   
-  // Update internal agents state when fetched agents change
+  // Whenever the fetched data or the mode (fake/real) changes, reset both lists
   useEffect(() => {
-    if (fetchedAgents.length > 0) {
-      console.log("Setting agents from fetched data:", fetchedAgents.length);
-      setAgents(fetchedAgents);
-    }
-  }, [fetchedAgents]);
+    console.log("Setting agents from fetched data:", fetchedAgents.length, "useFakeData:", useFakeData);
+    setAgents(fetchedAgents);
+    setFilteredAgents(fetchedAgents);
+  }, [fetchedAgents, useFakeData]);
   
-  // Get filtered agents
-  const { filteredAgents, setFilteredAgents } = useAgentFilter(agents);
+  // Apply filtering on the freshly reset list
+  const { 
+    filteredAgents: afterFilter, 
+    setFilteredAgents: setAfterFilter 
+  } = useAgentFilter(filteredAgents);
   
-  // Get favorite management functionality
+  // Wire up favorites toggles
   const { toggleFavorite } = useAgentFavorites(
     agents, 
     setAgents, 
-    filteredAgents, 
-    setFilteredAgents, 
+    afterFilter, 
+    setAfterFilter, 
     user?.id, 
     userRole,
     useFakeData
@@ -46,8 +49,8 @@ export function useAgentData(useFakeData: boolean) {
 
   return {
     agents,
-    filteredAgents, 
-    setFilteredAgents,
+    filteredAgents: afterFilter, 
+    setFilteredAgents: setAfterFilter,
     loading,
     countries,
     cities,
