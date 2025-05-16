@@ -21,12 +21,6 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
 }) => {
   const { audio, loading, error } = useAgentAudio(agent.id);
   
-  const copyAgentId = () => {
-    navigator.clipboard.writeText(agent.id)
-      .then(() => console.log('[AgentDetailCard] Agent ID copied'))
-      .catch(err => console.error('[AgentDetailCard] Copy failed:', err));
-  };
-  
   return (
     <Card className="mb-6">
       <CardHeader>
@@ -94,24 +88,6 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
               </div>
             </div>
           )}
-        </div>
-        
-        {/* Debug UI: display raw audio data and full agent ID for copy-pasting */}
-        <div className="my-4 p-3 bg-gray-100 rounded-md">
-          <h3 className="text-lg font-medium">Debug: Full Agent ID</h3>
-          <div className="flex items-center space-x-2">
-            <pre className="bg-gray-200 p-2 rounded whitespace-pre-wrap break-all text-xs flex-1">
-              {agent.id}
-            </pre>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={copyAgentId}
-              className="whitespace-nowrap"
-            >
-              Copy ID
-            </Button>
-          </div>
         </div>
       </CardContent>
     </Card>
