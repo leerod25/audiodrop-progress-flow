@@ -10,6 +10,12 @@ const sampleAudios = [
   'https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3',
 ];
 
+// Avatar images for profiles
+const avatarImages = {
+  boy: '/lovable-uploads/8ae8fb9c-1ded-47ae-aa00-f2952d6a80b1.png',
+  girl: '/lovable-uploads/eeac5d8e-0ba7-49d3-9235-4e6b321390bd.png'
+};
+
 // Predefined countries and cities
 const locations = [
   { country: 'United States', city: 'New York' },
@@ -42,6 +48,8 @@ const generateFakeProfile = (index: number, gender: 'boy' | 'girl') => {
     city: location.city,
     computer_skill_level: skillLevel,
     is_favorite: Math.random() > 0.7, // 30% chance to be favorited
+    avatar_url: avatarImages[gender],
+    name: name,
   };
 };
 

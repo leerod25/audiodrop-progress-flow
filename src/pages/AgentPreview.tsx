@@ -8,6 +8,7 @@ import { User, FileAudio, CheckCircle, XCircle, Filter, Star, Play, Pause, Volum
 import { toast } from 'sonner';
 import { Label } from "@/components/ui/label";
 import { useUserContext } from "@/contexts/UserContext";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +41,8 @@ interface Agent {
   city?: string | null;
   computer_skill_level?: string | null;
   is_favorite?: boolean;
+  avatar_url?: string | null;
+  name?: string | null;
 }
 
 interface FilterValues {
@@ -184,7 +187,9 @@ const AgentPreview: React.FC = () => {
           country: profile.country,
           city: profile.city,
           computer_skill_level: profile.computer_skill_level,
-          is_favorite: favorites.includes(profile.id)
+          is_favorite: favorites.includes(profile.id),
+          avatar_url: profile.avatar_url,
+          name: profile.name
         })) || [];
         
         setAgents(agentsWithAudioInfo);
@@ -630,8 +635,19 @@ const AgentPreview: React.FC = () => {
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4 mt-2">
                   <div className="flex items-center">
-                    <User className="mr-2 text-gray-500" size={18} />
-                    <span className="font-semibold text-gray-700">{formatUserId(agent.id)}</span>
+                    {agent.avatar_url ? (
+                      <Avatar className="h-10 w-10 mr-3">
+                        <AvatarImage src={agent.avatar_url} alt={`Avatar for ${agent.name || agent.id}`} />
+                        <AvatarFallback>
+                          <User className="h-6 w-6 text-gray-400" />
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <User className="mr-2 text-gray-500" size={18} />
+                    )}
+                    <span className="font-semibold text-gray-700">
+                      {agent.name || formatUserId(agent.id)}
+                    </span>
                   </div>
                   
                   <div className="flex items-center">
@@ -713,8 +729,23 @@ const AgentPreview: React.FC = () => {
           
           {currentAgent && (
             <div className="flex flex-col items-center space-y-4">
+              <div className="flex items-center justify-center mb-4">
+                {currentAgent.avatar_url ? (
+                  <Avatar className="h-20 w-20">
+                    <AvatarImage src={currentAgent.avatar_url} alt={`Avatar for ${currentAgent.name || currentAgent.id}`} />
+                    <AvatarFallback>
+                      <User className="h-10 w-10 text-gray-400" />
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <User className="h-16 w-16 text-gray-400" />
+                )}
+              </div>
+              
               <div className="w-full rounded-md bg-gray-100 p-6">
-                <div className="mb-2 text-sm text-gray-500">Agent ID: {formatUserId(currentAgent.id)}</div>
+                <div className="mb-2 text-sm text-gray-500">
+                  Agent: {currentAgent.name || formatUserId(currentAgent.id)}
+                </div>
                 <div className="mb-4 text-sm text-gray-500">
                   {currentAgent.country} {currentAgent.city ? `· ${currentAgent.city}` : ''}
                 </div>
