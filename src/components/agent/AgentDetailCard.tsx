@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star } from 'lucide-react';
 import { useAgentAudio } from '@/hooks/useAgentAudio';
 import { Agent } from '@/types/Agent';
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AgentDetailCardProps {
   agent: Agent;
@@ -19,7 +20,7 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
   formatUserId,
   toggleFavorite
 }) => {
-  const { audio, loading, error } = useAgentAudio(agent.id);
+  const { audioList, loading, error } = useAgentAudio(agent.id);
   
   return (
     <Card className="mb-6">
@@ -44,9 +45,9 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
           </Button>
         )}
         
-        {/* Audio recording display */}
+        {/* Audio recordings display */}
         <div className="mt-4">
-          <h3 className="text-lg font-medium mb-2">Audio Recording</h3>
+          <h3 className="text-lg font-medium mb-2">Audio Recordings</h3>
           
           {loading ? (
             <div className="animate-pulse space-y-2">
@@ -63,29 +64,33 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
                 Retry
               </button>
             </div>
-          ) : !audio ? (
+          ) : audioList.length === 0 ? (
             <div className="text-center text-gray-500 py-8">
-              <p>No recording available.</p>
+              <p>No recordings available.</p>
             </div>
           ) : (
-            <div className="p-3 border rounded-lg">
-              <div className="flex flex-col space-y-2">
-                <div>
-                  <span className="font-medium">{audio.title}</span><br />
-                  <small className="text-gray-500">{audio.updated_at ? new Date(audio.updated_at).toLocaleString() : ''}</small>
+            <div className="space-y-4">
+              {audioList.map((audio) => (
+                <div key={audio.id} className="p-3 border rounded-lg">
+                  <div className="flex flex-col space-y-2">
+                    <div>
+                      <span className="font-medium">{audio.title}</span><br />
+                      <small className="text-gray-500">{audio.updated_at ? new Date(audio.updated_at).toLocaleString() : ''}</small>
+                    </div>
+                    
+                    <div className="w-full">
+                      <audio 
+                        controls 
+                        preload="none" 
+                        className="w-full"
+                        src={audio.url}
+                      >
+                        Your browser does not support audio playback.
+                      </audio>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="w-full">
-                  <audio 
-                    controls 
-                    preload="none" 
-                    className="w-full"
-                    src={audio.url}
-                  >
-                    Your browser does not support audio playback.
-                  </audio>
-                </div>
-              </div>
+              ))}
             </div>
           )}
         </div>
