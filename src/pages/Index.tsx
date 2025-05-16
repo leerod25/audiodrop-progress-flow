@@ -63,9 +63,9 @@ const Index = () => {
             <div className="flex items-center gap-3">
               <span className="text-sm hidden md:inline">{user.email}</span>
               <Button asChild variant="outline" size="sm">
-                <Link to="/upload">
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Audio
+                <Link to="/profile">
+                  <User className="mr-2 h-4 w-4" />
+                  My Profile
                 </Link>
               </Button>
               <Button onClick={handleSignOut} variant="outline" size="sm">
