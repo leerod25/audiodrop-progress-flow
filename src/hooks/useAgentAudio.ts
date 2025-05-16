@@ -24,66 +24,39 @@ export function useAgentAudio(agentId: string | null) {
     const fetchAudios = async () => {
       setLoading(true);
       setError(null);
-      console.groupCollapsed('[useAgentAudio] Debug fetch start:', agentId);
-      
-      // Debug auth context
-      try {
-        // Supabase JS v1
-        const sessionV1 = supabase.auth.session?.();
-        console.log('[useAgentAudio] Session v1:', sessionV1);
-      } catch (e) {
-        console.log('[useAgentAudio] Session v1 not available');
-      }
-      
-      try {
-        // Supabase JS v2
-        const { data: sessionData } = await supabase.auth.getSession();
-        console.log('[useAgentAudio] Session v2:', sessionData);
-      } catch (authErr) {
-        console.warn('[useAgentAudio] auth.getSession error:', authErr);
-      }
+      console.groupCollapsed('[useAgentAudio] Fetching audio for user_id:', agentId);
 
       try {
-        // First attempt with user_id
-        console.log(`[useAgentAudio] fetching audio_metadata for user_id=${agentId}`);
+        // Query by the actual foreign key column 'user_id'
         const { data, error: supaErr } = await supabase
           .from('audio_metadata')
           .select('id, title, audio_url, created_at')
           .eq('user_id', agentId)
           .order('created_at', { ascending: false });
+        console.log('[useAgentAudio] user_id query result:', { data, supaErr });
 
-        if (supaErr) {
-          console.error('[useAgentAudio] Supabase error:', supaErr);
-          setError(supaErr.message);
-          setAudioList([]);
-        } else if (data) {
-          console.log('[useAgentAudio] Data received:', data.length, 'entries');
-          console.log('[useAgentAudio] Raw data:', data);
-          
-          // Normalize and get public URLs if needed
-          const normalized: AgentAudio[] = data.map(d => {
-            let url = d.audio_url;
-            if (url && !/^https?:\/\//.test(url)) {
-              const { data: urlData, error: urlErr } = supabase.storage
-                .from('audio')
-                .getPublicUrl(url);
-              console.log('[useAgentAudio] Public URL call:', { urlData, urlErr });
-              url = urlData?.publicUrl || url;
-            }
-            return {
-              id: d.id,
-              title: d.title ?? 'Untitled',
-              url: url,
-              created_at: d.created_at
-            };
-          });
-          
-          console.log('[useAgentAudio] Normalized data:', normalized);
-          setAudioList(normalized);
-        }
+        if (supaErr) throw supaErr;
+
+        // Normalize and get public URLs
+        const normalized: AgentAudio[] = (data || []).map(d => {
+          let url = d.audio_url;
+          if (!/^https?:\/\//.test(url)) {
+            const { data: urlData } = supabase.storage.from('audio').getPublicUrl(url);
+            url = urlData?.publicUrl || url;
+          }
+          return {
+            id: d.id,
+            title: d.title ?? 'Untitled',
+            url,
+            created_at: d.created_at,
+          };
+        });
+
+        console.log('[useAgentAudio] Normalized list:', normalized);
+        setAudioList(normalized);
       } catch (err: any) {
-        console.error('[useAgentAudio] unexpected error:', err);
-        setError(err.message || 'Unexpected error occurred');
+        console.error('[useAgentAudio] Error:', err.message || err);
+        setError(err.message || 'Error fetching audio');
         setAudioList([]);
       } finally {
         console.groupEnd();
