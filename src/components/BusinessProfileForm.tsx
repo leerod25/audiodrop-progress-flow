@@ -70,8 +70,9 @@ const BusinessProfileForm = ({ userId, onProfileUpdate }: BusinessProfileFormPro
       setLoading(true);
       try {
         // First check if business profile exists
+        // Using 'any' as a temporary workaround until types are regenerated
         const { data, error } = await supabase
-          .from('business_profiles')
+          .from('business_profiles' as any)
           .select('*')
           .eq('id', userId)
           .maybeSingle();
@@ -96,7 +97,7 @@ const BusinessProfileForm = ({ userId, onProfileUpdate }: BusinessProfileFormPro
         } else {
           // Business profile doesn't exist or is empty, create initial entry
           const { error: insertError } = await supabase
-            .from('business_profiles')
+            .from('business_profiles' as any)
             .upsert({
               id: userId,
               email: (await supabase.auth.getUser()).data.user?.email,
@@ -142,7 +143,7 @@ const BusinessProfileForm = ({ userId, onProfileUpdate }: BusinessProfileFormPro
     setLoading(true);
     try {
       const { error } = await supabase
-        .from('business_profiles')
+        .from('business_profiles' as any)
         .upsert({
           id: userId,
           business_name: profileData.business_name,
@@ -231,6 +232,15 @@ const BusinessProfileForm = ({ userId, onProfileUpdate }: BusinessProfileFormPro
     >
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-medium">Business Information</h3>
+        <Button 
+          type="button"
+          variant="outline" 
+          size="sm" 
+          className="flex items-center gap-1"
+          onClick={() => setIsInviteDialogOpen(true)}
+        >
+          <span>Invite Team Member</span>
+        </Button>
         <TeamInviteDialog isOpen={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen} />
       </div>
 

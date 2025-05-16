@@ -99,8 +99,9 @@ export default function Profile() {
   const checkBusinessProfileCompletion = async (userId: string) => {
     try {
       setLoading(true);
+      // Using type assertion to work around the TypeScript error
       const { data, error } = await supabase
-        .from('business_profiles')
+        .from('business_profiles' as any)
         .select('business_name, phone, city, country, industry')
         .eq('id', userId)
         .maybeSingle();
