@@ -18,11 +18,13 @@ import ProfessionalDetailsForm from '@/components/ProfessionalDetailsForm';
 export default function Profile() {
   const [user, setUser] = useState<User | null>(null);
   const [profileCompleted, setProfileCompleted] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const { audio, loading: loadingSingle } = useLatestAudio(user);
   const { audios, loading: loadingAll, deleteAudio, renameAudio } = useUserAudios(user);
   const navigate = useNavigate();
 
   useEffect(() => {
+    setLoading(true);
     // Check if user is logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -33,6 +35,7 @@ export default function Profile() {
         // Check if profile is completed
         checkProfileCompletion(session.user.id);
       }
+      setLoading(false);
     });
 
     // Listen for auth changes
@@ -52,6 +55,7 @@ export default function Profile() {
 
   const checkProfileCompletion = async (userId: string) => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
         .select('full_name, phone, city, country')
@@ -66,8 +70,30 @@ export default function Profile() {
     } catch (error) {
       console.error('Error checking profile completion:', error);
       setProfileCompleted(false);
+    } finally {
+      setLoading(false);
     }
   };
+
+  // If still loading, show a skeleton loader
+  if (loading) {
+    return (
+      <div className="container mx-auto py-10 px-4 md:px-6 max-w-3xl">
+        <Card className="bg-white shadow-md mb-8">
+          <CardHeader>
+            <Skeleton className="h-8 w-36" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <motion.div 

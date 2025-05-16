@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { supabase } from "@/integrations/supabase/client";
@@ -38,24 +39,48 @@ const ProfileForm = ({ userId, onProfileUpdate }: ProfileFormProps) => {
     gender: '',
   });
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const { setUser } = useUserContext();
+  
+  // Initialize profile with user's auth email
+  useEffect(() => {
+    const initializeWithAuthData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email && initialLoad) {
+          setProfileData(prev => ({
+            ...prev,
+            email: user.email
+          }));
+        }
+      } catch (error) {
+        console.error("Error getting auth user data:", error);
+      }
+    };
+    
+    if (initialLoad) {
+      initializeWithAuthData();
+    }
+  }, [initialLoad]);
 
   useEffect(() => {
     const fetchProfile = async () => {
       setLoading(true);
       try {
+        // First check if profile exists
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', userId)
-          .single();
+          .maybeSingle();
 
-        if (error) {
+        if (error && error.code !== 'PGRST116') {
           console.error("Error fetching profile:", error);
           toast.error("Failed to load profile data.");
         }
 
         if (data) {
+          // Profile exists, set data
           setProfileData({
             full_name: data.full_name || '',
             email: data.email || '',
@@ -66,9 +91,34 @@ const ProfileForm = ({ userId, onProfileUpdate }: ProfileFormProps) => {
             country: data.country || '',
             gender: data.gender || '',
           });
+        } else {
+          // Profile doesn't exist or is empty, create initial entry
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: userId,
+              email: (await supabase.auth.getUser()).data.user?.email,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'id' });
+          
+          if (insertError) {
+            console.error("Error creating initial profile:", insertError);
+          }
+          
+          // Set email from auth if available
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user?.email) {
+            setProfileData(prev => ({
+              ...prev,
+              email: user.email
+            }));
+          }
         }
+      } catch (error) {
+        console.error("Error in profile fetch/creation:", error);
       } finally {
         setLoading(false);
+        setInitialLoad(false);
       }
     };
 
