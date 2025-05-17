@@ -68,9 +68,9 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
       }
       
       // Otherwise, use the title with a default extension
-      return `${title || 'audio'}.mp3`;
+      return `${title || 'audio'}.webm`;
     } catch (e) {
-      return `${title || 'audio'}.mp3`;
+      return `${title || 'audio'}.webm`;
     }
   };
 
@@ -82,7 +82,7 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
       if (url.startsWith('http://') || url.startsWith('https://')) {
         return true;
       }
-      // For relative paths, we'll consider them valid if they don't start with special characters
+      // For relative paths, we'll consider them valid if they start with certain patterns
       if (url.startsWith('path/') || url.startsWith('/') || /^[a-zA-Z0-9]/.test(url)) {
         return true;
       }

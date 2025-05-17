@@ -74,62 +74,85 @@ serve(async (req) => {
     }
 
     // Fetch all users using the admin API
-    const { data, error } = await supabaseAdmin.auth.admin.listUsers();
+    const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
 
-    if (error) {
-      console.error('Error listing users:', error);
-      return new Response(JSON.stringify({ error: error.message }), {
+    if (usersError) {
+      console.error('Error listing users:', usersError);
+      return new Response(JSON.stringify({ error: usersError.message }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       });
     }
     
-    // For each user, fetch their audio files from audio_metadata
-    if (data && data.users) {
-      for (const user of data.users) {
+    // For each user, fetch their audio files directly from storage
+    if (usersData && usersData.users) {
+      for (const user of usersData.users) {
         try {
-          // Get all audio files for this user
-          const { data: audioData, error: audioError } = await supabaseAdmin
-            .from('audio_metadata')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
+          // Get all audio files from storage for this user
+          // Look for files in the audio-bucket/{user_id}/ path
+          const { data: filesList, error: storageError } = await supabaseAdmin
+            .storage
+            .from('audio-bucket')
+            .list(user.id, {
+              sortBy: { column: 'created_at', order: 'desc' }
+            });
           
-          if (audioError) {
-            console.error(`Error fetching audio for user ${user.id}:`, audioError);
+          if (storageError) {
+            console.error(`Error fetching storage files for user ${user.id}:`, storageError);
             user.audio_files = [];
             continue;
           }
+          
+          if (filesList && filesList.length > 0) {
+            console.log(`Found ${filesList.length} files in storage for user ${user.id}`);
             
-          // Include audio files in the user object, ensuring valid URLs
-          if (audioData && audioData.length > 0) {
-            console.log(`Processing ${audioData.length} audio files for user ${user.id}`);
+            // Create signed URLs for each file
+            const audioFiles = await Promise.all(
+              filesList
+                .filter(file => {
+                  // Only include audio files (typically .webm, .mp3, .wav)
+                  const isAudio = file.name.endsWith('.webm') || 
+                                  file.name.endsWith('.mp3') || 
+                                  file.name.endsWith('.wav') ||
+                                  file.name.endsWith('.m4a') ||
+                                  file.name.endsWith('.ogg');
+                  return isAudio;
+                })
+                .map(async (file) => {
+                  try {
+                    // Create a public URL for the file
+                    const { data: publicURL } = supabaseAdmin
+                      .storage
+                      .from('audio-bucket')
+                      .getPublicUrl(`${user.id}/${file.name}`);
+                    
+                    if (publicURL && publicURL.publicUrl) {
+                      console.log(`Valid audio URL for file ${file.name}: ${publicURL.publicUrl}`);
+                      
+                      // Extract a title from the filename (remove extension)
+                      const title = file.name.split('.').slice(0, -1).join('.') || file.name;
+                      
+                      return {
+                        id: file.id || `file-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                        title: title || 'Untitled Recording',
+                        audio_url: publicURL.publicUrl,
+                        created_at: file.created_at || new Date().toISOString()
+                      };
+                    }
+                    return null;
+                  } catch (err) {
+                    console.error(`Error processing file ${file.name}:`, err);
+                    return null;
+                  }
+                })
+            );
             
-            // Process each audio file to ensure valid URLs
-            user.audio_files = audioData
-              .map(file => {
-                // Basic URL validation using our helper function
-                const validUrl = isValidUrl(file.audio_url);
-                
-                if (validUrl) {
-                  console.log(`Valid audio URL for file ${file.id}: ${file.audio_url}`);
-                  return {
-                    id: file.id,
-                    title: file.title || 'Untitled Recording',
-                    audio_url: file.audio_url,
-                    created_at: file.created_at
-                  };
-                }
-                
-                console.error(`Invalid audio URL for file ${file.id}: ${file.audio_url}`);
-                return null;
-              })
-              .filter(Boolean); // Remove any null entries (invalid URLs)
-            
-            console.log(`User ${user.id} has ${user.audio_files.length} valid audio files out of ${audioData.length} total`);
+            // Filter out any null entries and assign to the user
+            user.audio_files = audioFiles.filter(Boolean);
+            console.log(`User ${user.id} has ${user.audio_files.length} valid audio files`);
           } else {
             user.audio_files = [];
-            console.log(`User ${user.id} has no audio files`);
+            console.log(`User ${user.id} has no audio files in storage`);
           }
         } catch (err) {
           console.error(`Error processing audio files for user ${user.id}:`, err);
@@ -139,7 +162,7 @@ serve(async (req) => {
     }
 
     // Return the users with their audio files
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify(usersData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
