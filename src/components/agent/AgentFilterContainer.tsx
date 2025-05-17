@@ -39,10 +39,11 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
     },
   });
 
-  // Only exclude the current user; show all other profiles
-  const agentProfiles = user
-    ? agents.filter(a => a.id !== user.id)
-    : agents;
+  // Exclude the current user from the list of agents
+  const agentProfiles = agents.filter(agent => {
+    if (!user) return true;  // If no user is logged in, show all agents
+    return agent.id !== user.id;  // Otherwise, filter out the current user
+  });
 
   // Apply filters whenever form values change
   useEffect(() => {
