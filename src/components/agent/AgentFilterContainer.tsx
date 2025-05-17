@@ -1,16 +1,15 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from "react-hook-form";
 import AgentFilters, { FilterValues } from '@/components/agent/AgentFilters';
 import { Agent } from '@/types/Agent';
 
 interface AgentFilterContainerProps {
-  agents: Agent[];
+  agents: Agent[];              // full list of all user profiles
   countries: string[];
   cities: string[];
   skillLevels: string[];
   onApplyFilters: (agents: Agent[]) => void;
-  isBusinessAccount: boolean;
+  isBusinessAccount: boolean;   // current viewer role
 }
 
 const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
@@ -21,8 +20,16 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
   onApplyFilters,
   isBusinessAccount
 }) => {
-  const [showFilters, setShowFilters] = React.useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   
+  // Only keep true "agent" profiles (exclude business accounts/self)
+  const agentProfiles = agents.filter(agent => !agent.isBusinessAccount);
+  
+  // Seed parent with filtered agent list on mount or when raw agents change
+  useEffect(() => {
+    onApplyFilters(agentProfiles);
+  }, [agentProfiles, onApplyFilters]);
+
   const form = useForm<FilterValues>({
     defaultValues: {
       country: '',
@@ -30,51 +37,44 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
       hasAudio: false,
       skillLevel: '',
       favoritesOnly: false,
-    },
+    }
   });
 
-  // Seed parent with full agent list on mount or when agents change
-  React.useEffect(() => {
-    onApplyFilters(agents);
-  }, [agents, onApplyFilters]);
-
-  // Apply filters whenever form values change
   const applyFilters = (values: FilterValues) => {
-    let result = [...agents];
+    let result = agentProfiles;
     
     if (values.country) {
-      result = result.filter(agent => agent.country === values.country);
+      result = result.filter(a => a.country === values.country);
     }
     
     if (values.city) {
-      result = result.filter(agent => agent.city === values.city);
+      result = result.filter(a => a.city === values.city);
     }
     
     if (values.hasAudio) {
-      result = result.filter(agent => agent.has_audio);
+      result = result.filter(a => a.hasAudio);
     }
     
     if (values.skillLevel) {
-      result = result.filter(agent => agent.computer_skill_level === values.skillLevel);
+      result = result.filter(a => a.computer_skill_level === values.skillLevel);
     }
     
     if (values.favoritesOnly && isBusinessAccount) {
-      result = result.filter(agent => agent.is_favorite);
+      result = result.filter(a => a.is_favorite);
     }
     
     onApplyFilters(result);
   };
 
   // Watch form changes and update filters
-  React.useEffect(() => {
+  useEffect(() => {
     const subscription = form.watch((value) => {
       applyFilters(value as FilterValues);
     });
     
     return () => subscription.unsubscribe();
-  }, [form, agents]);
+  }, [form, agentProfiles]);
 
-  // Reset filters
   const resetFilters = () => {
     form.reset({
       country: '',
@@ -83,7 +83,7 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
       skillLevel: '',
       favoritesOnly: false,
     });
-    onApplyFilters(agents);
+    onApplyFilters(agentProfiles);
     setShowFilters(false);
   };
 
