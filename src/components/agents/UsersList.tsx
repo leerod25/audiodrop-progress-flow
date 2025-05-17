@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import UserCard from './UserCard';
@@ -11,7 +12,13 @@ interface User {
   last_name?: string;
   full_name?: string;
   avatar_url?: string;
+  created_at: string;
   audio_files: AudioFile[];
+  country?: string | null;
+  city?: string | null;
+  gender?: string | null;
+  years_experience?: string | null;
+  languages?: string[] | null;
 }
 
 interface AudioFile {

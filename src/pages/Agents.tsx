@@ -13,6 +13,30 @@ import { InfoIcon, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
+// Use the same User interface as in UsersList
+interface User {
+  id: string;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
+  avatar_url?: string;
+  created_at: string;
+  audio_files: AudioFile[];
+  country?: string | null;
+  city?: string | null;
+  gender?: string | null;
+  years_experience?: string | null;
+  languages?: string[] | null;
+}
+
+interface AudioFile {
+  id: string;
+  title: string;
+  audio_url: string;
+  created_at: string;
+}
+
 const Agents: React.FC = () => {
   const { user } = useUserContext();
   const [emailFilter, setEmailFilter] = useState('');

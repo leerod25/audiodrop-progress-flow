@@ -11,9 +11,13 @@ import { Link } from 'react-router-dom';
 
 interface User {
   id: string;
-  email: string | null;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
+  avatar_url?: string;
   created_at: string;
-  audio_files?: AudioFile[];
+  audio_files: AudioFile[];
   country?: string | null;
   city?: string | null;
   gender?: string | null;

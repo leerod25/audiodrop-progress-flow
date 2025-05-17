@@ -1,24 +1,27 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 import { isValidUrl } from '@/utils/audioUtils';
 
-interface AudioFile {
+export interface AudioFile {
   id: string;
   title: string;
   audio_url: string;
   created_at: string;
 }
 
-interface User {
+export interface User {
   id: string;
-  email: string | null;
-  app_metadata: Record<string, any>;
-  user_metadata: Record<string, any>;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
+  avatar_url?: string;
   created_at: string;
+  app_metadata?: Record<string, any>;
+  user_metadata?: Record<string, any>;
   last_sign_in_at?: string | null;
-  audio_files?: AudioFile[];
+  audio_files: AudioFile[];
   country?: string | null;
   city?: string | null;
   gender?: string | null;
