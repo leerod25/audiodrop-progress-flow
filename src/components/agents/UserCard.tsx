@@ -48,6 +48,7 @@ const UserCard: React.FC<UserCardProps> = ({
   return (
     <>
       <CardContent className="p-4">
+        {/* User ID and Join Date */}
         <div className="flex justify-between items-start">
           <div>
             <div className="flex items-center gap-2">
@@ -64,36 +65,39 @@ const UserCard: React.FC<UserCardProps> = ({
           </Button>
         </div>
 
-        {/* Location information */}
-        {(user.country || user.city) && (
-          <div className="mt-4 flex items-center">
-            <MapPin className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
-            <span className="text-sm">{[user.city, user.country].filter(Boolean).join(", ")}</span>
-          </div>
-        )}
-        
-        {/* Experience information */}
-        {user.years_experience && (
-          <div className="mt-2 flex items-center">
-            <Briefcase className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
-            <span className="text-sm">{user.years_experience} years experience</span>
-          </div>
-        )}
-
-        {/* Languages Section */}
-        {user.languages && user.languages.length > 0 && (
-          <div className="mt-4">
+        {/* Profile Information Section - Always Visible */}
+        <div className="mt-4 space-y-3">
+          {/* Location information */}
+          {(user.country || user.city) && (
             <div className="flex items-center">
-              <Globe className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
-              <div className="text-sm font-medium">Languages:</div>
+              <MapPin className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
+              <span className="text-sm">{[user.city, user.country].filter(Boolean).join(", ")}</span>
             </div>
-            <div className="flex flex-wrap gap-2 mt-2 ml-6">
-              {user.languages.map((lang, idx) => (
-                <Badge key={idx} variant="secondary" className="text-xs">{lang}</Badge>
-              ))}
+          )}
+          
+          {/* Experience information */}
+          {user.years_experience && (
+            <div className="flex items-center">
+              <Briefcase className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
+              <span className="text-sm">{user.years_experience} years experience</span>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Languages Section */}
+          {user.languages && user.languages.length > 0 && (
+            <div className="mt-2">
+              <div className="flex items-center">
+                <Globe className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
+                <div className="text-sm font-medium">Languages:</div>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2 ml-6">
+                {user.languages.map((lang, idx) => (
+                  <Badge key={idx} variant="secondary" className="text-xs">{lang}</Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Show expanded content */}
         {isExpanded && (
