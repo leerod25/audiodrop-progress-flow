@@ -42,6 +42,11 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
   // Show all profiles by default
   const agentProfiles = agents;
 
+  // Initial load - apply all profiles without filters
+  useEffect(() => {
+    onApplyFilters(agentProfiles);
+  }, []);
+  
   // Apply filters whenever form values change
   useEffect(() => {
     // Initial display of all profiles without filtering
