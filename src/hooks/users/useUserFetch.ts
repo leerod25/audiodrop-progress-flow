@@ -77,10 +77,6 @@ export const useUserFetch = (currentUser: any) => {
             .eq('user_id', user.id)
             .single();
           
-          // Log fetched data for debugging
-          console.log(`User ${user.id} profile data:`, profileData);
-          console.log(`User ${user.id} professional data:`, professionalData);
-          
           // Filter out any audio files with invalid URLs
           let validAudioFiles = user.audio_files || [];
           if (user.audio_files) {
@@ -104,9 +100,6 @@ export const useUserFetch = (currentUser: any) => {
             audio_files: validAudioFiles
           };
         }));
-        
-        // Log processed users for debugging
-        console.log('Processed users with profile data:', processedUsers);
         
         setUsers(processedUsers);
       } else {
