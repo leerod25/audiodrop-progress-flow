@@ -43,8 +43,19 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({ onApplyFilt
           roleMap.set(userRole.user_id, userRole.role);
         });
 
+        console.log('Total profiles before filtering:', profiles?.length);
+        
         // Filter out business profiles
-        const filteredProfiles = profiles?.filter(profile => roleMap.get(profile.id) !== 'business') || [];
+        const filteredProfiles = profiles?.filter(profile => {
+          const role = roleMap.get(profile.id);
+          const isNotBusiness = role !== 'business';
+          if (!isNotBusiness) {
+            console.log('Filtering out business profile:', profile.id);
+          }
+          return isNotBusiness;
+        }) || [];
+        
+        console.log('Profiles after filtering out businesses:', filteredProfiles.length);
         
         // Transform the profile data to match the Agent type
         const agents: Agent[] = filteredProfiles.map(profile => ({

@@ -40,6 +40,8 @@ export function useAgents(): UseAgentsResult {
           return;
         }
 
+        console.log('Total profiles fetched:', profiles?.length || 0);
+
         // Fetch user roles to filter out business profiles
         const { data: userRoles, error: rolesError } = await supabase
           .from('user_roles')
@@ -58,6 +60,7 @@ export function useAgents(): UseAgentsResult {
         });
 
         console.log('Fetched profiles:', profiles?.length, profiles);
+        console.log('User roles map created with entries:', roleMap.size);
         
         // Add mock audio data for testing
         const audioMap = new Map<string, string>();
@@ -80,8 +83,19 @@ export function useAgents(): UseAgentsResult {
         }
         
         // Filter out profiles where role is 'business'
-        const filteredProfiles = profiles?.filter(profile => roleMap.get(profile.id) !== 'business') || [];
+        const filteredProfiles = profiles?.filter(profile => {
+          const role = roleMap.get(profile.id);
+          const keepProfile = role !== 'business';
+          
+          if (!keepProfile) {
+            console.log(`Filtering out business profile: ${profile.id}, role: ${role}`);
+          }
+          
+          return keepProfile;
+        }) || [];
+        
         console.log('Filtered out business profiles, remaining:', filteredProfiles.length);
+        console.log('Filtered profiles:', filteredProfiles);
         
         // Map filtered profiles to agents
         const agentsWithAudioInfo = filteredProfiles.map(profile => ({

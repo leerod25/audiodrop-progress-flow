@@ -27,6 +27,8 @@ const Agents: React.FC = () => {
     handleAudioPlay,
   } = useUsersData(user);
 
+  console.log("Agents page - total users received:", users.length);
+
   // Reset filters function
   const resetFilters = () => {
     setEmailFilter('');
