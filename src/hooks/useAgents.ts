@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Agent } from '@/types/Agent';
@@ -39,6 +40,23 @@ export function useAgents(): UseAgentsResult {
           return;
         }
 
+        // Fetch user roles to filter out business profiles
+        const { data: userRoles, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('user_id, role');
+          
+        if (rolesError) {
+          console.error('Error fetching user roles:', rolesError);
+          toast.error('Failed to load user roles');
+          return;
+        }
+        
+        // Create a map of user_id to role for quick lookup
+        const roleMap = new Map<string, string>();
+        userRoles?.forEach(userRole => {
+          roleMap.set(userRole.user_id, userRole.role);
+        });
+
         console.log('Fetched profiles:', profiles?.length, profiles);
         
         // Add mock audio data for testing
@@ -61,8 +79,12 @@ export function useAgents(): UseAgentsResult {
           }
         }
         
-        // Map ALL profiles to agents without any filtering
-        const agentsWithAudioInfo = profiles?.map(profile => ({
+        // Filter out profiles where role is 'business'
+        const filteredProfiles = profiles?.filter(profile => roleMap.get(profile.id) !== 'business') || [];
+        console.log('Filtered out business profiles, remaining:', filteredProfiles.length);
+        
+        // Map filtered profiles to agents
+        const agentsWithAudioInfo = filteredProfiles.map(profile => ({
           id: profile.id,
           has_audio: true, // Set all profiles to have audio for testing
           audio_url: audioMap.get(profile.id) || null,
