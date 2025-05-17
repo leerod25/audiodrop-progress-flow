@@ -1,11 +1,11 @@
-
 import React, { useEffect, useState } from 'react';
 import { useForm } from "react-hook-form";
 import AgentFilters, { FilterValues } from '@/components/agent/AgentFilters';
 import { Agent } from '@/types/Agent';
+import { useUserContext } from '@/contexts/UserContext';
 
 interface AgentFilterContainerProps {
-  /** All user profiles, including business users */
+  /** All user profiles, including agents and business users */
   agents: Agent[];
   countries: string[];
   cities: string[];
@@ -24,6 +24,7 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
   onApplyFilters,
   isBusinessAccount,
 }) => {
+  const { user } = useUserContext();
   // local toggle for showing/hiding the filter panel
   const [showFilters, setShowFilters] = useState(false);
 
@@ -38,9 +39,9 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
     },
   });
 
-  // Only agent profiles (exclude business accounts)
-  // We need to use a different approach since isBusinessAccount doesn't exist on Agent
-  const agentProfiles = agents;
+  // Only include agent profiles, exclude business users and self
+  // Note: Since Agent type doesn't have a role property directly, we'll keep just the filtering logic we can apply
+  const agentProfiles = user ? agents.filter(a => a.id !== user.id) : agents;
   
   // Seed parent with all agents on mount or when the list changes
   useEffect(() => {
@@ -59,7 +60,7 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
         result = result.filter(a => a.city === values.city);
       }
       if (values.hasAudio) {
-        result = result.filter(a => a.has_audio); // Changed hasAudio to has_audio to match Agent type
+        result = result.filter(a => a.has_audio);
       }
       if (values.skillLevel) {
         result = result.filter(
@@ -75,7 +76,7 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
     return () => subscription.unsubscribe();
   }, [form, agentProfiles, isBusinessAccount, onApplyFilters]);
 
-  // Reset all filters back to default
+  // Reset all filters back to full agent list
   const resetFilters = () => {
     form.reset({
       country: '',
@@ -90,11 +91,12 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
 
   return (
     <AgentFilters
-      applyFilters={() => { /* handled by watch */ }}
-      resetFilters={resetFilters}
       form={form}
       showFilters={showFilters}
       setShowFilters={setShowFilters}
+      resetFilters={resetFilters}
+      /** applyFilters handled by form.watch */
+      applyFilters={() => {}}
       countries={countries}
       cities={cities}
       skillLevels={skillLevels}
