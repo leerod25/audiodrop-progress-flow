@@ -18,15 +18,6 @@ serve(async (req) => {
   }
 
   try {
-    // Get authorization header from the request
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Not authorized' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 401,
-      });
-    }
-
     // Create a Supabase client with the service role key (admin privileges)
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -36,13 +27,19 @@ serve(async (req) => {
           autoRefreshToken: false,
           persistSession: false,
         },
-        global: {
-          headers: { Authorization: authHeader },
-        },
       }
     );
 
-    // Get the user's ID from their JWT token
+    // Get the user's token from the Authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Not authorized' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    }
+
+    // Verify the user is authenticated first
     const {
       data: { user },
     } = await supabaseAdmin.auth.getUser(authHeader.replace('Bearer ', ''));
@@ -54,9 +51,6 @@ serve(async (req) => {
       });
     }
 
-    // Verify the user's role (optional, you may want to check if they're an admin)
-    // For now, we'll allow any authenticated user to fetch all users
-    
     // Fetch all users using the admin API
     const { data, error } = await supabaseAdmin.auth.admin.listUsers();
 
