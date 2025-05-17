@@ -3,7 +3,6 @@ import React from 'react';
 import { useForm } from "react-hook-form";
 import AgentFilters, { FilterValues } from '@/components/agent/AgentFilters';
 import { Agent } from '@/types/Agent';
-import { Button } from '@/components/ui/button';
 
 interface AgentFilterContainerProps {
   agents: Agent[];
@@ -33,6 +32,11 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
       favoritesOnly: false,
     },
   });
+
+  // Seed parent with full agent list on mount or when agents change
+  React.useEffect(() => {
+    onApplyFilters(agents);
+  }, [agents, onApplyFilters]);
 
   // Apply filters whenever form values change
   const applyFilters = (values: FilterValues) => {
