@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Agent } from '@/types/Agent';
@@ -22,28 +21,30 @@ export function useAgents(): UseAgentsResult {
   const [skillLevels, setSkillLevels] = useState<string[]>([]);
   const { user, userRole } = useUserContext();
 
-  // Fetch all profiles without filtering by role
+  // Fetch all profiles without ANY filtering
   useEffect(() => {
     const fetchAgents = async () => {
       try {
         setLoading(true);
+        console.log('Fetching all profiles without filtering');
         
-        // Get all profiles without any role filtering
+        // Get ALL profiles - no filters at all
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('id, country, city, computer_skill_level');
+          .select('*');
         
         if (profilesError) {
           console.error('Error fetching profiles:', profilesError);
-          toast.error('Failed to load agent profiles');
+          toast.error('Failed to load profiles');
           return;
         }
 
+        console.log('Fetched profiles:', profiles?.length, profiles);
+        
         // Then check which ones have audio
         const { data: audioData, error: audioError } = await supabase
           .from('audio_metadata')
-          .select('user_id, audio_url')
-          .order('created_at', { ascending: false });
+          .select('user_id, audio_url');
         
         if (audioError) {
           console.error('Error fetching audio data:', audioError);
@@ -57,14 +58,11 @@ export function useAgents(): UseAgentsResult {
           }
         });
 
-        // If business user, get favorites
+        // Get favorites if user is business
         let favorites: string[] = [];
         if (userRole === 'business' && user) {
-          // Use RPC function to get favorites
           const { data, error } = await supabase
-            .rpc('get_business_favorites', { 
-              business_user_id: user.id 
-            });
+            .rpc('get_business_favorites', { business_user_id: user.id });
 
           if (error) {
             console.error('Error fetching favorites:', error);
@@ -73,12 +71,8 @@ export function useAgents(): UseAgentsResult {
           }
         }
         
-        // Filter out the current user's profile only if needed
-        // For now, we'll show all profiles including the current user
-        const filteredProfiles = profiles || [];
-        
-        // Map profiles to agents with audio info and favorite status
-        const agentsWithAudioInfo = filteredProfiles?.map(profile => ({
+        // Map ALL profiles to agents without any filtering
+        const agentsWithAudioInfo = profiles?.map(profile => ({
           id: profile.id,
           has_audio: audioMap.has(profile.id),
           audio_url: audioMap.get(profile.id) || null,
@@ -88,6 +82,7 @@ export function useAgents(): UseAgentsResult {
           is_favorite: favorites.includes(profile.id)
         })) || [];
         
+        console.log('Processed agents:', agentsWithAudioInfo.length, agentsWithAudioInfo);
         setAgents(agentsWithAudioInfo);
 
         // Extract unique values for filter dropdowns
