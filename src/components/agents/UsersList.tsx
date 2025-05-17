@@ -55,7 +55,8 @@ const UsersList: React.FC<UsersListProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-between mb-4">
+        <p className="text-gray-500">{users.length} agent profiles found</p>
         <Button variant="outline" size="sm" onClick={handleRefresh} className="flex items-center gap-2">
           <RefreshCw className="h-4 w-4" />
           Refresh

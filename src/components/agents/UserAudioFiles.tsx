@@ -65,15 +65,13 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
             )}
           </div>
 
-          {/* Add actual audio element */}
-          {!showLoginPrompt && (
-            <div className={playingAudio === file.id ? "block" : "hidden"}>
-              <AudioPlayer 
-                audioUrl={file.audio_url} 
-                suppressErrors={true}
-                className="mt-2"
-              />
-            </div>
+          {/* Show AudioPlayer component when the audio is playing */}
+          {!showLoginPrompt && playingAudio === file.id && (
+            <AudioPlayer
+              audioUrl={file.audio_url}
+              suppressErrors={true}
+              className="mt-2"
+            />
           )}
           
           {/* Add hidden audio element for reference */}

@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CardContent, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ChevronDown, ChevronUp, Clock, MapPin, PlayCircle, Lock } from 'lucide-react';
+import { ChevronDown, ChevronUp, Clock, MapPin, PlayCircle, Lock, Globe, Briefcase, User } from 'lucide-react';
 import { formatDate } from '@/utils/dateUtils';
 import UserAudioFiles, { AudioFile } from './UserAudioFiles';
 import { Link } from 'react-router-dom';
@@ -42,13 +42,18 @@ const UserCard: React.FC<UserCardProps> = ({
   onAudioPlay,
   showLoginPrompt = false
 }) => {
+  // Format the user ID to show only first 8 characters
+  const formatUserId = (id: string) => `${id.substring(0, 8)}...`;
   
   return (
     <>
       <CardContent className="p-4">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-lg font-medium">{user.email?.split('@')[0] || 'Anonymous Agent'}</h3>
+            <div className="flex items-center gap-2">
+              <User className="h-5 w-5 text-gray-500" />
+              <h3 className="text-lg font-medium">{formatUserId(user.id)}</h3>
+            </div>
             <div className="text-sm text-gray-500 mt-1 flex items-center">
               <Clock className="h-4 w-4 mr-1" />
               <span>Joined {formatDate(user.created_at)}</span>
@@ -59,21 +64,18 @@ const UserCard: React.FC<UserCardProps> = ({
           </Button>
         </div>
 
-        {/* Show basic info */}
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          {user.country && (
+        {/* Show basic info in a more compact layout */}
+        <div className="mt-4 space-y-2">
+          {(user.country || user.city) && (
             <div className="flex items-center">
-              <MapPin className="h-4 w-4 mr-1 text-gray-500" />
-              <span className="text-sm">{`${user.city || 'Unknown'}, ${user.country}`}</span>
+              <MapPin className="h-4 w-4 mr-2 text-gray-500" />
+              <span className="text-sm">{[user.city, user.country].filter(Boolean).join(", ")}</span>
             </div>
           )}
-          {user.gender && (
-            <div className="flex items-center">
-              <span className="text-sm">{user.gender}</span>
-            </div>
-          )}
+          
           {user.years_experience && (
-            <div className="flex items-center col-span-2">
+            <div className="flex items-center">
+              <Briefcase className="h-4 w-4 mr-2 text-gray-500" />
               <span className="text-sm">{user.years_experience} years experience</span>
             </div>
           )}
@@ -82,10 +84,13 @@ const UserCard: React.FC<UserCardProps> = ({
         {/* Languages Section */}
         {user.languages && user.languages.length > 0 && (
           <div className="mt-4">
-            <div className="text-sm font-medium mb-2">Languages Spoken:</div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex items-center">
+              <Globe className="h-4 w-4 mr-2 text-gray-500" />
+              <div className="text-sm font-medium">Languages:</div>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2 ml-6">
               {user.languages.map((lang, idx) => (
-                <Badge key={idx} variant="secondary">{lang}</Badge>
+                <Badge key={idx} variant="secondary" className="text-xs">{lang}</Badge>
               ))}
             </div>
           </div>
