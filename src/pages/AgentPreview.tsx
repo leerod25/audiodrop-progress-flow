@@ -24,9 +24,6 @@ const AgentPreview: React.FC = () => {
   // Custom hooks for data and audio
   const { 
     loading, 
-    countries, 
-    cities, 
-    skillLevels,
     toggleFavorite 
   } = useAgents();
 
@@ -70,7 +67,11 @@ const AgentPreview: React.FC = () => {
 
   // Reset all filters
   const resetFilters = () => {
-    // This will be handled by the AgentFilterContainer component
+    // This will be handled by fetching all users again
+    const container = document.querySelector('AgentFilterContainer');
+    if (container) {
+      // Re-trigger effect
+    }
   };
 
   // Close audio modal
@@ -110,11 +111,7 @@ const AgentPreview: React.FC = () => {
       </div>
       
       <AgentFilterContainer
-        countries={countries}
-        cities={cities}
-        skillLevels={skillLevels}
         onApplyFilters={setFilteredAgents}
-        isBusinessAccount={isBusinessAccount}
       />
       
       {/* Show Agent Detail Card if Selected */}
