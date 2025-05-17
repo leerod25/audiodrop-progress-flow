@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from "@/components/ui/skeleton";
 import AudioRecordingItem from '@/components/AudioRecordingItem';
+import { ArrowLeft } from 'lucide-react';
 
 interface Audio {
   id: string;
@@ -24,8 +25,14 @@ interface ProfileAudioListProps {
 const ProfileAudioList = ({ audios, loading, deleteAudio, renameAudio }: ProfileAudioListProps) => {
   return (
     <Card className="bg-white shadow-md">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-2xl font-bold">Your Recordings</CardTitle>
+        <Button variant="outline" asChild className="flex items-center gap-2">
+          <Link to="/dashboard">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Link>
+        </Button>
       </CardHeader>
       <CardContent className="space-y-6">
         {loading && (
@@ -58,6 +65,14 @@ const ProfileAudioList = ({ audios, loading, deleteAudio, renameAudio }: Profile
                 <Link to="/upload">Record Your First Audio</Link>
               </Button>
             </motion.div>
+            <div className="mt-4">
+              <Button variant="outline" asChild className="flex items-center gap-2">
+                <Link to="/dashboard">
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Dashboard
+                </Link>
+              </Button>
+            </div>
           </div>
         )}
 
