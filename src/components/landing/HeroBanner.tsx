@@ -20,7 +20,8 @@ const HeroBanner: React.FC = () => {
           </p>
           <div className="mt-4 space-y-2">
             <p className="italic text-gray-200">
-              <strong>1. A SOURCE</strong> — <i>Fons</i> (Latin): the origin or spring from which something flows.
+              <span className="block"><i>Fons</i> (Latin): the origin or spring from which something flows.</span>
+              <strong className="block mt-1">1. A SOURCE</strong>
             </p>
             <p className="italic text-gray-200">
               <strong>2. A wellspring of growth, power, and elevation</strong> — built to take your company to the next level.
