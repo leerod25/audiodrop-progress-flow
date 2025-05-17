@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 
@@ -72,6 +71,17 @@ serve(async (req) => {
         status: 401,
       });
     }
+    
+    // Get request parameters
+    let params = {};
+    try {
+      params = await req.json();
+    } catch (e) {
+      // If request body is not valid JSON, just use empty object
+      params = {};
+    }
+    
+    const businessOnly = params.businessOnly === true;
 
     // Fetch all users using the admin API
     const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
@@ -84,9 +94,45 @@ serve(async (req) => {
       });
     }
     
+    // Get user roles to filter profiles
+    const { data: userRoles, error: rolesError } = await supabaseAdmin
+      .from('user_roles')
+      .select('user_id, role');
+      
+    if (rolesError) {
+      console.error('Error fetching user roles:', rolesError);
+      return new Response(JSON.stringify({ error: 'Failed to fetch user roles' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+    
+    // Create a map of user_id to role
+    const roleMap = new Map();
+    userRoles?.forEach(userRole => {
+      roleMap.set(userRole.user_id, userRole.role);
+    });
+    
+    // Filter users based on role
+    let filteredUsers = usersData.users;
+    if (businessOnly) {
+      // Keep only business users
+      filteredUsers = filteredUsers.filter(user => {
+        const role = roleMap.get(user.id);
+        return role === 'business';
+      });
+      console.log(`Filtered to show only business profiles: ${filteredUsers.length} found`);
+    } else {
+      // Default behavior - remove business users
+      filteredUsers = filteredUsers.filter(user => {
+        const role = roleMap.get(user.id);
+        return role !== 'business';
+      });
+    }
+    
     // For each user, fetch their audio files directly from storage
-    if (usersData && usersData.users) {
-      for (const user of usersData.users) {
+    if (filteredUsers) {
+      for (const user of filteredUsers) {
         try {
           // Get all audio files from storage for this user
           // Look for files in the audio-bucket/{user_id}/ path
@@ -160,6 +206,9 @@ serve(async (req) => {
         }
       }
     }
+    
+    // Update the usersData object with the filtered users
+    usersData.users = filteredUsers;
 
     // Return the users with their audio files
     return new Response(JSON.stringify(usersData), {
