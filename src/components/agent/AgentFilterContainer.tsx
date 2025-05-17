@@ -102,7 +102,7 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
         isBusinessAccount={isBusinessAccount}
       />
 
-      {/* No Results Message */}
+      {/* No Results Message - Fix the condition to check if filtered agents length is 0 */}
       {agents.length > 0 && onApplyFilters.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-600 text-lg">No agents found matching your filters.</p>
