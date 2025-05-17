@@ -39,7 +39,7 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
     },
   });
 
-  // Only include agent profiles, exclude business users and self
+  // Only exclude the current user; show all other profiles
   const agentProfiles = user
     ? agents.filter(a => a.id !== user.id)
     : agents;
