@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Agent } from '@/types/Agent';
@@ -13,6 +14,7 @@ const AgentPreview: React.FC = () => {
     async function loadAgents() {
       try {
         setLoading(true);
+        // Get all profiles from Supabase
         const { data, error } = await supabase
           .from('profiles')
           .select('*');
@@ -24,6 +26,7 @@ const AgentPreview: React.FC = () => {
         }
         
         console.log('Raw profiles data:', data);
+        console.log('Number of profiles found:', data?.length || 0);
         
         // Transform profiles data to match Agent interface
         const transformedAgents: Agent[] = (data || []).map(profile => ({
