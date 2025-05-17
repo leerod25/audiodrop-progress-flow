@@ -4,6 +4,7 @@ import { Play, Pause, Volume2, VolumeX, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { isValidUrl } from '@/utils/audioUtils';
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -29,6 +30,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const progressRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    if (!isValidUrl(audioUrl)) {
+      setError(`Invalid audio URL: ${audioUrl}`);
+      return;
+    }
+
+    console.log(`AudioPlayer: Setting up audio with URL: ${audioUrl}`);
+    
     // Create audio element on mount
     const audio = new Audio();
     audioRef.current = audio;
@@ -109,6 +117,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('canplaythrough', handleCanPlay);
+      
+      // Release memory
+      URL.revokeObjectURL(audio.src);
+      audio.src = '';
+      audioRef.current = null;
     };
   }, [audioUrl, suppressErrors]);
 

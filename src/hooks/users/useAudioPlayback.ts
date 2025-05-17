@@ -61,75 +61,20 @@ export const useAudioPlayback = () => {
       // Stop any currently playing audio
       stopCurrentAudio();
       
-      // Get or create audio element
-      let audioElement = audioElementsRef.current[audioId];
-      if (!audioElement) {
-        // Find the audio element in the DOM
-        audioElement = document.getElementById(audioId) as HTMLAudioElement;
-        
-        if (!audioElement) {
-          console.error('Audio element not found in DOM:', audioId);
-          toast.error('Audio element not found');
-          return;
-        }
-        
+      // Update state first to show the AudioPlayer component
+      setPlayingAudio(audioId);
+      
+      // Either the AudioPlayer component will handle actual playback,
+      // or we'll fall back to the hidden audio element if needed
+      
+      // Get a reference to the hidden audio element for fallback purposes
+      const audioElement = document.getElementById(audioId) as HTMLAudioElement;
+      
+      if (audioElement) {
         // Cache the element for future use
         audioElementsRef.current[audioId] = audioElement;
-      }
-      
-      // Check if audio source exists and is valid
-      if (!audioElement.src || audioElement.src === window.location.href) {
-        console.error('Audio source is missing or invalid');
-        toast.error('Audio file URL is not valid');
-        return;
-      }
-      
-      // Check if the audio URL is valid before trying to play
-      if (!isValidUrl(audioElement.src)) {
-        console.error('Invalid audio URL:', audioElement.src);
-        toast.error('Invalid audio URL format');
-        return;
-      }
-      
-      // Reset the audio element
-      audioElement.currentTime = 0;
-      
-      // Force a reload to clear any previous errors
-      audioElement.load();
-      
-      console.log(`Attempting to play audio: ${audioId}`);
-      
-      // Play with promise handling for browsers that support it
-      let playPromise;
-      try {
-        playPromise = audioElement.play();
-        
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              setPlayingAudio(audioId);
-              console.log(`Now playing: ${audioId}`);
-              
-              // Set up onended handler to reset playingAudio state
-              audioElement.onended = () => {
-                console.log(`Playback ended for: ${audioId}`);
-                setPlayingAudio(null);
-              };
-            })
-            .catch(err => {
-              console.error('Browser prevented audio playback:', err);
-              toast.error('Audio playback blocked by browser. Try clicking again or check browser settings.');
-              setPlayingAudio(null);
-            });
-        } else {
-          // For older browsers that don't return a promise
-          setPlayingAudio(audioId);
-          console.log(`Now playing (legacy browser): ${audioId}`);
-        }
-      } catch (err) {
-        console.error('Error initiating playback:', err);
-        toast.error('Failed to play audio');
-        setPlayingAudio(null);
+      } else {
+        console.log(`Audio element with ID ${audioId} not found in DOM, using AudioPlayer component instead.`);
       }
     } catch (err) {
       console.error('Unexpected error in handleAudioPlay:', err);
