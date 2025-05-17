@@ -3,10 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import AgentFilters, { FilterValues } from '@/components/agent/AgentFilters';
 import { Agent } from '@/types/Agent';
-import { useUserContext } from '@/contexts/UserContext';
 
 interface AgentFilterContainerProps {
-  /** All user profiles, including agents and business users */
+  /** All user profiles, without exclusions */
   agents: Agent[];
   countries: string[];
   cities: string[];
@@ -25,7 +24,6 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
   onApplyFilters,
   isBusinessAccount,
 }) => {
-  const { user } = useUserContext();
   const [showFilters, setShowFilters] = useState(false);
 
   // Initialize the form state for filters
@@ -40,61 +38,32 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
   });
 
   // Show all profiles by default
-  const agentProfiles = agents;
+  useEffect(() => {
+    onApplyFilters(agents);
+  }, [agents, onApplyFilters]);
 
-  // Initial load - apply all profiles without filters
+  // Apply filters when any filter value changes
   useEffect(() => {
-    onApplyFilters(agentProfiles);
-  }, []);
-  
-  // Apply filters whenever form values change
-  useEffect(() => {
-    // Initial display of all profiles without filtering
-    console.log('Initial display of all profiles:', agentProfiles.length, agentProfiles);
-    onApplyFilters(agentProfiles);
-    
     const subscription = form.watch((values: FilterValues) => {
       if (!showFilters) {
-        onApplyFilters(agentProfiles);
+        onApplyFilters(agents);
         return;
       }
-      
-      // Start with all profiles
-      let result = agentProfiles;
-
-      // Apply filters only if specifically selected by the user
-      if (values.country) {
-        result = result.filter(a => a.country === values.country);
-      }
-      if (values.city) {
-        result = result.filter(a => a.city === values.city);
-      }
-      if (values.hasAudio) {
-        result = result.filter(a => a.has_audio);
-      }
-      if (values.skillLevel) {
-        result = result.filter(a => a.computer_skill_level === values.skillLevel);
-      }
-      if (values.favoritesOnly && isBusinessAccount) {
-        result = result.filter(a => a.is_favorite);
-      }
-
-      console.log('Filtered profiles:', result.length, result);
+      let result = agents;
+      if (values.country) result = result.filter(a => a.country === values.country);
+      if (values.city) result = result.filter(a => a.city === values.city);
+      if (values.hasAudio) result = result.filter(a => a.has_audio);
+      if (values.skillLevel) result = result.filter(a => a.computer_skill_level === values.skillLevel);
+      if (values.favoritesOnly && isBusinessAccount) result = result.filter(a => a.is_favorite);
       onApplyFilters(result);
     });
     return () => subscription.unsubscribe();
-  }, [form, agentProfiles, isBusinessAccount, onApplyFilters, showFilters]);
+  }, [form, agents, showFilters, isBusinessAccount, onApplyFilters]);
 
-  // Reset all filters back to full agent list
+  // Reset filters to defaults
   const resetFilters = () => {
-    form.reset({
-      country: '',
-      city: '',
-      hasAudio: false,
-      skillLevel: '',
-      favoritesOnly: false,
-    });
-    onApplyFilters(agentProfiles);
+    form.reset({ country: '', city: '', hasAudio: false, skillLevel: '', favoritesOnly: false });
+    onApplyFilters(agents);
     setShowFilters(false);
   };
 
@@ -104,7 +73,6 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
       showFilters={showFilters}
       setShowFilters={setShowFilters}
       resetFilters={resetFilters}
-      /** applyFilters handled by form.watch */
       applyFilters={() => {}}
       countries={countries}
       cities={cities}
