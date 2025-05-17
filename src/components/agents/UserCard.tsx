@@ -1,9 +1,13 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { formatDate } from '@/utils/dateUtils';
 import UserAudioFiles from './UserAudioFiles';
 import { useUserContext } from '@/contexts/UserContext';
+import { Heart, Send } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
 
 interface User {
   id: string;
@@ -41,11 +45,91 @@ const UserCard: React.FC<UserCardProps> = ({
   toggleUserExpand,
   handleAudioPlay
 }) => {
-  const { userRole } = useUserContext();
+  const { user: currentUser, userRole } = useUserContext();
   const isAgent = userRole === "agent";
+  const isBusiness = userRole === "business";
+  const [isFavorite, setIsFavorite] = React.useState(false);
+  const [isAddingToFavorites, setIsAddingToFavorites] = React.useState(false);
   
   // Generate a profile ID from the first 6 characters of the user ID
   const profileId = user.id.substring(0, 6).toUpperCase();
+
+  // Check if this agent is in favorites when component mounts
+  React.useEffect(() => {
+    const checkFavoriteStatus = async () => {
+      if (currentUser && isBusiness) {
+        try {
+          const { data, error } = await supabase
+            .rpc('get_business_favorites', { business_user_id: currentUser.id });
+          
+          if (error) {
+            console.error('Error checking favorite status:', error);
+            return;
+          }
+          
+          // Check if user.id is in the favorites array
+          if (data && Array.isArray(data)) {
+            setIsFavorite(data.includes(user.id));
+          }
+        } catch (err) {
+          console.error('Error checking favorite status:', err);
+        }
+      }
+    };
+    
+    checkFavoriteStatus();
+  }, [currentUser, user.id, isBusiness]);
+
+  // Handle adding to favorites
+  const handleAddToFavorites = async () => {
+    if (!currentUser) {
+      toast.error("You must be logged in to add agents to your team");
+      return;
+    }
+
+    if (userRole !== 'business') {
+      toast.error("Only business accounts can add agents to their team");
+      return;
+    }
+
+    try {
+      setIsAddingToFavorites(true);
+      
+      if (isFavorite) {
+        // Remove from favorites
+        const { error } = await supabase.rpc('remove_business_favorite', { 
+          business_user_id: currentUser.id, 
+          agent_user_id: user.id 
+        });
+
+        if (error) throw error;
+        toast.success('Agent removed from your team');
+        setIsFavorite(false);
+      } else {
+        // Add to favorites
+        const { error } = await supabase.rpc('add_business_favorite', { 
+          business_user_id: currentUser.id, 
+          agent_user_id: user.id 
+        });
+
+        if (error) throw error;
+        toast.success('Agent added to your team');
+        setIsFavorite(true);
+      }
+    } catch (error) {
+      console.error('Error updating favorites:', error);
+      toast.error('Failed to update your team');
+    } finally {
+      setIsAddingToFavorites(false);
+    }
+  };
+
+  // Handle connect now
+  const handleConnectNow = () => {
+    toast.success(`Connection request sent for agent ${profileId}`);
+    // In a real application, this would send a notification to administrators
+    // and potentially store the request in a database
+  };
   
   return (
     <Card className="shadow-sm overflow-hidden">
@@ -98,6 +182,28 @@ const UserCard: React.FC<UserCardProps> = ({
                 <p className="text-sm text-gray-600">{formatDate(user.last_sign_in_at)}</p>
               </div>
             </div>
+            
+            {isBusiness && (
+              <div className="flex flex-col sm:flex-row gap-3 mt-2">
+                <Button
+                  variant="outline"
+                  className={isFavorite ? "bg-pink-50 text-pink-600 border-pink-200" : ""} 
+                  onClick={handleAddToFavorites}
+                  disabled={isAddingToFavorites}
+                >
+                  <Heart className={isFavorite ? "fill-pink-500 text-pink-500" : ""} size={16} />
+                  {isFavorite ? 'Remove from Team' : 'Add to My Team'}
+                </Button>
+                
+                <Button
+                  onClick={handleConnectNow}
+                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  <Send size={16} />
+                  Connect Now
+                </Button>
+              </div>
+            )}
             
             <UserAudioFiles 
               audioFiles={user.audio_files} 
