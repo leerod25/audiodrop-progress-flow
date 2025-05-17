@@ -3,7 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
+// Define the User interface to match what we see in the screenshots
 interface User {
   id: string;
   full_name: string | null;
@@ -11,6 +13,7 @@ interface User {
   country: string | null;
   city: string | null;
   computer_skill_level: string | null;
+  phone: string | null;
 }
 
 const Agents: React.FC = () => {
@@ -18,31 +21,34 @@ const Agents: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadUsers() {
+    async function loadAllUsers() {
       try {
         setLoading(true);
-        // Direct query to get all profiles
-        const { data, error } = await supabase
+        
+        // First, get users from the profiles table
+        const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('*');
         
-        if (error) {
-          console.error('Error fetching users:', error);
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+          toast.error("Failed to load users");
           return;
         }
         
-        console.log('Users found:', data?.length || 0);
-        console.log('User data:', data);
+        console.log('Profiles found:', profilesData?.length || 0);
         
-        setUsers(data || []);
+        // Set the users from profiles data
+        setUsers(profilesData || []);
       } catch (err) {
         console.error('Error:', err);
+        toast.error("An unexpected error occurred");
       } finally {
         setLoading(false);
       }
     }
     
-    loadUsers();
+    loadAllUsers();
   }, []);
 
   return (
@@ -60,6 +66,7 @@ const Agents: React.FC = () => {
           {users.length === 0 ? (
             <div className="text-center py-8 border rounded-lg">
               <p className="text-xl text-gray-500">No users found</p>
+              <p className="text-sm text-gray-400 mt-2">This may be because you only have access to profiles and not all auth users.</p>
             </div>
           ) : (
             users.map(user => (
@@ -85,6 +92,10 @@ const Agents: React.FC = () => {
                       </p>
                     </div>
                     <div>
+                      <p className="font-medium">Phone</p>
+                      <p className="text-sm text-gray-600">{user.phone || 'Not provided'}</p>
+                    </div>
+                    <div>
                       <p className="font-medium">Computer Skill Level</p>
                       <p className="text-sm text-gray-600">{user.computer_skill_level || 'Not specified'}</p>
                     </div>
@@ -95,6 +106,22 @@ const Agents: React.FC = () => {
           )}
         </div>
       )}
+      
+      <div className="mt-8 p-4 bg-gray-100 rounded-lg">
+        <h2 className="text-xl font-bold mb-4">Important Note</h2>
+        <p className="text-gray-700">
+          Currently, we can only access profiles from the database, not all Auth users. 
+          To see all Auth users (as shown in your screenshot), we would need to:
+        </p>
+        <ol className="list-decimal ml-6 mt-2 text-gray-700 space-y-2">
+          <li>Create a secure server-side API endpoint with admin credentials</li>
+          <li>Use that endpoint to fetch all users from Supabase Auth</li>
+          <li>Display those results instead of just the profiles data</li>
+        </ol>
+        <p className="mt-4 text-gray-700">
+          This would require a backend service which isn't currently set up in this client-side only application.
+        </p>
+      </div>
       
       {/* Raw data for debugging */}
       <div className="mt-8">
