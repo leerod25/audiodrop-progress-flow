@@ -1,5 +1,6 @@
+
 import React, { useEffect, useState } from 'react';
-import { useForm } from "react-hook-form";
+import { useForm } from 'react-hook-form';
 import AgentFilters, { FilterValues } from '@/components/agent/AgentFilters';
 import { Agent } from '@/types/Agent';
 import { useUserContext } from '@/contexts/UserContext';
@@ -25,10 +26,9 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
   isBusinessAccount,
 }) => {
   const { user } = useUserContext();
-  // local toggle for showing/hiding the filter panel
   const [showFilters, setShowFilters] = useState(false);
 
-  // form state for the filters
+  // Initialize the form state for filters
   const form = useForm<FilterValues>({
     defaultValues: {
       country: '',
@@ -40,17 +40,13 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
   });
 
   // Only include agent profiles, exclude business users and self
-  // Note: Since Agent type doesn't have a role property directly, we'll keep just the filtering logic we can apply
-  const agentProfiles = user ? agents.filter(a => a.id !== user.id) : agents;
-  
-  // Seed parent with all agents on mount or when the list changes
-  useEffect(() => {
-    onApplyFilters(agentProfiles);
-  }, [agentProfiles, onApplyFilters]);
+  const agentProfiles = user
+    ? agents.filter(a => a.id !== user.id)
+    : agents;
 
-  // Apply filters whenever the form values change
+  // Apply filters whenever form values change
   useEffect(() => {
-    const subscription = form.watch((values: any) => {
+    const subscription = form.watch((values: FilterValues) => {
       let result = agentProfiles;
 
       if (values.country) {
