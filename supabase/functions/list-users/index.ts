@@ -62,34 +62,39 @@ serve(async (req) => {
       });
     }
     
-    // For each user, fetch their audio files from audio_metadata
+    // For each user, fetch their latest audio file from audio_metadata
     if (data && data.users) {
       for (const user of data.users) {
         try {
-          const { data: audioData, error: audioError } = await supabaseAdmin
+          // Get the most recent valid audio file for this user
+          const { data: audioData } = await supabaseAdmin
             .from('audio_metadata')
             .select('*')
-            .eq('user_id', user.id);
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
             
-          // Validate audio URLs before attaching them to the user object
-          let validAudioFiles = [];
-          if (!audioError && audioData && audioData.length > 0) {
-            validAudioFiles = audioData.map(file => {
-              // Ensure the audio_url is present and a string
-              if (!file.audio_url || typeof file.audio_url !== 'string') {
-                console.warn(`Invalid audio URL for file ${file.id}`);
-                // Return file with a placeholder URL that's obviously wrong
-                return {
-                  ...file,
-                  audio_url: '#invalid-url'
-                };
+          // Attach audio files to each user object, ensuring all URLs are valid
+          if (audioData && audioData.length > 0) {
+            // Filter to only include records with valid URLs
+            const validAudioFiles = audioData.filter(file => {
+              // Basic URL validation
+              try {
+                if (file.audio_url && typeof file.audio_url === 'string') {
+                  new URL(file.audio_url); // This will throw if URL is invalid
+                  return true;
+                }
+                return false;
+              } catch (e) {
+                console.warn(`Invalid audio URL for file ${file.id}: ${file.audio_url}`);
+                return false;
               }
-              return file;
             });
+            
+            user.audio_files = validAudioFiles;
+            console.log(`User ${user.id} has ${validAudioFiles.length} valid audio files`);
+          } else {
+            user.audio_files = [];
           }
-          
-          // Attach audio files to each user object
-          user.audio_files = audioError ? [] : validAudioFiles || [];
         } catch (err) {
           console.error(`Error fetching audio files for user ${user.id}:`, err);
           user.audio_files = []; // Default to empty array on error

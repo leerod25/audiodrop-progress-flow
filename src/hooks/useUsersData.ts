@@ -51,25 +51,7 @@ export const useUsersData = (currentUser: any) => {
       console.log('Users found:', response?.users?.length || 0);
       
       if (response?.users) {
-        // Validate audio URLs before setting users
-        const processedUsers = response.users.map(user => {
-          if (user.audio_files && user.audio_files.length > 0) {
-            // Filter out invalid audio URLs
-            user.audio_files = user.audio_files.filter(file => {
-              try {
-                // Simple validation to make sure URL is properly formatted
-                const url = new URL(file.audio_url);
-                return true;
-              } catch (e) {
-                console.warn('Invalid audio URL found:', file.audio_url);
-                return false;
-              }
-            });
-          }
-          return user;
-        });
-        
-        setUsers(processedUsers);
+        setUsers(response.users);
       } else {
         setError('No users data returned');
         toast.error("No users data returned");
@@ -118,13 +100,13 @@ export const useUsersData = (currentUser: any) => {
         // Play the new audio
         const audioElement = document.getElementById(audioId) as HTMLAudioElement;
         if (audioElement) {
-          // Check if audio is valid before playing
-          if (audioElement.error) {
-            console.error('Audio element has error before play:', audioElement.error);
+          if (!audioElement.src || audioElement.src === window.location.href) {
+            console.error('Audio source is missing or invalid');
             toast.error('Audio file is not available');
             return;
           }
           
+          // Check if audio is valid before playing
           audioElement.play()
             .then(() => setPlayingAudio(audioId))
             .catch(err => {
