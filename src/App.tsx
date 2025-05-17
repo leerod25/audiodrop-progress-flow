@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import LandingPage from "./pages/LandingPage";
 import AgentPreview from "./pages/AgentPreview";
 import BusinessSignup from "./pages/BusinessSignup";
+import Agents from "./pages/Agents"; // Import the new page
 import AppLayout from "./layouts/AppLayout";
 
 const queryClient = new QueryClient();
@@ -31,7 +32,8 @@ const App = () => (
             <Route path="/business-signup" element={<AppLayout><BusinessSignup /></AppLayout>} />
             <Route path="/upload" element={<AppLayout><UploadAudio /></AppLayout>} />
             <Route path="/profile" element={<AppLayout><Profile /></AppLayout>} />
-            <Route path="/agents" element={<AppLayout><AgentPreview /></AppLayout>} />
+            <Route path="/agents" element={<AppLayout><Agents /></AppLayout>} />
+            <Route path="/agent-preview" element={<AppLayout><AgentPreview /></AppLayout>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<AppLayout><NotFound /></AppLayout>} />
           </Routes>
