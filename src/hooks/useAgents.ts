@@ -22,27 +22,16 @@ export function useAgents(): UseAgentsResult {
   const [skillLevels, setSkillLevels] = useState<string[]>([]);
   const { user, userRole } = useUserContext();
 
-  // Fetch agents and populate filter options
+  // Fetch all profiles without filtering by role
   useEffect(() => {
     const fetchAgents = async () => {
       try {
         setLoading(true);
         
-        let userQuery = supabase
+        // Get all profiles without any role filtering
+        const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
           .select('id, country, city, computer_skill_level');
-
-        // For business users, we need to get only agent profiles
-        // Join with user_roles to get only users with 'agent' role
-        if (userRole === 'business') {
-          userQuery = supabase
-            .from('profiles')
-            .select('id, country, city, computer_skill_level, user_roles!inner(role)')
-            .eq('user_roles.role', 'agent');
-        }
-        
-        // Get profiles
-        const { data: profiles, error: profilesError } = await userQuery;
         
         if (profilesError) {
           console.error('Error fetching profiles:', profilesError);
@@ -84,8 +73,9 @@ export function useAgents(): UseAgentsResult {
           }
         }
         
-        // Filter out the current user's profile
-        const filteredProfiles = profiles?.filter(profile => profile.id !== user?.id) || [];
+        // Filter out the current user's profile only if needed
+        // For now, we'll show all profiles including the current user
+        const filteredProfiles = profiles || [];
         
         // Map profiles to agents with audio info and favorite status
         const agentsWithAudioInfo = filteredProfiles?.map(profile => ({

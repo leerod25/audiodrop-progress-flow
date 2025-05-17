@@ -39,17 +39,17 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
     },
   });
 
-  // Always show all agents without filtering out any profiles
-  const agentProfiles = agents;
+  // Show all profiles by default
+  const allProfiles = agents;
 
   // Apply filters whenever form values change
   useEffect(() => {
     // Initial display of all profiles without filtering
-    onApplyFilters(agentProfiles);
+    onApplyFilters(allProfiles);
     
     const subscription = form.watch((values: FilterValues) => {
       // Start with all profiles
-      let result = agentProfiles;
+      let result = allProfiles;
 
       // Apply filters only if specifically selected by the user
       if (values.country) {
@@ -73,7 +73,7 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
       onApplyFilters(result);
     });
     return () => subscription.unsubscribe();
-  }, [form, agentProfiles, isBusinessAccount, onApplyFilters]);
+  }, [form, allProfiles, isBusinessAccount, onApplyFilters]);
 
   // Reset all filters back to full agent list
   const resetFilters = () => {
@@ -84,7 +84,7 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
       skillLevel: '',
       favoritesOnly: false,
     });
-    onApplyFilters(agentProfiles);
+    onApplyFilters(allProfiles);
     setShowFilters(false);
   };
 
