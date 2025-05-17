@@ -38,9 +38,7 @@ const AgentPreview: React.FC = () => {
 
   // Show agent details card with audio recordings
   const showAgentDetails = (agent: Agent) => {
-    console.log("showAgentDetails called with agent:", agent.id);
     setSelectedAgent(agent);
-    
     // Scroll to the top to ensure the detail card is visible
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -50,7 +48,7 @@ const AgentPreview: React.FC = () => {
     if (!agent.audio_url) {
       return;
     }
-
+    
     setCurrentAgent(agent);
     setShowAudioModal(true);
     
@@ -87,7 +85,6 @@ const AgentPreview: React.FC = () => {
 
   // Close selected agent
   const closeSelectedAgent = () => {
-    console.log("Close Details clicked");
     setSelectedAgent(null);
   };
 
