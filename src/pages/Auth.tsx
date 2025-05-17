@@ -21,7 +21,7 @@ const Auth = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setUser(session.user);
-        navigate("/"); // Redirect to home if already logged in
+        navigate("/dashboard"); // Redirect to dashboard if already logged in
       }
     });
 
@@ -43,7 +43,7 @@ const Auth = () => {
             if (!data || !data.full_name || !data.phone || !data.city || !data.country) {
               navigate("/profile");
             } else {
-              navigate("/");
+              navigate("/dashboard");
             }
           }
         } else {

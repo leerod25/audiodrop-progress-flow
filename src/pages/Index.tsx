@@ -36,7 +36,7 @@ export default function Index() {
         title: "Logged out",
         description: "You have been successfully logged out.",
       });
-      navigate('/landing');
+      navigate('/');
     } catch (error) {
       console.error('Error logging out:', error);
       toast({
@@ -113,7 +113,7 @@ export default function Index() {
               <Link to="/auth">Login / Sign Up</Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link to="/landing">Back to Landing Page</Link>
+              <Link to="/">Back to Landing Page</Link>
             </Button>
           </div>
         </div>

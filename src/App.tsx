@@ -13,7 +13,7 @@ import Profile from "./pages/Profile";
 import LandingPage from "./pages/LandingPage";
 import AgentPreview from "./pages/AgentPreview";
 import BusinessSignup from "./pages/BusinessSignup";
-import Agents from "./pages/Agents"; // Import the new page
+import Agents from "./pages/Agents";
 import AppLayout from "./layouts/AppLayout";
 
 const queryClient = new QueryClient();
@@ -26,7 +26,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<AppLayout><Index /></AppLayout>} />
+            <Route path="/" element={<AppLayout><LandingPage /></AppLayout>} />
+            <Route path="/dashboard" element={<AppLayout><Index /></AppLayout>} />
             <Route path="/landing" element={<AppLayout><LandingPage /></AppLayout>} />
             <Route path="/auth" element={<AppLayout><Auth /></AppLayout>} />
             <Route path="/business-signup" element={<AppLayout><BusinessSignup /></AppLayout>} />

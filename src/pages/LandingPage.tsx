@@ -2,10 +2,37 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Button } from '@/components/ui/button';
+import { useUserContext } from '@/contexts/UserContext';
 
 const LandingPage: React.FC = () => {
+  const { user } = useUserContext();
+  
   return (
     <main className="font-sans antialiased text-gray-900">
+      {/* Header with navigation */}
+      <header className="bg-white shadow-sm py-4">
+        <div className="container mx-auto px-6 flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-blue-600">Out-Fons</h1>
+          <div className="space-x-4">
+            {user ? (
+              <Button asChild>
+                <Link to="/dashboard">Go to Dashboard</Link>
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" asChild>
+                  <Link to="/auth">Login</Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/business-signup">Business Sign Up</Link>
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+      
       {/* Banner Image with Text Overlay */}
       <section className="w-full relative">
         <AspectRatio ratio={3/1} className="bg-gradient-to-r from-gray-700 to-gray-900">
@@ -29,13 +56,21 @@ const LandingPage: React.FC = () => {
                 <strong>2. A wellspring of growth, power, and elevation</strong> — built to take your company to the next level.
               </p>
             </div>
-            <div className="mt-8">
+            <div className="mt-8 flex gap-4">
               <a
                 href="#services"
                 className="inline-block bg-white text-blue-600 font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
               >
                 Our Services
               </a>
+              {!user && (
+                <Link
+                  to="/auth"
+                  className="inline-block bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:bg-blue-700 transition-colors duration-300"
+                >
+                  Get Started
+                </Link>
+              )}
             </div>
           </div>
         </AspectRatio>
@@ -116,12 +151,22 @@ const LandingPage: React.FC = () => {
           <p className="text-gray-700 mb-8 max-w-xl mx-auto">
             Partner with Out-Fons and let us become the fountain of communication excellence for your brand.
           </p>
-          <a
-            href="mailto:contact@outfons.com"
-            className="inline-block bg-blue-600 text-white font-semibold px-8 py-4 rounded-lg shadow-lg hover:bg-blue-700 transition-colors duration-300"
-          >
-            Get in Touch
-          </a>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="mailto:contact@outfons.com"
+              className="inline-block bg-blue-600 text-white font-semibold px-8 py-4 rounded-lg shadow-lg hover:bg-blue-700 transition-colors duration-300"
+            >
+              Get in Touch
+            </a>
+            {!user && (
+              <Link
+                to="/auth"
+                className="inline-block bg-white border border-blue-600 text-blue-600 font-semibold px-8 py-4 rounded-lg shadow-lg hover:bg-blue-50 transition-colors duration-300"
+              >
+                Sign Up Now
+              </Link>
+            )}
+          </div>
         </div>
       </section>
 
@@ -132,7 +177,11 @@ const LandingPage: React.FC = () => {
           <div className="mt-2">
             <Link to="/auth" className="text-gray-400 hover:text-white mx-2">Login</Link>
             <span className="text-gray-600">|</span>
-            <Link to="/" className="text-gray-400 hover:text-white mx-2">Home</Link>
+            {user ? (
+              <Link to="/dashboard" className="text-gray-400 hover:text-white mx-2">Dashboard</Link>
+            ) : (
+              <Link to="/business-signup" className="text-gray-400 hover:text-white mx-2">Business Sign Up</Link>
+            )}
           </div>
         </div>
       </footer>
