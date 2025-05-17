@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { LogIn, UserPlus } from "lucide-react";
@@ -14,7 +14,13 @@ import AuthError from "@/components/auth/AuthError";
 const Auth = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, setUser } = useUserContext();
+  
+  // Get tab from URL query parameter
+  const searchParams = new URLSearchParams(location.search);
+  const tabParam = searchParams.get('tab');
+  const defaultTab = tabParam === 'signup' ? 'signup' : 'login';
 
   useEffect(() => {
     // Check if user is already logged in
@@ -64,7 +70,7 @@ const Auth = () => {
       <Card className="w-full">
         <AuthHeading />
         
-        <Tabs defaultValue="login" className="w-full">
+        <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="login" className="flex items-center gap-2" onClick={clearError}>
               <LogIn className="h-4 w-4" />

@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Button } from '@/components/ui/button';
 import { useUserContext } from '@/contexts/UserContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowRight, FileAudio, Users, UserCheck, LogIn } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
   const { user } = useUserContext();
@@ -58,26 +60,93 @@ const LandingPage: React.FC = () => {
             </div>
             <div className="mt-8 flex gap-4">
               <a
-                href="#services"
+                href="#actions"
                 className="inline-block bg-white text-blue-600 font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
               >
-                Our Services
+                Get Started
               </a>
-              {!user && (
-                <Link
-                  to="/auth"
-                  className="inline-block bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:bg-blue-700 transition-colors duration-300"
-                >
-                  Get Started
-                </Link>
-              )}
             </div>
           </div>
         </AspectRatio>
       </section>
       
+      {/* Action Cards Section */}
+      <section id="actions" className="py-20 bg-white">
+        <div className="container mx-auto px-6 lg:px-20">
+          <h2 className="text-4xl font-bold text-center mb-12">Choose Your Path</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="hover:shadow-lg transition-all duration-300">
+              <CardHeader className="bg-blue-50">
+                <CardTitle className="flex items-center gap-3">
+                  <Users className="h-6 w-6 text-blue-600" />
+                  View Agent Profiles
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6 flex flex-col gap-4">
+                <p className="text-gray-600">Browse available agents and preview their profiles.</p>
+                <p className="text-amber-600 text-sm font-medium">Note: Register to listen to audio samples</p>
+                <Button asChild variant="outline" className="mt-2">
+                  <Link to="/agents" className="flex items-center justify-between w-full">
+                    Browse Profiles
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover:shadow-lg transition-all duration-300">
+              <CardHeader className="bg-green-50">
+                <CardTitle className="flex items-center gap-3">
+                  <UserCheck className="h-6 w-6 text-green-600" />
+                  Register as an Agent
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6 flex flex-col gap-4">
+                <p className="text-gray-600">Create your agent profile and upload your audio samples.</p>
+                <p className="text-gray-600 text-sm">Get discovered by businesses looking for call center agents.</p>
+                <Button asChild className="mt-2 bg-green-600 hover:bg-green-700">
+                  <Link to="/auth?tab=signup" className="flex items-center justify-between w-full">
+                    Sign Up as Agent
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover:shadow-lg transition-all duration-300">
+              <CardHeader className="bg-purple-50">
+                <CardTitle className="flex items-center gap-3">
+                  <FileAudio className="h-6 w-6 text-purple-600" />
+                  Business Access
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6 flex flex-col gap-4">
+                <p className="text-gray-600">Find the perfect agents for your business needs.</p>
+                <p className="text-gray-600 text-sm">Full access to profiles, audio samples and contact information.</p>
+                <Button asChild className="mt-2 bg-purple-600 hover:bg-purple-700">
+                  <Link to="/business-signup" className="flex items-center justify-between w-full">
+                    Business Sign Up
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="mt-12 text-center">
+            <p className="text-gray-600 mb-4">Already registered?</p>
+            <Button asChild variant="outline" className="flex items-center gap-2 mx-auto">
+              <Link to="/auth">
+                <LogIn className="h-4 w-4" />
+                Login to Your Account
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+      
       {/* Services Section */}
-      <section id="services" className="py-20 bg-white">
+      <section id="services" className="py-20 bg-blue-50">
         <div className="container mx-auto px-6 lg:px-20">
           <h2 className="text-4xl font-bold text-center mb-12">Our Expertise</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -100,7 +169,7 @@ const LandingPage: React.FC = () => {
             ].map((service, idx) => (
               <div
                 key={idx}
-                className="p-6 border rounded-xl hover:shadow-lg transition-shadow duration-300 flex flex-col items-center text-center"
+                className="p-6 border rounded-xl bg-white hover:shadow-lg transition-shadow duration-300 flex flex-col items-center text-center"
               >
                 <div className="w-32 h-24 mb-4 overflow-hidden">
                   <img 
@@ -118,7 +187,7 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* About Section */}
-      <section className="py-20 bg-blue-50">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-6 lg:px-20 flex flex-col lg:flex-row items-center">
           <div className="lg:w-1/2 mb-8 lg:mb-0">
             <h2 className="text-4xl font-bold mb-4">Why <span className="text-blue-600">Fons</span>?</h2>
@@ -145,7 +214,7 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* Contact / CTA Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-blue-50">
         <div className="container mx-auto px-6 lg:px-20 text-center">
           <h2 className="text-4xl font-bold mb-6">Ready to Connect?</h2>
           <p className="text-gray-700 mb-8 max-w-xl mx-auto">

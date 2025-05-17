@@ -1,28 +1,20 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
+import { Card } from '@/components/ui/card';
 import UserCard from './UserCard';
-import { useUserContext } from '@/contexts/UserContext';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
 interface User {
   id: string;
   email: string | null;
-  app_metadata: Record<string, any>;
-  user_metadata: Record<string, any>;
   created_at: string;
-  last_sign_in_at?: string | null;
-  audio_files?: AudioFile[];
+  audio_files?: { id: string; title: string; audio_url: string }[];
   country?: string | null;
   city?: string | null;
   gender?: string | null;
   years_experience?: string | null;
-}
-
-interface AudioFile {
-  id: string;
-  title: string;
-  audio_url: string;
-  created_at: string;
+  languages?: string[] | null;
 }
 
 interface UsersListProps {
@@ -33,6 +25,7 @@ interface UsersListProps {
   toggleUserExpand: (userId: string) => void;
   handleAudioPlay: (audioId: string) => void;
   fetchAllUsers: () => Promise<void>;
+  showLoginPrompt?: boolean;
 }
 
 const UsersList: React.FC<UsersListProps> = ({
@@ -42,44 +35,40 @@ const UsersList: React.FC<UsersListProps> = ({
   playingAudio,
   toggleUserExpand,
   handleAudioPlay,
-  fetchAllUsers
+  fetchAllUsers,
+  showLoginPrompt = false
 }) => {
-  const { userRole } = useUserContext();
-  const isAgent = userRole === "agent";
-  
+  const handleRefresh = () => {
+    fetchAllUsers();
+  };
+
   return (
-    <div className="space-y-6">
-      {users.length === 0 ? (
-        <div className="text-center py-8 border rounded-lg">
-          <p className="text-xl text-gray-500">No agent profiles found matching your filters</p>
-        </div>
-      ) : (
-        <>
-          <div className="mb-4 text-sm text-gray-500">
-            Displaying {users.length} agent profile{users.length !== 1 ? 's' : ''}
-          </div>
-          {users.map(user => (
-            <UserCard
-              key={user.id}
-              user={user}
-              expandedUser={expandedUser}
-              playingAudio={playingAudio}
-              toggleUserExpand={toggleUserExpand}
-              handleAudioPlay={handleAudioPlay}
-            />
-          ))}
-        </>
-      )}
-      
-      <div className="flex justify-center mt-6">
-        <Button 
-          onClick={fetchAllUsers}
-          disabled={loading}
-          className="bg-blue-500 hover:bg-blue-600 text-white"
-        >
-          {loading ? 'Loading...' : isAgent ? 'Refresh Agent Directory' : 'Refresh Agent List'}
+    <div className="space-y-4">
+      <div className="flex justify-end mb-4">
+        <Button variant="outline" size="sm" onClick={handleRefresh} className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4" />
+          Refresh
         </Button>
       </div>
+
+      {users.length > 0 ? (
+        users.map(user => (
+          <Card key={user.id} className="overflow-hidden">
+            <UserCard
+              user={user}
+              isExpanded={expandedUser === user.id}
+              playingAudio={playingAudio}
+              toggleExpand={() => toggleUserExpand(user.id)}
+              onAudioPlay={handleAudioPlay}
+              showLoginPrompt={showLoginPrompt}
+            />
+          </Card>
+        ))
+      ) : (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No agent profiles found</p>
+        </div>
+      )}
     </div>
   );
 };
