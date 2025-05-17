@@ -14,6 +14,7 @@ import {
   TableRow,
   TableCell
 } from "@/components/ui/table";
+import { Volume2, ExternalLink } from "lucide-react";
 
 // Define the User interface from Supabase Auth
 interface User {
@@ -45,6 +46,7 @@ const Agents: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const { user } = useUserContext();
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
 
   const fetchAllUsers = async () => {
     try {
@@ -92,7 +94,51 @@ const Agents: React.FC = () => {
 
   // Toggle expanded state for a user
   const toggleUserExpand = (userId: string) => {
+    // If we're closing the currently expanded user, stop any playing audio
+    if (expandedUser === userId && playingAudio) {
+      const audioElement = document.getElementById(playingAudio) as HTMLAudioElement;
+      if (audioElement) {
+        audioElement.pause();
+      }
+      setPlayingAudio(null);
+    }
     setExpandedUser(expandedUser === userId ? null : userId);
+  };
+
+  // Format date for better display
+  const formatDate = (dateString: string | undefined | null): string => {
+    if (!dateString) return 'Never';
+    return new Date(dateString).toLocaleString();
+  };
+
+  // Handle audio playback
+  const handleAudioPlay = (audioId: string) => {
+    if (playingAudio === audioId) {
+      // If the same audio is already playing, stop it
+      const audioElement = document.getElementById(audioId) as HTMLAudioElement;
+      if (audioElement) {
+        audioElement.pause();
+      }
+      setPlayingAudio(null);
+    } else {
+      // If another audio is playing, stop it first
+      if (playingAudio) {
+        const previousAudio = document.getElementById(playingAudio) as HTMLAudioElement;
+        if (previousAudio) {
+          previousAudio.pause();
+        }
+      }
+      // Play the new audio
+      const audioElement = document.getElementById(audioId) as HTMLAudioElement;
+      if (audioElement) {
+        audioElement.play()
+          .then(() => setPlayingAudio(audioId))
+          .catch(err => {
+            console.error('Error playing audio:', err);
+            toast.error('Failed to play audio');
+          });
+      }
+    }
   };
 
   return (
@@ -141,13 +187,11 @@ const Agents: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <p className="font-medium">Created At</p>
-                        <p className="text-sm text-gray-600">{new Date(user.created_at).toLocaleString()}</p>
+                        <p className="text-sm text-gray-600">{formatDate(user.created_at)}</p>
                       </div>
                       <div>
                         <p className="font-medium">Last Sign In</p>
-                        <p className="text-sm text-gray-600">
-                          {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}
-                        </p>
+                        <p className="text-sm text-gray-600">{formatDate(user.last_sign_in_at)}</p>
                       </div>
                     </div>
                     
@@ -161,22 +205,45 @@ const Agents: React.FC = () => {
                             <TableRow>
                               <TableHead>Title</TableHead>
                               <TableHead>Created</TableHead>
-                              <TableHead>Action</TableHead>
+                              <TableHead>Actions</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {user.audio_files.map(file => (
                               <TableRow key={file.id}>
                                 <TableCell>{file.title}</TableCell>
-                                <TableCell>{new Date(file.created_at).toLocaleString()}</TableCell>
-                                <TableCell>
+                                <TableCell>{formatDate(file.created_at)}</TableCell>
+                                <TableCell className="space-y-2">
+                                  <div className="flex items-center space-x-2">
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      className="flex items-center space-x-1"
+                                      onClick={() => handleAudioPlay(`audio-${file.id}`)}
+                                    >
+                                      <Volume2 className="h-4 w-4" />
+                                      <span>{playingAudio === `audio-${file.id}` ? 'Pause' : 'Play'}</span>
+                                    </Button>
+                                    
+                                    <Button
+                                      size="sm"
+                                      variant="link"
+                                      className="flex items-center space-x-1"
+                                      asChild
+                                    >
+                                      <a href={file.audio_url} target="_blank" rel="noopener noreferrer">
+                                        <ExternalLink className="h-4 w-4" />
+                                        <span>Open</span>
+                                      </a>
+                                    </Button>
+                                  </div>
+                                  
                                   <audio 
-                                    controls 
+                                    id={`audio-${file.id}`}
                                     src={file.audio_url}
-                                    className="w-full max-w-[300px]"
-                                  >
-                                    Your browser does not support audio playback
-                                  </audio>
+                                    className="hidden"
+                                    onEnded={() => setPlayingAudio(null)}
+                                  />
                                 </TableCell>
                               </TableRow>
                             ))}
