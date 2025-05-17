@@ -21,7 +21,6 @@ const AgentPreview: React.FC = () => {
   
   // Custom hooks for data and audio
   const { 
-    agents, 
     loading, 
     countries, 
     cities, 
@@ -35,13 +34,6 @@ const AgentPreview: React.FC = () => {
     toggleAudio,
     stopAudio
   } = useAudioPlayer();
-
-  // Initialize filteredAgents with all agents when the agents array changes
-  useEffect(() => {
-    if (agents.length > 0) {
-      setFilteredAgents(agents);
-    }
-  }, [agents]);
 
   // Check if user is business role
   const isBusinessAccount = userRole === 'business';
@@ -76,7 +68,7 @@ const AgentPreview: React.FC = () => {
 
   // Reset all filters
   const resetFilters = () => {
-    setFilteredAgents(agents);
+    // This will be handled by the AgentFilterContainer component
   };
 
   // Close audio modal
@@ -93,7 +85,6 @@ const AgentPreview: React.FC = () => {
       </div>
       
       <AgentFilterContainer
-        agents={agents}
         countries={countries}
         cities={cities}
         skillLevels={skillLevels}

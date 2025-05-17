@@ -3,21 +3,19 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import AgentFilters, { FilterValues } from '@/components/agent/AgentFilters';
 import { Agent } from '@/types/Agent';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AgentFilterContainerProps {
-  /** All user profiles, without exclusions */
-  agents: Agent[];
   countries: string[];
   cities: string[];
   skillLevels: string[];
-  /** Callback to update the parent with the filtered list */
+  /** Callback to update the parent with the user list */
   onApplyFilters: (agents: Agent[]) => void;
   /** Whether the current viewer is a business user */
   isBusinessAccount: boolean;
 }
 
 const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
-  agents,
   countries,
   cities,
   skillLevels,
@@ -25,8 +23,36 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
   isBusinessAccount,
 }) => {
   const [showFilters, setShowFilters] = useState(false);
+  const [allAgents, setAllAgents] = useState<Agent[]>([]);
 
-  // Initialize the form state for filters
+  // fetch all users from Supabase profiles table
+  useEffect(() => {
+    async function loadUsers() {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*');
+      if (error) {
+        console.error('Error fetching users:', error);
+      } else {
+        // Add mock audio data for testing
+        const agentsWithAudioInfo = (data || []).map(profile => ({
+          id: profile.id,
+          has_audio: true, // Set all profiles to have audio for testing
+          audio_url: "path/to/your/audio-file.mp3",
+          country: profile.country,
+          city: profile.city,
+          computer_skill_level: profile.computer_skill_level,
+          is_favorite: false
+        }));
+        
+        setAllAgents(agentsWithAudioInfo);
+        onApplyFilters(agentsWithAudioInfo);
+      }
+    }
+    loadUsers();
+  }, [onApplyFilters]);
+
+  // filter form
   const form = useForm<FilterValues>({
     defaultValues: {
       country: '',
@@ -37,19 +63,14 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
     },
   });
 
-  // Show all profiles by default
+  // apply filters when form changes
   useEffect(() => {
-    onApplyFilters(agents);
-  }, [agents, onApplyFilters]);
-
-  // Apply filters when any filter value changes
-  useEffect(() => {
-    const subscription = form.watch((values: FilterValues) => {
+    const sub = form.watch((values: FilterValues) => {
+      let result = allAgents;
       if (!showFilters) {
-        onApplyFilters(agents);
+        onApplyFilters(allAgents);
         return;
       }
-      let result = agents;
       if (values.country) result = result.filter(a => a.country === values.country);
       if (values.city) result = result.filter(a => a.city === values.city);
       if (values.hasAudio) result = result.filter(a => a.has_audio);
@@ -57,13 +78,12 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
       if (values.favoritesOnly && isBusinessAccount) result = result.filter(a => a.is_favorite);
       onApplyFilters(result);
     });
-    return () => subscription.unsubscribe();
-  }, [form, agents, showFilters, isBusinessAccount, onApplyFilters]);
+    return () => sub.unsubscribe();
+  }, [form, allAgents, showFilters, isBusinessAccount, onApplyFilters]);
 
-  // Reset filters to defaults
   const resetFilters = () => {
     form.reset({ country: '', city: '', hasAudio: false, skillLevel: '', favoritesOnly: false });
-    onApplyFilters(agents);
+    onApplyFilters(allAgents);
     setShowFilters(false);
   };
 
