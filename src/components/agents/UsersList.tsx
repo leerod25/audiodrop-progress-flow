@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import UserCard from './UserCard';
+import { useUserContext } from '@/contexts/UserContext';
 
 interface User {
   id: string;
@@ -39,6 +39,9 @@ const UsersList: React.FC<UsersListProps> = ({
   handleAudioPlay,
   fetchAllUsers
 }) => {
+  const { userRole } = useUserContext();
+  const isAgent = userRole === "agent";
+  
   return (
     <div className="space-y-6">
       {users.length === 0 ? (
@@ -69,7 +72,7 @@ const UsersList: React.FC<UsersListProps> = ({
           disabled={loading}
           className="bg-blue-500 hover:bg-blue-600 text-white"
         >
-          {loading ? 'Loading...' : 'Refresh Agent List'}
+          {loading ? 'Loading...' : isAgent ? 'Refresh Agent Directory' : 'Refresh Agent List'}
         </Button>
       </div>
     </div>
