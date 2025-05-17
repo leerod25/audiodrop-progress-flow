@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
@@ -76,6 +77,10 @@ export const useUserFetch = (currentUser: any) => {
             .eq('user_id', user.id)
             .single();
           
+          // Log fetched data for debugging
+          console.log(`User ${user.id} profile data:`, profileData);
+          console.log(`User ${user.id} professional data:`, professionalData);
+          
           // Filter out any audio files with invalid URLs
           let validAudioFiles = user.audio_files || [];
           if (user.audio_files) {
@@ -100,6 +105,9 @@ export const useUserFetch = (currentUser: any) => {
           };
         }));
         
+        // Log processed users for debugging
+        console.log('Processed users with profile data:', processedUsers);
+        
         setUsers(processedUsers);
       } else {
         setError('No users data returned');
@@ -115,13 +123,8 @@ export const useUserFetch = (currentUser: any) => {
   };
 
   useEffect(() => {
-    // Only fetch if user is logged in
-    if (currentUser) {
-      fetchAllUsers();
-    } else {
-      setLoading(false);
-      setError("Please log in to view agent profiles");
-    }
+    // Fetch users regardless of login status to allow preview mode
+    fetchAllUsers();
   }, [currentUser]);
 
   return { users, loading, error, fetchAllUsers };

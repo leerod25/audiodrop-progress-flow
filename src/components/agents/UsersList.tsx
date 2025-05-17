@@ -53,6 +53,9 @@ const UsersList: React.FC<UsersListProps> = ({
     fetchAllUsers();
   };
 
+  // Debug output to check users data
+  console.log('UsersList rendering with users:', users);
+  
   return (
     <div className="space-y-4">
       <div className="flex justify-between mb-4">
@@ -64,18 +67,28 @@ const UsersList: React.FC<UsersListProps> = ({
       </div>
 
       {users.length > 0 ? (
-        users.map(user => (
-          <Card key={user.id} className="overflow-hidden">
-            <UserCard
-              user={user}
-              isExpanded={expandedUser === user.id}
-              playingAudio={playingAudio}
-              toggleExpand={() => toggleUserExpand(user.id)}
-              onAudioPlay={handleAudioPlay}
-              showLoginPrompt={showLoginPrompt}
-            />
-          </Card>
-        ))
+        users.map(user => {
+          // Debug output for each user
+          console.log(`Rendering user ${user.id}:`, {
+            country: user.country,
+            city: user.city,
+            years_experience: user.years_experience,
+            languages: user.languages
+          });
+          
+          return (
+            <Card key={user.id} className="overflow-hidden">
+              <UserCard
+                user={user}
+                isExpanded={expandedUser === user.id}
+                playingAudio={playingAudio}
+                toggleExpand={() => toggleUserExpand(user.id)}
+                onAudioPlay={handleAudioPlay}
+                showLoginPrompt={showLoginPrompt}
+              />
+            </Card>
+          );
+        })
       ) : (
         <div className="text-center py-8">
           <p className="text-gray-500">No agent profiles found</p>
