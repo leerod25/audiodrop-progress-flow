@@ -56,9 +56,9 @@ const UserCard: React.FC<UserCardProps> = ({
       
       <CardContent className={expandedUser === user.id ? "block" : "hidden"}>
         {isAgent ? (
-          // Limited view for agents - only show public information
+          // Limited view for agents - only show message that preview is not available
           <div className="p-4 text-center text-gray-500">
-            <p>As an agent, you can only view basic profile information.</p>
+            <p>NO PREVIEW AVAILABLE</p>
           </div>
         ) : (
           // Full view for business and admin users
