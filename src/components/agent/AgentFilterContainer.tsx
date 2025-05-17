@@ -21,7 +21,18 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({ onApplyFilt
           console.error('Error fetching users:', error);
           onApplyFilters([]);
         } else {
-          onApplyFilters(data || []);
+          // Transform the profile data to match the Agent type
+          const agents: Agent[] = (data || []).map(profile => ({
+            id: profile.id,
+            has_audio: true, // Setting a default value
+            audio_url: null, // Default to null
+            country: profile.country,
+            city: profile.city,
+            computer_skill_level: profile.computer_skill_level,
+            is_favorite: false // Default value
+          }));
+          
+          onApplyFilters(agents);
         }
       });
   }, [onApplyFilters]);
