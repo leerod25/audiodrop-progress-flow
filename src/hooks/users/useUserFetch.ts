@@ -19,6 +19,10 @@ interface User {
   created_at: string;
   last_sign_in_at?: string | null;
   audio_files?: AudioFile[];
+  country?: string | null;
+  city?: string | null;
+  gender?: string | null;
+  years_experience?: string | null;
 }
 
 interface UsersResponse {
@@ -52,11 +56,26 @@ export const useUserFetch = (currentUser: any) => {
       console.log('Agent profiles found:', response?.users?.length || 0);
       
       if (response?.users) {
-        // Process users to ensure audio files have proper URLs
-        const processedUsers = response.users.map(user => {
+        // Process users to ensure audio files have proper URLs and add profile data
+        const processedUsers = await Promise.all(response.users.map(async (user) => {
+          // Try to get additional profile data from the profiles table
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('country, city, gender')
+            .eq('id', user.id)
+            .single();
+            
+          // Try to get years experience from professional_details
+          const { data: professionalData } = await supabase
+            .from('professional_details')
+            .select('years_experience')
+            .eq('user_id', user.id)
+            .single();
+          
+          // Filter out any audio files with invalid URLs
+          let validAudioFiles = user.audio_files || [];
           if (user.audio_files) {
-            // Filter out any audio files with invalid URLs
-            const validAudioFiles = user.audio_files.filter(file => 
+            validAudioFiles = user.audio_files.filter(file => 
               isValidUrl(file.audio_url)
             );
             
@@ -64,14 +83,17 @@ export const useUserFetch = (currentUser: any) => {
             if (validAudioFiles.length !== user.audio_files.length) {
               console.log(`User ${user.id}: ${validAudioFiles.length} valid audio files out of ${user.audio_files.length} total`);
             }
-            
-            return {
-              ...user,
-              audio_files: validAudioFiles
-            };
           }
-          return user;
-        });
+          
+          return {
+            ...user,
+            country: profileData?.country || null,
+            city: profileData?.city || null,
+            gender: profileData?.gender || null,
+            years_experience: professionalData?.years_experience || null,
+            audio_files: validAudioFiles
+          };
+        }));
         
         setUsers(processedUsers);
       } else {

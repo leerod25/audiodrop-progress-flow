@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import UserCard from './UserCard';
@@ -11,6 +12,10 @@ interface User {
   created_at: string;
   last_sign_in_at?: string | null;
   audio_files?: AudioFile[];
+  country?: string | null;
+  city?: string | null;
+  gender?: string | null;
+  years_experience?: string | null;
 }
 
 interface AudioFile {

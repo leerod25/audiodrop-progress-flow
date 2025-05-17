@@ -13,6 +13,10 @@ interface User {
   created_at: string;
   last_sign_in_at?: string | null;
   audio_files?: AudioFile[];
+  country?: string | null;
+  city?: string | null;
+  gender?: string | null;
+  years_experience?: string | null;
 }
 
 interface AudioFile {
@@ -40,6 +44,9 @@ const UserCard: React.FC<UserCardProps> = ({
   const { userRole } = useUserContext();
   const isAgent = userRole === "agent";
   
+  // Generate a profile ID from the first 6 characters of the user ID
+  const profileId = user.id.substring(0, 6).toUpperCase();
+  
   return (
     <Card className="shadow-sm overflow-hidden">
       <CardHeader 
@@ -47,7 +54,7 @@ const UserCard: React.FC<UserCardProps> = ({
         onClick={() => toggleUserExpand(user.id)}
       >
         <div className="flex justify-between items-center">
-          <CardTitle className="text-xl">{user.email || 'No Email'}</CardTitle>
+          <CardTitle className="text-xl">Profile ID: {profileId}</CardTitle>
           <div className="text-sm text-blue-600 hover:underline">
             {expandedUser === user.id ? 'Hide Details' : 'Show Details'}
           </div>
@@ -70,8 +77,21 @@ const UserCard: React.FC<UserCardProps> = ({
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <p className="font-medium">Created At</p>
-                <p className="text-sm text-gray-600">{formatDate(user.created_at)}</p>
+                <p className="font-medium">Location</p>
+                <p className="text-sm text-gray-600">
+                  {user.country || 'Unknown'}{user.city ? `, ${user.city}` : ''}
+                </p>
+              </div>
+              <div>
+                <p className="font-medium">Gender</p>
+                <p className="text-sm text-gray-600">{user.gender || 'Not specified'}</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p className="font-medium">Experience</p>
+                <p className="text-sm text-gray-600">{user.years_experience || 'Not specified'} years</p>
               </div>
               <div>
                 <p className="font-medium">Last Sign In</p>
