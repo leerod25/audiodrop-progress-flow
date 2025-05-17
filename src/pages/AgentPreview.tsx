@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUserContext } from "@/contexts/UserContext";
 import { Agent } from '@/types/Agent';
 import { useAgents } from '@/hooks/useAgents';
@@ -17,15 +17,15 @@ const AgentPreview: React.FC = () => {
   const [currentAgent, setCurrentAgent] = useState<Agent | null>(null);
   const [showAgentCard, setShowAgentCard] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [filteredAgents, setFilteredAgents] = useState<Agent[]>([]);
   
   // Custom hooks for data and audio
   const { 
-    filteredAgents, 
+    agents, 
     loading, 
     countries, 
     cities, 
     skillLevels,
-    setFilteredAgents,
     toggleFavorite 
   } = useAgents();
 
@@ -35,6 +35,13 @@ const AgentPreview: React.FC = () => {
     toggleAudio,
     stopAudio
   } = useAudioPlayer();
+
+  // Initialize filteredAgents with all agents when the agents array changes
+  useEffect(() => {
+    if (agents.length > 0) {
+      setFilteredAgents(agents);
+    }
+  }, [agents]);
 
   // Check if user is business role
   const isBusinessAccount = userRole === 'business';
@@ -86,7 +93,7 @@ const AgentPreview: React.FC = () => {
       </div>
       
       <AgentFilterContainer
-        agents={filteredAgents}
+        agents={agents}
         countries={countries}
         cities={cities}
         skillLevels={skillLevels}

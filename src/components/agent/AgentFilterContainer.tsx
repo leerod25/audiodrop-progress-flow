@@ -23,6 +23,7 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
   isBusinessAccount
 }) => {
   const [showFilters, setShowFilters] = React.useState(false);
+  const [filteredAgents, setFilteredAgents] = React.useState<Agent[]>([]);
   
   const form = useForm<FilterValues>({
     defaultValues: {
@@ -58,11 +59,13 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
       result = result.filter(agent => agent.is_favorite);
     }
     
+    setFilteredAgents(result);
     onApplyFilters(result);
   };
 
   // Initialize with all agents on mount and when agents array changes
   useEffect(() => {
+    setFilteredAgents(agents);
     onApplyFilters(agents);
   }, [agents, onApplyFilters]);
 
@@ -84,6 +87,7 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
       skillLevel: '',
       favoritesOnly: false,
     });
+    setFilteredAgents(agents);
     onApplyFilters(agents);
     setShowFilters(false);
   };
@@ -102,8 +106,8 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
         isBusinessAccount={isBusinessAccount}
       />
 
-      {/* No Results Message - Fix the condition to check if filtered agents length is 0 */}
-      {agents.length > 0 && onApplyFilters.length === 0 && (
+      {/* No Results Message - Fixed condition to check if filtered agents length is 0 */}
+      {agents.length > 0 && filteredAgents.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-600 text-lg">No agents found matching your filters.</p>
           <Button 
