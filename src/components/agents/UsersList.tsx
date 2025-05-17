@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import UserCard from './UserCard';
@@ -7,14 +6,19 @@ import { RefreshCw } from 'lucide-react';
 
 interface User {
   id: string;
-  email: string | null;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
+  avatar_url?: string;
+  audio_files: AudioFile[];
+}
+
+interface AudioFile {
+  id: string;
+  title: string;
+  audio_url: string;
   created_at: string;
-  audio_files?: { id: string; title: string; audio_url: string }[];
-  country?: string | null;
-  city?: string | null;
-  gender?: string | null;
-  years_experience?: string | null;
-  languages?: string[] | null;
 }
 
 interface UsersListProps {
