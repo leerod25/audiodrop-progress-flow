@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -5,16 +6,8 @@ import { CardContent, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ChevronDown, ChevronUp, Clock, MapPin, PlayCircle, Lock } from 'lucide-react';
 import { formatDate } from '@/utils/dateUtils';
-import UserAudioFiles from './UserAudioFiles';
+import UserAudioFiles, { AudioFile } from './UserAudioFiles';
 import { Link } from 'react-router-dom';
-
-// Update the audio file type to include created_at
-interface AudioFile {
-  id: string;
-  title: string;
-  audio_url: string;
-  created_at: string; // Add this field to match expected type
-}
 
 interface User {
   id: string;
@@ -105,13 +98,7 @@ const UserCard: React.FC<UserCardProps> = ({
               
               {user.audio_files && user.audio_files.length > 0 ? (
                 <UserAudioFiles 
-                  // Update this to include created_at field
-                  audioFiles={user.audio_files.map(file => ({
-                    id: file.id,
-                    title: file.title, 
-                    audio_url: file.audio_url,
-                    created_at: file.created_at || new Date().toISOString() // Provide default if missing
-                  }))}
+                  audioFiles={user.audio_files}
                   playingAudio={playingAudio}
                   onPlay={onAudioPlay}
                   showLoginPrompt={showLoginPrompt}
