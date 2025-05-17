@@ -1,52 +1,99 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 
 export function useAudioPlayer() {
   const [currentAudio, setCurrentAudio] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Audio player setup
   useEffect(() => {
-    if (audioPlayer) {
-      audioPlayer.onended = () => {
+    if (audioRef.current) {
+      // Set up event listeners
+      const audio = audioRef.current;
+      
+      const onEnded = () => setIsPlaying(false);
+      const onError = (e: Event) => {
+        console.error('Audio playback error:', e);
+        toast.error('Failed to play audio');
         setIsPlaying(false);
+        setIsLoading(false);
+      };
+      const onCanPlayThrough = () => {
+        setIsLoading(false);
+        // Auto-play when loaded (only if we were trying to play)
+        if (isLoading && audio) {
+          audio.play().catch(err => {
+            console.error('Browser prevented autoplay:', err);
+            setIsPlaying(false);
+            toast.error('Autoplay prevented by browser. Please click play again.');
+          });
+        }
       };
       
+      audio.addEventListener('ended', onEnded);
+      audio.addEventListener('error', onError);
+      audio.addEventListener('canplaythrough', onCanPlayThrough);
+      
       return () => {
-        audioPlayer.pause();
-        audioPlayer.onended = null;
+        audio.pause();
+        audio.removeEventListener('ended', onEnded);
+        audio.removeEventListener('error', onError);
+        audio.removeEventListener('canplaythrough', onCanPlayThrough);
       };
     }
-  }, [audioPlayer]);
+  }, [audioRef.current, isLoading]);
 
   // Play/pause audio
   const toggleAudio = (audioUrl: string) => {
-    if (currentAudio === audioUrl && isPlaying && audioPlayer) {
-      audioPlayer.pause();
-      setIsPlaying(false);
-    } else {
-      if (audioPlayer) {
-        audioPlayer.pause();
+    try {
+      console.log('Attempting to play audio:', audioUrl);
+      
+      if (currentAudio === audioUrl && isPlaying && audioRef.current) {
+        // Pause current audio
+        audioRef.current.pause();
+        setIsPlaying(false);
+        return;
       }
       
-      const newAudioPlayer = new Audio(audioUrl);
-      setAudioPlayer(newAudioPlayer);
+      // Stop any currently playing audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      
+      // Create new audio instance or reuse existing
+      if (!audioRef.current) {
+        audioRef.current = new Audio();
+      }
+      
+      // Set new source and prepare for playback
+      const audio = audioRef.current;
+      audio.src = audioUrl;
+      audio.currentTime = 0;
       setCurrentAudio(audioUrl);
-      newAudioPlayer.play().then(() => {
-        setIsPlaying(true);
-      }).catch(err => {
-        console.error('Error playing audio:', err);
-        toast.error('Failed to play audio');
-      });
+      setIsLoading(true);
+      
+      // Try to play immediately (may be prevented by browser policies)
+      audio.load();
+      
+      // Update UI state - actual playback will happen in canplaythrough event
+      setIsPlaying(true);
+      
+      console.log('Audio element created and loading started');
+    } catch (err) {
+      console.error('Error setting up audio playback:', err);
+      toast.error('Failed to initialize audio playback');
+      setIsPlaying(false);
+      setIsLoading(false);
     }
   };
 
   // Stop any playing audio
   const stopAudio = () => {
-    if (audioPlayer && isPlaying) {
-      audioPlayer.pause();
+    if (audioRef.current && isPlaying) {
+      audioRef.current.pause();
       setIsPlaying(false);
     }
   };
@@ -54,6 +101,7 @@ export function useAudioPlayer() {
   return {
     currentAudio,
     isPlaying,
+    isLoading,
     toggleAudio,
     stopAudio
   };
