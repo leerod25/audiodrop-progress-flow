@@ -43,19 +43,24 @@ const UsersList: React.FC<UsersListProps> = ({
     <div className="space-y-6">
       {users.length === 0 ? (
         <div className="text-center py-8 border rounded-lg">
-          <p className="text-xl text-gray-500">No users found</p>
+          <p className="text-xl text-gray-500">No users found matching your filters</p>
         </div>
       ) : (
-        users.map(user => (
-          <UserCard
-            key={user.id}
-            user={user}
-            expandedUser={expandedUser}
-            playingAudio={playingAudio}
-            toggleUserExpand={toggleUserExpand}
-            handleAudioPlay={handleAudioPlay}
-          />
-        ))
+        <>
+          <div className="mb-4 text-sm text-gray-500">
+            Displaying {users.length} user{users.length !== 1 ? 's' : ''}
+          </div>
+          {users.map(user => (
+            <UserCard
+              key={user.id}
+              user={user}
+              expandedUser={expandedUser}
+              playingAudio={playingAudio}
+              toggleUserExpand={toggleUserExpand}
+              handleAudioPlay={handleAudioPlay}
+            />
+          ))}
+        </>
       )}
       
       <div className="flex justify-center mt-6">
