@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useUserContext } from "@/contexts/UserContext";
 import { Agent } from '@/types/Agent';
 import { useAgents } from '@/hooks/useAgents';
@@ -16,7 +16,6 @@ const AgentPreview: React.FC = () => {
   const { userRole } = useUserContext();
   const [showAudioModal, setShowAudioModal] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<Agent | null>(null);
-  const [showAgentCard, setShowAgentCard] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [filteredAgents, setFilteredAgents] = useState<Agent[]>([]);
   const [viewMode, setViewMode] = useState<'list' | 'details'>('list');
@@ -41,7 +40,6 @@ const AgentPreview: React.FC = () => {
   const showAgentDetails = (agent: Agent) => {
     console.log("showAgentDetails called with agent:", agent.id);
     setSelectedAgent(agent);
-    setShowAgentCard(true);
     
     // Scroll to the top to ensure the detail card is visible
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -84,10 +82,13 @@ const AgentPreview: React.FC = () => {
   // Toggle between list and details view
   const toggleViewMode = () => {
     setViewMode(viewMode === 'list' ? 'details' : 'list');
-    if (showAgentCard) {
-      setShowAgentCard(false);
-      setSelectedAgent(null);
-    }
+    setSelectedAgent(null);
+  };
+
+  // Close selected agent
+  const closeSelectedAgent = () => {
+    console.log("Close Details clicked");
+    setSelectedAgent(null);
   };
 
   return (
@@ -114,21 +115,18 @@ const AgentPreview: React.FC = () => {
         onApplyFilters={setFilteredAgents}
       />
       
-      {/* Show Agent Detail Card if Selected */}
-      {showAgentCard && selectedAgent && (
+      {/* Show Agent Detail View if a specific agent is selected */}
+      {selectedAgent && (
         <AgentDetailView
           agent={selectedAgent}
           isBusinessAccount={isBusinessAccount}
           toggleFavorite={toggleFavorite}
-          onClose={() => {
-            console.log("Close Details clicked");
-            setShowAgentCard(false);
-          }}
+          onClose={closeSelectedAgent}
         />
       )}
       
       {/* When in list view and no agent is selected */}
-      {viewMode === 'list' && !showAgentCard && (
+      {viewMode === 'list' && !selectedAgent && (
         <AgentList
           agents={filteredAgents}
           loading={loading}
@@ -142,8 +140,8 @@ const AgentPreview: React.FC = () => {
         />
       )}
 
-      {/* When in details view and no agent is explicitly selected */}
-      {viewMode === 'details' && !showAgentCard && (
+      {/* When in details view and no agent is selected */}
+      {viewMode === 'details' && !selectedAgent && (
         <div className="space-y-6">
           {loading ? (
             <div className="animate-pulse space-y-4">
