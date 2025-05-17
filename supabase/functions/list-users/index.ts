@@ -61,8 +61,21 @@ serve(async (req) => {
         status: 500,
       });
     }
+    
+    // For each user, fetch their audio files from audio_metadata
+    if (data && data.users) {
+      for (const user of data.users) {
+        const { data: audioData, error: audioError } = await supabaseAdmin
+          .from('audio_metadata')
+          .select('*')
+          .eq('user_id', user.id);
+          
+        // Attach audio files to each user object
+        user.audio_files = audioError ? [] : audioData || [];
+      }
+    }
 
-    // Return the users
+    // Return the users with their audio files
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,

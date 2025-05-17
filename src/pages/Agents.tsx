@@ -1,11 +1,19 @@
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useUserContext } from '@/contexts/UserContext';
+import { 
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell
+} from "@/components/ui/table";
 
 // Define the User interface from Supabase Auth
 interface User {
@@ -15,6 +23,15 @@ interface User {
   user_metadata: Record<string, any>;
   created_at: string;
   last_sign_in_at?: string | null;
+  audio_files?: AudioFile[];
+}
+
+// Interface for audio files
+interface AudioFile {
+  id: string;
+  title: string;
+  audio_url: string;
+  created_at: string;
 }
 
 // Data structure returned from the edge function
@@ -27,6 +44,7 @@ const Agents: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useUserContext();
+  const [expandedUser, setExpandedUser] = useState<string | null>(null);
 
   const fetchAllUsers = async () => {
     try {
@@ -72,6 +90,11 @@ const Agents: React.FC = () => {
     }
   }, [user]);
 
+  // Toggle expanded state for a user
+  const toggleUserExpand = (userId: string) => {
+    setExpandedUser(expandedUser === userId ? null : userId);
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-6">All Users ({users.length})</h1>
@@ -90,33 +113,76 @@ const Agents: React.FC = () => {
           <Skeleton className="h-24 w-full" />
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {users.length === 0 ? (
             <div className="text-center py-8 border rounded-lg">
               <p className="text-xl text-gray-500">No users found</p>
             </div>
           ) : (
             users.map(user => (
-              <Card key={user.id} className="shadow-sm">
-                <CardContent className="pt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card key={user.id} className="shadow-sm overflow-hidden">
+                <CardHeader className="cursor-pointer bg-gray-50" 
+                  onClick={() => toggleUserExpand(user.id)}>
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-xl">{user.email || 'No Email'}</CardTitle>
+                    <div className="text-sm text-blue-600 hover:underline">
+                      {expandedUser === user.id ? 'Hide Details' : 'Show Details'}
+                    </div>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className={expandedUser === user.id ? "block" : "hidden"}>
+                  <div className="grid grid-cols-1 gap-4 mb-4">
                     <div>
                       <p className="font-medium">User ID</p>
                       <p className="text-sm text-gray-600 break-all">{user.id}</p>
                     </div>
-                    <div>
-                      <p className="font-medium">Email</p>
-                      <p className="text-sm text-gray-600">{user.email || 'Not provided'}</p>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <p className="font-medium">Created At</p>
+                        <p className="text-sm text-gray-600">{new Date(user.created_at).toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="font-medium">Last Sign In</p>
+                        <p className="text-sm text-gray-600">
+                          {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}
+                        </p>
+                      </div>
                     </div>
+                    
                     <div>
-                      <p className="font-medium">Created At</p>
-                      <p className="text-sm text-gray-600">{new Date(user.created_at).toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium">Last Sign In</p>
-                      <p className="text-sm text-gray-600">
-                        {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}
-                      </p>
+                      <h3 className="font-medium text-lg mb-2">Audio Files ({user.audio_files?.length || 0})</h3>
+                      {!user.audio_files || user.audio_files.length === 0 ? (
+                        <p className="text-sm text-gray-500 italic">No audio files found for this user</p>
+                      ) : (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Title</TableHead>
+                              <TableHead>Created</TableHead>
+                              <TableHead>Action</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {user.audio_files.map(file => (
+                              <TableRow key={file.id}>
+                                <TableCell>{file.title}</TableCell>
+                                <TableCell>{new Date(file.created_at).toLocaleString()}</TableCell>
+                                <TableCell>
+                                  <audio 
+                                    controls 
+                                    src={file.audio_url}
+                                    className="w-full max-w-[300px]"
+                                  >
+                                    Your browser does not support audio playback
+                                  </audio>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -135,14 +201,6 @@ const Agents: React.FC = () => {
           </div>
         </div>
       )}
-      
-      {/* Raw data for debugging */}
-      <div className="mt-8">
-        <h2 className="text-xl font-bold mb-2">Raw User Data</h2>
-        <pre className="bg-gray-100 p-4 rounded-lg overflow-auto max-h-96 text-xs">
-          {JSON.stringify(users, null, 2)}
-        </pre>
-      </div>
     </div>
   );
 };
