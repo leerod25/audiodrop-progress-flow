@@ -61,6 +61,11 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
     onApplyFilters(result);
   };
 
+  // Initialize with all agents on mount and when agents array changes
+  useEffect(() => {
+    onApplyFilters(agents);
+  }, [agents, onApplyFilters]);
+
   // Watch form changes and update filters
   useEffect(() => {
     const subscription = form.watch((value) => {
