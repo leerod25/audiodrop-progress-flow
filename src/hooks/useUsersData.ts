@@ -24,6 +24,24 @@ interface UsersResponse {
   users: User[];
 }
 
+// Helper function to check if a URL is valid
+function isValidUrl(url: string): boolean {
+  try {
+    if (!url) return false;
+    // Check if it's a valid URL format
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return true;
+    }
+    // For relative paths, we'll consider them valid if they match certain patterns
+    if (url.startsWith('path/') || url.startsWith('/') || /^[a-zA-Z0-9]/.test(url)) {
+      return true;
+    }
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
 export const useUsersData = (currentUser: any) => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,8 +74,14 @@ export const useUsersData = (currentUser: any) => {
           if (user.audio_files) {
             // Filter out any audio files with invalid URLs
             const validAudioFiles = user.audio_files.filter(file => 
-              typeof file.audio_url === 'string' && file.audio_url.trim() !== ''
+              isValidUrl(file.audio_url)
             );
+            
+            // Log info about valid vs. total audio files
+            if (validAudioFiles.length !== user.audio_files.length) {
+              console.log(`User ${user.id}: ${validAudioFiles.length} valid audio files out of ${user.audio_files.length} total`);
+            }
+            
             return {
               ...user,
               audio_files: validAudioFiles
@@ -115,10 +139,17 @@ export const useUsersData = (currentUser: any) => {
         // Play the new audio
         const audioElement = document.getElementById(audioId) as HTMLAudioElement;
         if (audioElement) {
-          // Check if audio exists before trying to play
+          // Check if audio source exists and is valid
           if (!audioElement.src || audioElement.src === window.location.href) {
             console.error('Audio source is missing or invalid');
-            toast.error('Audio file is not available');
+            toast.error('Audio file URL is not valid');
+            return;
+          }
+          
+          // Check if the audio URL is valid before trying to play
+          if (!isValidUrl(audioElement.src)) {
+            console.error('Invalid audio URL:', audioElement.src);
+            toast.error('Invalid audio URL format');
             return;
           }
           
@@ -137,7 +168,7 @@ export const useUsersData = (currentUser: any) => {
             })
             .catch(err => {
               console.error('Error playing audio:', err);
-              toast.error('Failed to play audio');
+              toast.error('Failed to play audio: ' + (err.message || 'Unknown error'));
             });
         }
       }

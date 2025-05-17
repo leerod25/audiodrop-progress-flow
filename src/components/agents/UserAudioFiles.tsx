@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Table,
@@ -9,7 +8,7 @@ import {
   TableCell
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Volume2, ExternalLink, AlertCircle } from "lucide-react";
+import { Volume2, ExternalLink, AlertCircle, Download } from "lucide-react";
 import { formatDate } from '@/utils/dateUtils';
 import { toast } from 'sonner';
 
@@ -56,6 +55,43 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
     toast.error(`Could not load audio: ${title}`);
   };
 
+  // Extract filename from URL for download
+  const getFileName = (title: string, url: string) => {
+    try {
+      // Try to get the filename from the URL
+      const urlParts = url.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+      
+      // If we have a valid filename with extension, use it
+      if (fileName && fileName.includes('.')) {
+        return fileName;
+      }
+      
+      // Otherwise, use the title with a default extension
+      return `${title || 'audio'}.mp3`;
+    } catch (e) {
+      return `${title || 'audio'}.mp3`;
+    }
+  };
+
+  // Check if URL is valid
+  const isValidUrl = (url: string): boolean => {
+    try {
+      if (!url) return false;
+      // Check if it's a valid URL format
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        return true;
+      }
+      // For relative paths, we'll consider them valid if they don't start with special characters
+      if (url.startsWith('path/') || url.startsWith('/') || /^[a-zA-Z0-9]/.test(url)) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  };
+
   return (
     <div>
       <h3 className="font-medium text-lg mb-2">Audio Files ({audioFiles.length})</h3>
@@ -72,9 +108,9 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
             <TableRow key={file.id}>
               <TableCell>{file.title}</TableCell>
               <TableCell>{formatDate(file.created_at)}</TableCell>
-              <TableCell className="space-y-2">
+              <TableCell>
                 <div className="flex items-center space-x-2">
-                  {failedAudio[file.id] ? (
+                  {failedAudio[file.id] || !isValidUrl(file.audio_url) ? (
                     <div className="flex items-center text-red-500 text-sm">
                       <AlertCircle className="h-4 w-4 mr-1" />
                       <span>Audio unavailable</span>
@@ -91,28 +127,49 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
                     </Button>
                   )}
                   
-                  {file.audio_url && (
-                    <Button
-                      size="sm"
-                      variant="link"
-                      className="flex items-center space-x-1"
-                      asChild
-                    >
-                      <a href={file.audio_url} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-4 w-4" />
-                        <span>Open</span>
-                      </a>
-                    </Button>
+                  {isValidUrl(file.audio_url) && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="link"
+                        className="flex items-center space-x-1"
+                        asChild
+                      >
+                        <a href={file.audio_url} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-4 w-4" />
+                          <span>Open</span>
+                        </a>
+                      </Button>
+                      
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex items-center space-x-1"
+                        asChild
+                      >
+                        <a 
+                          href={file.audio_url} 
+                          download={getFileName(file.title, file.audio_url)}
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                        >
+                          <Download className="h-4 w-4" />
+                          <span>Download</span>
+                        </a>
+                      </Button>
+                    </>
                   )}
                 </div>
                 
-                <audio 
-                  id={`audio-${file.id}`}
-                  src={file.audio_url}
-                  className="hidden"
-                  onError={() => handleAudioError(file.id, file.title)}
-                  preload="none"
-                />
+                {isValidUrl(file.audio_url) && (
+                  <audio 
+                    id={`audio-${file.id}`}
+                    src={file.audio_url}
+                    className="hidden"
+                    onError={() => handleAudioError(file.id, file.title)}
+                    preload="none"
+                  />
+                )}
               </TableCell>
             </TableRow>
           ))}

@@ -8,6 +8,28 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
 
+// Helper function to check if a URL is valid
+function isValidUrl(urlString: string): boolean {
+  try {
+    if (!urlString) return false;
+    
+    // Check if it's a proper URL
+    if (urlString.startsWith('http://') || urlString.startsWith('https://')) {
+      return true;
+    }
+    
+    // For relative paths, we'll consider them valid if they match certain patterns
+    if (urlString.startsWith('path/') || urlString.startsWith('/') || /^[a-zA-Z0-9]/.test(urlString)) {
+      return true;
+    }
+    
+    return false;
+  } catch (e) {
+    console.error("Error validating URL:", e);
+    return false;
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
@@ -81,15 +103,16 @@ serve(async (req) => {
             
           // Include audio files in the user object, ensuring valid URLs
           if (audioData && audioData.length > 0) {
+            console.log(`Processing ${audioData.length} audio files for user ${user.id}`);
+            
             // Process each audio file to ensure valid URLs
             user.audio_files = audioData
               .map(file => {
-                // Basic URL validation
-                const isValidUrl = file.audio_url && 
-                  typeof file.audio_url === 'string' && 
-                  file.audio_url.trim() !== '';
+                // Basic URL validation using our helper function
+                const validUrl = isValidUrl(file.audio_url);
                 
-                if (isValidUrl) {
+                if (validUrl) {
+                  console.log(`Valid audio URL for file ${file.id}: ${file.audio_url}`);
                   return {
                     id: file.id,
                     title: file.title || 'Untitled Recording',
@@ -97,11 +120,13 @@ serve(async (req) => {
                     created_at: file.created_at
                   };
                 }
+                
+                console.error(`Invalid audio URL for file ${file.id}: ${file.audio_url}`);
                 return null;
               })
               .filter(Boolean); // Remove any null entries (invalid URLs)
             
-            console.log(`User ${user.id} has ${user.audio_files.length} audio files`);
+            console.log(`User ${user.id} has ${user.audio_files.length} valid audio files out of ${audioData.length} total`);
           } else {
             user.audio_files = [];
             console.log(`User ${user.id} has no audio files`);
