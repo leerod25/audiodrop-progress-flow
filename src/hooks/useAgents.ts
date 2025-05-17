@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Agent } from '@/types/Agent';
@@ -7,18 +6,15 @@ import { useUserContext } from '@/contexts/UserContext';
 
 export interface UseAgentsResult {
   agents: Agent[];
-  filteredAgents: Agent[];
   loading: boolean;
   countries: string[];
   cities: string[];
   skillLevels: string[];
-  setFilteredAgents: (agents: Agent[]) => void;
   toggleFavorite: (agentId: string, currentStatus: boolean) => Promise<void>;
 }
 
 export function useAgents(): UseAgentsResult {
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [filteredAgents, setFilteredAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [countries, setCountries] = useState<string[]>([]);
   const [cities, setCities] = useState<string[]>([]);
@@ -88,7 +84,6 @@ export function useAgents(): UseAgentsResult {
         })) || [];
         
         setAgents(agentsWithAudioInfo);
-        setFilteredAgents(agentsWithAudioInfo);
 
         // Extract unique values for filter dropdowns
         const uniqueCountries = Array.from(
@@ -168,12 +163,6 @@ export function useAgents(): UseAgentsResult {
           agent.id === agentId ? { ...agent, is_favorite: !currentStatus } : agent
         )
       );
-      
-      setFilteredAgents(prevAgents => 
-        prevAgents.map(agent => 
-          agent.id === agentId ? { ...agent, is_favorite: !currentStatus } : agent
-        )
-      );
     } catch (error) {
       console.error('Error updating favorites:', error);
       toast.error('Failed to update favorites');
@@ -182,12 +171,10 @@ export function useAgents(): UseAgentsResult {
 
   return { 
     agents, 
-    filteredAgents, 
     loading, 
     countries, 
     cities, 
     skillLevels,
-    setFilteredAgents,
     toggleFavorite
   };
 }

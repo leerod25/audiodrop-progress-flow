@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useForm } from "react-hook-form";
 import AgentFilters, { FilterValues } from '@/components/agent/AgentFilters';
 import { Agent } from '@/types/Agent';
@@ -23,7 +23,6 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
   isBusinessAccount
 }) => {
   const [showFilters, setShowFilters] = React.useState(false);
-  const [filteredAgents, setFilteredAgents] = React.useState<Agent[]>([]);
   
   const form = useForm<FilterValues>({
     defaultValues: {
@@ -59,18 +58,11 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
       result = result.filter(agent => agent.is_favorite);
     }
     
-    setFilteredAgents(result);
     onApplyFilters(result);
   };
 
-  // Initialize with all agents on mount and when agents array changes
-  useEffect(() => {
-    setFilteredAgents(agents);
-    onApplyFilters(agents);
-  }, [agents, onApplyFilters]);
-
   // Watch form changes and update filters
-  useEffect(() => {
+  React.useEffect(() => {
     const subscription = form.watch((value) => {
       applyFilters(value as FilterValues);
     });
@@ -87,39 +79,22 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
       skillLevel: '',
       favoritesOnly: false,
     });
-    setFilteredAgents(agents);
     onApplyFilters(agents);
     setShowFilters(false);
   };
 
   return (
-    <>
-      <AgentFilters
-        countries={countries}
-        cities={cities}
-        skillLevels={skillLevels}
-        showFilters={showFilters}
-        setShowFilters={setShowFilters}
-        applyFilters={applyFilters}
-        resetFilters={resetFilters}
-        form={form}
-        isBusinessAccount={isBusinessAccount}
-      />
-
-      {/* No Results Message - Fixed condition to check if filtered agents length is 0 */}
-      {agents.length > 0 && filteredAgents.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-600 text-lg">No agents found matching your filters.</p>
-          <Button 
-            variant="outline" 
-            className="mt-4" 
-            onClick={resetFilters}
-          >
-            Reset Filters
-          </Button>
-        </div>
-      )}
-    </>
+    <AgentFilters
+      countries={countries}
+      cities={cities}
+      skillLevels={skillLevels}
+      showFilters={showFilters}
+      setShowFilters={setShowFilters}
+      applyFilters={applyFilters}
+      resetFilters={resetFilters}
+      form={form}
+      isBusinessAccount={isBusinessAccount}
+    />
   );
 };
 

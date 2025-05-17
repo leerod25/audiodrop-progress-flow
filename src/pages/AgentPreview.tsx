@@ -76,7 +76,7 @@ const AgentPreview: React.FC = () => {
 
   // Reset all filters
   const resetFilters = () => {
-    // This will be handled by the AgentFilterContainer
+    setFilteredAgents(agents);
   };
 
   // Close audio modal
