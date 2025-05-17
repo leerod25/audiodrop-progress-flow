@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Agent } from '@/types/Agent';
@@ -27,10 +28,21 @@ export function useAgents(): UseAgentsResult {
       try {
         setLoading(true);
         
-        // First get all profiles
-        const { data: profiles, error: profilesError } = await supabase
+        let userQuery = supabase
           .from('profiles')
           .select('id, country, city, computer_skill_level');
+
+        // For business users, we need to get only agent profiles
+        // Join with user_roles to get only users with 'agent' role
+        if (userRole === 'business') {
+          userQuery = supabase
+            .from('profiles')
+            .select('id, country, city, computer_skill_level, user_roles!inner(role)')
+            .eq('user_roles.role', 'agent');
+        }
+        
+        // Get profiles
+        const { data: profiles, error: profilesError } = await userQuery;
         
         if (profilesError) {
           console.error('Error fetching profiles:', profilesError);
@@ -72,8 +84,11 @@ export function useAgents(): UseAgentsResult {
           }
         }
         
+        // Filter out the current user's profile
+        const filteredProfiles = profiles?.filter(profile => profile.id !== user?.id) || [];
+        
         // Map profiles to agents with audio info and favorite status
-        const agentsWithAudioInfo = profiles?.map(profile => ({
+        const agentsWithAudioInfo = filteredProfiles?.map(profile => ({
           id: profile.id,
           has_audio: audioMap.has(profile.id),
           audio_url: audioMap.get(profile.id) || null,
