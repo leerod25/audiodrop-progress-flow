@@ -51,7 +51,25 @@ export const useUsersData = (currentUser: any) => {
       console.log('Users found:', response?.users?.length || 0);
       
       if (response?.users) {
-        setUsers(response.users);
+        // Validate audio URLs before setting users
+        const processedUsers = response.users.map(user => {
+          if (user.audio_files && user.audio_files.length > 0) {
+            // Filter out invalid audio URLs
+            user.audio_files = user.audio_files.filter(file => {
+              try {
+                // Simple validation to make sure URL is properly formatted
+                const url = new URL(file.audio_url);
+                return true;
+              } catch (e) {
+                console.warn('Invalid audio URL found:', file.audio_url);
+                return false;
+              }
+            });
+          }
+          return user;
+        });
+        
+        setUsers(processedUsers);
       } else {
         setError('No users data returned');
         toast.error("No users data returned");
@@ -80,31 +98,44 @@ export const useUsersData = (currentUser: any) => {
 
   // Handle audio playback
   const handleAudioPlay = (audioId: string) => {
-    if (playingAudio === audioId) {
-      // If the same audio is already playing, stop it
-      const audioElement = document.getElementById(audioId) as HTMLAudioElement;
-      if (audioElement) {
-        audioElement.pause();
-      }
-      setPlayingAudio(null);
-    } else {
-      // If another audio is playing, stop it first
-      if (playingAudio) {
-        const previousAudio = document.getElementById(playingAudio) as HTMLAudioElement;
-        if (previousAudio) {
-          previousAudio.pause();
+    try {
+      if (playingAudio === audioId) {
+        // If the same audio is already playing, stop it
+        const audioElement = document.getElementById(audioId) as HTMLAudioElement;
+        if (audioElement) {
+          audioElement.pause();
+        }
+        setPlayingAudio(null);
+      } else {
+        // If another audio is playing, stop it first
+        if (playingAudio) {
+          const previousAudio = document.getElementById(playingAudio) as HTMLAudioElement;
+          if (previousAudio) {
+            previousAudio.pause();
+          }
+        }
+        
+        // Play the new audio
+        const audioElement = document.getElementById(audioId) as HTMLAudioElement;
+        if (audioElement) {
+          // Check if audio is valid before playing
+          if (audioElement.error) {
+            console.error('Audio element has error before play:', audioElement.error);
+            toast.error('Audio file is not available');
+            return;
+          }
+          
+          audioElement.play()
+            .then(() => setPlayingAudio(audioId))
+            .catch(err => {
+              console.error('Error playing audio:', err);
+              toast.error('Failed to play audio');
+            });
         }
       }
-      // Play the new audio
-      const audioElement = document.getElementById(audioId) as HTMLAudioElement;
-      if (audioElement) {
-        audioElement.play()
-          .then(() => setPlayingAudio(audioId))
-          .catch(err => {
-            console.error('Error playing audio:', err);
-            toast.error('Failed to play audio');
-          });
-      }
+    } catch (err) {
+      console.error('Unexpected error in handleAudioPlay:', err);
+      toast.error('An error occurred when trying to play audio');
     }
   };
 

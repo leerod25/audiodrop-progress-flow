@@ -11,6 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Volume2, ExternalLink } from "lucide-react";
 import { formatDate } from '@/utils/dateUtils';
+import { toast } from 'sonner';
+import AudioPlayer from '@/components/AudioPlayer';
 
 interface AudioFile {
   id: string;
@@ -30,6 +32,16 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
   playingAudio,
   handleAudioPlay
 }) => {
+  // Helper function to check if a URL is valid
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
   return (
     <div>
       <h3 className="font-medium text-lg mb-2">Audio Files ({audioFiles?.length || 0})</h3>
@@ -45,44 +57,56 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {audioFiles.map(file => (
-              <TableRow key={file.id}>
-                <TableCell>{file.title}</TableCell>
-                <TableCell>{formatDate(file.created_at)}</TableCell>
-                <TableCell className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      className="flex items-center space-x-1"
-                      onClick={() => handleAudioPlay(`audio-${file.id}`)}
-                    >
-                      <Volume2 className="h-4 w-4" />
-                      <span>{playingAudio === `audio-${file.id}` ? 'Pause' : 'Play'}</span>
-                    </Button>
+            {audioFiles.map(file => {
+              const isUrlValid = isValidUrl(file.audio_url);
+              
+              return (
+                <TableRow key={file.id}>
+                  <TableCell>{file.title}</TableCell>
+                  <TableCell>{formatDate(file.created_at)}</TableCell>
+                  <TableCell className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      {isUrlValid ? (
+                        <>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="flex items-center space-x-1"
+                            onClick={() => handleAudioPlay(`audio-${file.id}`)}
+                          >
+                            <Volume2 className="h-4 w-4" />
+                            <span>{playingAudio === `audio-${file.id}` ? 'Pause' : 'Play'}</span>
+                          </Button>
+                          
+                          <Button
+                            size="sm"
+                            variant="link"
+                            className="flex items-center space-x-1"
+                            asChild
+                          >
+                            <a href={file.audio_url} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4" />
+                              <span>Open</span>
+                            </a>
+                          </Button>
+                        </>
+                      ) : (
+                        <p className="text-sm text-red-500">Invalid audio URL</p>
+                      )}
+                    </div>
                     
-                    <Button
-                      size="sm"
-                      variant="link"
-                      className="flex items-center space-x-1"
-                      asChild
-                    >
-                      <a href={file.audio_url} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-4 w-4" />
-                        <span>Open</span>
-                      </a>
-                    </Button>
-                  </div>
-                  
-                  <audio 
-                    id={`audio-${file.id}`}
-                    src={file.audio_url}
-                    className="hidden"
-                    onEnded={() => {}} // The parent component handles this event
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
+                    {isUrlValid && (
+                      <audio 
+                        id={`audio-${file.id}`}
+                        src={file.audio_url}
+                        className="hidden"
+                        onError={() => toast.error(`Could not load audio: ${file.title}`)}
+                      />
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       )}

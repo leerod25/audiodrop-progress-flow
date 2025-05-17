@@ -65,13 +65,35 @@ serve(async (req) => {
     // For each user, fetch their audio files from audio_metadata
     if (data && data.users) {
       for (const user of data.users) {
-        const { data: audioData, error: audioError } = await supabaseAdmin
-          .from('audio_metadata')
-          .select('*')
-          .eq('user_id', user.id);
+        try {
+          const { data: audioData, error: audioError } = await supabaseAdmin
+            .from('audio_metadata')
+            .select('*')
+            .eq('user_id', user.id);
+            
+          // Validate audio URLs before attaching them to the user object
+          let validAudioFiles = [];
+          if (!audioError && audioData && audioData.length > 0) {
+            validAudioFiles = audioData.map(file => {
+              // Ensure the audio_url is present and a string
+              if (!file.audio_url || typeof file.audio_url !== 'string') {
+                console.warn(`Invalid audio URL for file ${file.id}`);
+                // Return file with a placeholder URL that's obviously wrong
+                return {
+                  ...file,
+                  audio_url: '#invalid-url'
+                };
+              }
+              return file;
+            });
+          }
           
-        // Attach audio files to each user object
-        user.audio_files = audioError ? [] : audioData || [];
+          // Attach audio files to each user object
+          user.audio_files = audioError ? [] : validAudioFiles || [];
+        } catch (err) {
+          console.error(`Error fetching audio files for user ${user.id}:`, err);
+          user.audio_files = []; // Default to empty array on error
+        }
       }
     }
 
