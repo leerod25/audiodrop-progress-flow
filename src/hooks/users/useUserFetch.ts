@@ -23,6 +23,7 @@ interface User {
   city?: string | null;
   gender?: string | null;
   years_experience?: string | null;
+  languages?: string[] | null;
 }
 
 interface UsersResponse {
@@ -65,10 +66,10 @@ export const useUserFetch = (currentUser: any) => {
             .eq('id', user.id)
             .single();
             
-          // Try to get years experience from professional_details
+          // Try to get years experience and languages from professional_details
           const { data: professionalData } = await supabase
             .from('professional_details')
-            .select('years_experience')
+            .select('years_experience, languages')
             .eq('user_id', user.id)
             .single();
           
@@ -91,6 +92,7 @@ export const useUserFetch = (currentUser: any) => {
             city: profileData?.city || null,
             gender: profileData?.gender || null,
             years_experience: professionalData?.years_experience || null,
+            languages: professionalData?.languages || null,
             audio_files: validAudioFiles
           };
         }));

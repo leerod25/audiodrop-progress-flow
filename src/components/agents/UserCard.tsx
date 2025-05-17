@@ -21,6 +21,7 @@ interface User {
   city?: string | null;
   gender?: string | null;
   years_experience?: string | null;
+  languages?: string[] | null;
 }
 
 interface AudioFile {
@@ -155,8 +156,12 @@ const UserCard: React.FC<UserCardProps> = ({
           // Full view for business and admin users
           <div className="grid grid-cols-1 gap-4 mb-4">
             <div>
-              <p className="font-medium">User ID</p>
-              <p className="text-sm text-gray-600 break-all">{user.id}</p>
+              <p className="font-medium">Languages Spoken</p>
+              <p className="text-sm text-gray-600">
+                {user.languages && user.languages.length > 0 
+                  ? user.languages.join(', ') 
+                  : 'Not specified'}
+              </p>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
