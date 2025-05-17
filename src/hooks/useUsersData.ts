@@ -51,7 +51,22 @@ export const useUsersData = (currentUser: any) => {
       console.log('Users found:', response?.users?.length || 0);
       
       if (response?.users) {
-        setUsers(response.users);
+        // Process users to ensure audio files have proper URLs
+        const processedUsers = response.users.map(user => {
+          if (user.audio_files) {
+            // Filter out any audio files with invalid URLs
+            const validAudioFiles = user.audio_files.filter(file => 
+              typeof file.audio_url === 'string' && file.audio_url.trim() !== ''
+            );
+            return {
+              ...user,
+              audio_files: validAudioFiles
+            };
+          }
+          return user;
+        });
+        
+        setUsers(processedUsers);
       } else {
         setError('No users data returned');
         toast.error("No users data returned");
@@ -107,10 +122,18 @@ export const useUsersData = (currentUser: any) => {
             return;
           }
           
+          // Load the audio first to catch any loading errors
+          audioElement.load();
+          
           audioElement.play()
             .then(() => {
               setPlayingAudio(audioId);
               console.log(`Now playing: ${audioId}`);
+              
+              // Set up onended handler to reset playingAudio state
+              audioElement.onended = () => {
+                setPlayingAudio(null);
+              };
             })
             .catch(err => {
               console.error('Error playing audio:', err);

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Table,
   TableHeader,
@@ -9,7 +9,7 @@ import {
   TableCell
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Volume2, ExternalLink } from "lucide-react";
+import { Volume2, ExternalLink, AlertCircle } from "lucide-react";
 import { formatDate } from '@/utils/dateUtils';
 import { toast } from 'sonner';
 
@@ -33,6 +33,13 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
 }) => {
   const [failedAudio, setFailedAudio] = useState<Record<string, boolean>>({});
   
+  // Reset failed audio when component receives new audio files
+  useEffect(() => {
+    if (audioFiles && audioFiles.length > 0) {
+      setFailedAudio({});
+    }
+  }, [audioFiles]);
+  
   // If no audio files or empty array
   if (!audioFiles || audioFiles.length === 0) {
     return (
@@ -44,6 +51,7 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
   }
 
   const handleAudioError = (fileId: string, title: string) => {
+    console.error(`Audio load error for file: ${title}, ID: ${fileId}`);
     setFailedAudio(prev => ({ ...prev, [fileId]: true }));
     toast.error(`Could not load audio: ${title}`);
   };
@@ -66,16 +74,22 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
               <TableCell>{formatDate(file.created_at)}</TableCell>
               <TableCell className="space-y-2">
                 <div className="flex items-center space-x-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    className="flex items-center space-x-1"
-                    onClick={() => handleAudioPlay(`audio-${file.id}`)}
-                    disabled={failedAudio[file.id]}
-                  >
-                    <Volume2 className="h-4 w-4" />
-                    <span>{playingAudio === `audio-${file.id}` ? 'Pause' : 'Play'}</span>
-                  </Button>
+                  {failedAudio[file.id] ? (
+                    <div className="flex items-center text-red-500 text-sm">
+                      <AlertCircle className="h-4 w-4 mr-1" />
+                      <span>Audio unavailable</span>
+                    </div>
+                  ) : (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="flex items-center space-x-1"
+                      onClick={() => handleAudioPlay(`audio-${file.id}`)}
+                    >
+                      <Volume2 className="h-4 w-4" />
+                      <span>{playingAudio === `audio-${file.id}` ? 'Pause' : 'Play'}</span>
+                    </Button>
+                  )}
                   
                   {file.audio_url && (
                     <Button
@@ -97,6 +111,7 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
                   src={file.audio_url}
                   className="hidden"
                   onError={() => handleAudioError(file.id, file.title)}
+                  preload="none"
                 />
               </TableCell>
             </TableRow>

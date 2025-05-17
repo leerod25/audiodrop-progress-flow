@@ -66,7 +66,7 @@ serve(async (req) => {
     if (data && data.users) {
       for (const user of data.users) {
         try {
-          // Get all audio files for this user - no filtering yet
+          // Get all audio files for this user
           const { data: audioData, error: audioError } = await supabaseAdmin
             .from('audio_metadata')
             .select('*')
@@ -79,17 +79,29 @@ serve(async (req) => {
             continue;
           }
             
-          // Include all audio files in the user object
+          // Include audio files in the user object, ensuring valid URLs
           if (audioData && audioData.length > 0) {
-            // Instead of filtering, we'll include all files and let the frontend handle display
-            user.audio_files = audioData.map(file => ({
-              id: file.id,
-              title: file.title || 'Untitled Recording',
-              audio_url: file.audio_url,
-              created_at: file.created_at
-            }));
+            // Process each audio file to ensure valid URLs
+            user.audio_files = audioData
+              .map(file => {
+                // Basic URL validation
+                const isValidUrl = file.audio_url && 
+                  typeof file.audio_url === 'string' && 
+                  file.audio_url.trim() !== '';
+                
+                if (isValidUrl) {
+                  return {
+                    id: file.id,
+                    title: file.title || 'Untitled Recording',
+                    audio_url: file.audio_url,
+                    created_at: file.created_at
+                  };
+                }
+                return null;
+              })
+              .filter(Boolean); // Remove any null entries (invalid URLs)
             
-            console.log(`User ${user.id} has ${audioData.length} audio files`);
+            console.log(`User ${user.id} has ${user.audio_files.length} audio files`);
           } else {
             user.audio_files = [];
             console.log(`User ${user.id} has no audio files`);
