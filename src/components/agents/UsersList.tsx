@@ -43,12 +43,12 @@ const UsersList: React.FC<UsersListProps> = ({
     <div className="space-y-6">
       {users.length === 0 ? (
         <div className="text-center py-8 border rounded-lg">
-          <p className="text-xl text-gray-500">No users found matching your filters</p>
+          <p className="text-xl text-gray-500">No agent profiles found matching your filters</p>
         </div>
       ) : (
         <>
           <div className="mb-4 text-sm text-gray-500">
-            Displaying {users.length} user{users.length !== 1 ? 's' : ''}
+            Displaying {users.length} agent profile{users.length !== 1 ? 's' : ''}
           </div>
           {users.map(user => (
             <UserCard
@@ -69,7 +69,7 @@ const UsersList: React.FC<UsersListProps> = ({
           disabled={loading}
           className="bg-blue-500 hover:bg-blue-600 text-white"
         >
-          {loading ? 'Loading...' : 'Refresh User List'}
+          {loading ? 'Loading...' : 'Refresh Agent List'}
         </Button>
       </div>
     </div>

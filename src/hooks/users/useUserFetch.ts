@@ -37,7 +37,7 @@ export const useUserFetch = (currentUser: any) => {
       
       // Call our edge function to get all users
       const { data, error } = await supabase.functions.invoke('list-users', {
-        body: { businessOnly: true }
+        body: { businessOnly: false }  // Set to false to get agent profiles
       });
       
       if (error) {
@@ -49,7 +49,7 @@ export const useUserFetch = (currentUser: any) => {
 
       // Data contains the users
       const response = data as UsersResponse;
-      console.log('Business profiles found:', response?.users?.length || 0);
+      console.log('Agent profiles found:', response?.users?.length || 0);
       
       if (response?.users) {
         // Process users to ensure audio files have proper URLs
@@ -76,7 +76,7 @@ export const useUserFetch = (currentUser: any) => {
         setUsers(processedUsers);
       } else {
         setError('No users data returned');
-        toast.error("No business profiles found");
+        toast.error("No agent profiles found");
       }
     } catch (err: any) {
       console.error('Unexpected error:', err);
@@ -93,7 +93,7 @@ export const useUserFetch = (currentUser: any) => {
       fetchAllUsers();
     } else {
       setLoading(false);
-      setError("Please log in to view business profiles");
+      setError("Please log in to view agent profiles");
     }
   }, [currentUser]);
 

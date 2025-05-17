@@ -27,7 +27,7 @@ const Agents: React.FC = () => {
     handleAudioPlay,
   } = useUsersData(user);
 
-  console.log("Agents page - total business profiles received:", users.length);
+  console.log("Agents page - total agent profiles received:", users.length);
 
   // Reset filters function
   const resetFilters = () => {
@@ -61,7 +61,7 @@ const Agents: React.FC = () => {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-6">Business Profiles ({users.length})</h1>
+      <h1 className="text-3xl font-bold mb-6">Agent Profiles ({users.length})</h1>
       
       {error ? (
         <UsersError error={error} isLoggedIn={!!user} />
