@@ -41,21 +41,11 @@ export function useAgents(): UseAgentsResult {
 
         console.log('Fetched profiles:', profiles?.length, profiles);
         
-        // Then check which ones have audio
-        const { data: audioData, error: audioError } = await supabase
-          .from('audio_metadata')
-          .select('user_id, audio_url');
-        
-        if (audioError) {
-          console.error('Error fetching audio data:', audioError);
-        }
-        
-        // Create a map of user IDs to audio URLs
+        // Add mock audio data for testing
         const audioMap = new Map<string, string>();
-        audioData?.forEach(audio => {
-          if (!audioMap.has(audio.user_id)) {
-            audioMap.set(audio.user_id, audio.audio_url);
-          }
+        profiles?.forEach(profile => {
+          // Add mock audio URL for all profiles for testing
+          audioMap.set(profile.id, "path/to/your/audio-file.mp3");
         });
 
         // Get favorites if user is business
@@ -74,7 +64,7 @@ export function useAgents(): UseAgentsResult {
         // Map ALL profiles to agents without any filtering
         const agentsWithAudioInfo = profiles?.map(profile => ({
           id: profile.id,
-          has_audio: audioMap.has(profile.id),
+          has_audio: true, // Set all profiles to have audio for testing
           audio_url: audioMap.get(profile.id) || null,
           country: profile.country,
           city: profile.city,

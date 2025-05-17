@@ -39,20 +39,23 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
     },
   });
 
-  // Show all profiles by default - no filtering
+  // Show all profiles by default
+  const agentProfiles = agents;
+
+  // Apply filters whenever form values change
   useEffect(() => {
-    console.log('Showing all profiles without filtering:', agents.length, agents);
-    onApplyFilters(agents);
+    // Initial display of all profiles without filtering
+    console.log('Initial display of all profiles:', agentProfiles.length, agentProfiles);
+    onApplyFilters(agentProfiles);
     
-    // Only apply filters when user interacts with form
     const subscription = form.watch((values: FilterValues) => {
       if (!showFilters) {
-        onApplyFilters(agents);
+        onApplyFilters(agentProfiles);
         return;
       }
       
       // Start with all profiles
-      let result = agents;
+      let result = agentProfiles;
 
       // Apply filters only if specifically selected by the user
       if (values.country) {
@@ -65,18 +68,17 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
         result = result.filter(a => a.has_audio);
       }
       if (values.skillLevel) {
-        result = result.filter(
-          a => a.computer_skill_level === values.skillLevel
-        );
+        result = result.filter(a => a.computer_skill_level === values.skillLevel);
       }
       if (values.favoritesOnly && isBusinessAccount) {
         result = result.filter(a => a.is_favorite);
       }
 
+      console.log('Filtered profiles:', result.length, result);
       onApplyFilters(result);
     });
     return () => subscription.unsubscribe();
-  }, [agents, form, isBusinessAccount, onApplyFilters, showFilters]);
+  }, [form, agentProfiles, isBusinessAccount, onApplyFilters, showFilters]);
 
   // Reset all filters back to full agent list
   const resetFilters = () => {
@@ -87,7 +89,7 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
       skillLevel: '',
       favoritesOnly: false,
     });
-    onApplyFilters(agents);
+    onApplyFilters(agentProfiles);
     setShowFilters(false);
   };
 
