@@ -62,41 +62,40 @@ serve(async (req) => {
       });
     }
     
-    // For each user, fetch their latest audio file from audio_metadata
+    // For each user, fetch their audio files from audio_metadata
     if (data && data.users) {
       for (const user of data.users) {
         try {
-          // Get the most recent valid audio file for this user
-          const { data: audioData } = await supabaseAdmin
+          // Get all audio files for this user - no filtering yet
+          const { data: audioData, error: audioError } = await supabaseAdmin
             .from('audio_metadata')
             .select('*')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false });
+          
+          if (audioError) {
+            console.error(`Error fetching audio for user ${user.id}:`, audioError);
+            user.audio_files = [];
+            continue;
+          }
             
-          // Attach audio files to each user object, ensuring all URLs are valid
+          // Include all audio files in the user object
           if (audioData && audioData.length > 0) {
-            // Filter to only include records with valid URLs
-            const validAudioFiles = audioData.filter(file => {
-              // Basic URL validation
-              try {
-                if (file.audio_url && typeof file.audio_url === 'string') {
-                  new URL(file.audio_url); // This will throw if URL is invalid
-                  return true;
-                }
-                return false;
-              } catch (e) {
-                console.warn(`Invalid audio URL for file ${file.id}: ${file.audio_url}`);
-                return false;
-              }
-            });
+            // Instead of filtering, we'll include all files and let the frontend handle display
+            user.audio_files = audioData.map(file => ({
+              id: file.id,
+              title: file.title || 'Untitled Recording',
+              audio_url: file.audio_url,
+              created_at: file.created_at
+            }));
             
-            user.audio_files = validAudioFiles;
-            console.log(`User ${user.id} has ${validAudioFiles.length} valid audio files`);
+            console.log(`User ${user.id} has ${audioData.length} audio files`);
           } else {
             user.audio_files = [];
+            console.log(`User ${user.id} has no audio files`);
           }
         } catch (err) {
-          console.error(`Error fetching audio files for user ${user.id}:`, err);
+          console.error(`Error processing audio files for user ${user.id}:`, err);
           user.audio_files = []; // Default to empty array on error
         }
       }

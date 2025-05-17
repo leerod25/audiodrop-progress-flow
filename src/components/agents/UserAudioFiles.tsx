@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Table,
   TableHeader,
@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Volume2, ExternalLink } from "lucide-react";
 import { formatDate } from '@/utils/dateUtils';
 import { toast } from 'sonner';
-import AudioPlayer from '@/components/AudioPlayer';
 
 interface AudioFile {
   id: string;
@@ -32,16 +31,8 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
   playingAudio,
   handleAudioPlay
 }) => {
-  // Helper function to check if a URL is valid
-  const isValidUrl = (url: string) => {
-    try {
-      new URL(url);
-      return url.startsWith('http'); // Ensure it's actually http/https
-    } catch (e) {
-      return false;
-    }
-  };
-
+  const [failedAudio, setFailedAudio] = useState<Record<string, boolean>>({});
+  
   // If no audio files or empty array
   if (!audioFiles || audioFiles.length === 0) {
     return (
@@ -52,40 +43,41 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
     );
   }
 
-  // Filter to only valid audio URLs
-  const validAudioFiles = audioFiles.filter(file => isValidUrl(file.audio_url));
+  const handleAudioError = (fileId: string, title: string) => {
+    setFailedAudio(prev => ({ ...prev, [fileId]: true }));
+    toast.error(`Could not load audio: ${title}`);
+  };
 
   return (
     <div>
-      <h3 className="font-medium text-lg mb-2">Audio Files ({validAudioFiles.length})</h3>
-      {validAudioFiles.length === 0 ? (
-        <p className="text-sm text-gray-500 italic">No valid audio files found for this user</p>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {validAudioFiles.map(file => (
-              <TableRow key={file.id}>
-                <TableCell>{file.title}</TableCell>
-                <TableCell>{formatDate(file.created_at)}</TableCell>
-                <TableCell className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      className="flex items-center space-x-1"
-                      onClick={() => handleAudioPlay(`audio-${file.id}`)}
-                    >
-                      <Volume2 className="h-4 w-4" />
-                      <span>{playingAudio === `audio-${file.id}` ? 'Pause' : 'Play'}</span>
-                    </Button>
-                    
+      <h3 className="font-medium text-lg mb-2">Audio Files ({audioFiles.length})</h3>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Title</TableHead>
+            <TableHead>Created</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {audioFiles.map(file => (
+            <TableRow key={file.id}>
+              <TableCell>{file.title}</TableCell>
+              <TableCell>{formatDate(file.created_at)}</TableCell>
+              <TableCell className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="flex items-center space-x-1"
+                    onClick={() => handleAudioPlay(`audio-${file.id}`)}
+                    disabled={failedAudio[file.id]}
+                  >
+                    <Volume2 className="h-4 w-4" />
+                    <span>{playingAudio === `audio-${file.id}` ? 'Pause' : 'Play'}</span>
+                  </Button>
+                  
+                  {file.audio_url && (
                     <Button
                       size="sm"
                       variant="link"
@@ -97,20 +89,20 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
                         <span>Open</span>
                       </a>
                     </Button>
-                  </div>
-                  
-                  <audio 
-                    id={`audio-${file.id}`}
-                    src={file.audio_url}
-                    className="hidden"
-                    onError={() => toast.error(`Could not load audio: ${file.title}`)}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+                  )}
+                </div>
+                
+                <audio 
+                  id={`audio-${file.id}`}
+                  src={file.audio_url}
+                  className="hidden"
+                  onError={() => handleAudioError(file.id, file.title)}
+                />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };

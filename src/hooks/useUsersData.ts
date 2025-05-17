@@ -100,15 +100,18 @@ export const useUsersData = (currentUser: any) => {
         // Play the new audio
         const audioElement = document.getElementById(audioId) as HTMLAudioElement;
         if (audioElement) {
+          // Check if audio exists before trying to play
           if (!audioElement.src || audioElement.src === window.location.href) {
             console.error('Audio source is missing or invalid');
             toast.error('Audio file is not available');
             return;
           }
           
-          // Check if audio is valid before playing
           audioElement.play()
-            .then(() => setPlayingAudio(audioId))
+            .then(() => {
+              setPlayingAudio(audioId);
+              console.log(`Now playing: ${audioId}`);
+            })
             .catch(err => {
               console.error('Error playing audio:', err);
               toast.error('Failed to play audio');
