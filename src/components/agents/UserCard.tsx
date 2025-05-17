@@ -104,6 +104,20 @@ const UserCard: React.FC<UserCardProps> = ({
           <div className="mt-4">
             <Separator className="my-4" />
             
+            {/* Full view with additional details */}
+            <div className="grid grid-cols-1 gap-4 mb-4">
+              <div>
+                <p className="font-medium">User ID</p>
+                <p className="text-sm text-gray-600 break-all">{user.id}</p>
+                <p className="font-medium">Languages Spoken</p>
+                <p className="text-sm text-gray-600">
+                  {user.languages && user.languages.length > 0 
+                    ? user.languages.join(', ') 
+                    : 'Not specified'}
+                </p>
+              </div>
+            </div>
+            
             {/* Audio files section */}
             <div className="mt-4">
               <h4 className="text-sm font-medium mb-2">Audio Samples:</h4>

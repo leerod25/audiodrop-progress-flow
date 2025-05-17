@@ -53,6 +53,15 @@ const UsersList: React.FC<UsersListProps> = ({
     fetchAllUsers();
   };
 
+  // Add console log to check user data
+  console.log("UsersList received users:", JSON.stringify(users.map(u => ({
+    id: u.id.substring(0, 8),
+    country: u.country,
+    city: u.city,
+    years_experience: u.years_experience,
+    languages: u.languages
+  })), null, 2));
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between mb-4">
