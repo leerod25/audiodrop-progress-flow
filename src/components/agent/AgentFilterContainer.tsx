@@ -39,15 +39,19 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({
     },
   });
 
-  // Filter out the current user's profile from the list
-  // For a business user, this ensures they see only agent profiles
+  // Always show all agents without filtering out any profiles
   const agentProfiles = agents;
 
   // Apply filters whenever form values change
   useEffect(() => {
+    // Initial display of all profiles without filtering
+    onApplyFilters(agentProfiles);
+    
     const subscription = form.watch((values: FilterValues) => {
+      // Start with all profiles
       let result = agentProfiles;
 
+      // Apply filters only if specifically selected by the user
       if (values.country) {
         result = result.filter(a => a.country === values.country);
       }
