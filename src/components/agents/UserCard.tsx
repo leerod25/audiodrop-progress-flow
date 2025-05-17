@@ -1,18 +1,26 @@
-
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { ChevronDown, ChevronUp, MapPin, Calendar, CalendarClock } from "lucide-react";
-import UserAudioFiles from "./UserAudioFiles";
-import { Link } from "react-router-dom";
-import { formatDistanceToNow } from "date-fns";
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { CardContent, CardFooter } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { ChevronDown, ChevronUp, Clock, MapPin, PlayCircle, Lock } from 'lucide-react';
+import { formatDate } from '@/utils/dateUtils';
+import UserAudioFiles from './UserAudioFiles';
+import { Link } from 'react-router-dom';
+
+// Update the audio file type to include created_at
+interface AudioFile {
+  id: string;
+  title: string;
+  audio_url: string;
+  created_at: string; // Add this field to match expected type
+}
 
 interface User {
   id: string;
   email: string | null;
   created_at: string;
-  audio_files?: { id: string; title: string; audio_url: string }[];
+  audio_files?: AudioFile[];
   country?: string | null;
   city?: string | null;
   gender?: string | null;
@@ -37,99 +45,113 @@ const UserCard: React.FC<UserCardProps> = ({
   onAudioPlay,
   showLoginPrompt = false
 }) => {
-  const audioCount = user.audio_files?.length || 0;
-  const hasAudioFiles = audioCount > 0;
-  const location = [user.city, user.country].filter(Boolean).join(", ");
   
   return (
     <>
-      <CardHeader className="bg-gray-50 p-4 flex flex-row items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">{user.email || "Anonymous User"}</h3>
-          <div className="flex items-center text-gray-500 text-sm mt-1">
-            <Calendar className="h-4 w-4 mr-1" />
-            <span>Joined {formatDistanceToNow(new Date(user.created_at), { addSuffix: true })}</span>
-          </div>
-        </div>
-        <Button variant="ghost" size="sm" onClick={toggleExpand} className="ml-4">
-          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </Button>
-      </CardHeader>
-
       <CardContent className="p-4">
-        <div className="flex flex-col md:flex-row justify-between gap-4">
-          <div className="space-y-2">
-            {location && (
-              <div className="flex items-center text-gray-600">
-                <MapPin className="h-4 w-4 mr-2" />
-                <span>{location}</span>
-              </div>
-            )}
-            
-            {user.years_experience && (
-              <div className="flex items-center text-gray-600">
-                <CalendarClock className="h-4 w-4 mr-2" />
-                <span>{user.years_experience} years experience</span>
-              </div>
-            )}
-
-            {user.languages && user.languages.length > 0 && (
-              <div className="flex flex-col gap-1">
-                <span className="text-sm text-gray-500">Languages Spoken:</span>
-                <div className="flex flex-wrap gap-1">
-                  {user.languages.map((language, index) => (
-                    <Badge key={index} variant="outline" className="bg-blue-50">
-                      {language}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-          
+        <div className="flex justify-between items-start">
           <div>
-            {hasAudioFiles && (
-              <div className="flex flex-col items-start md:items-end">
-                <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-                  {audioCount} {audioCount === 1 ? 'Audio File' : 'Audio Files'}
-                </Badge>
-              </div>
+            <h3 className="text-lg font-medium">{user.email?.split('@')[0] || 'Anonymous Agent'}</h3>
+            <div className="text-sm text-gray-500 mt-1 flex items-center">
+              <Clock className="h-4 w-4 mr-1" />
+              <span>Joined {formatDate(user.created_at)}</span>
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" onClick={toggleExpand} className="p-1">
+            {isExpanded ? <ChevronUp /> : <ChevronDown />}
+          </Button>
+        </div>
+
+        {/* Show basic info */}
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          {user.country && (
+            <div className="flex items-center">
+              <MapPin className="h-4 w-4 mr-1 text-gray-500" />
+              <span className="text-sm">{`${user.city || 'Unknown'}, ${user.country}`}</span>
+            </div>
+          )}
+          {user.gender && (
+            <div className="flex items-center">
+              <span className="text-sm">{user.gender}</span>
+            </div>
+          )}
+          {user.years_experience && (
+            <div className="flex items-center col-span-2">
+              <span className="text-sm">{user.years_experience} years experience</span>
+            </div>
+          )}
+        </div>
+
+        {/* Languages Section */}
+        {user.languages && user.languages.length > 0 && (
+          <div className="mt-4">
+            <div className="text-sm font-medium mb-2">Languages Spoken:</div>
+            <div className="flex flex-wrap gap-2">
+              {user.languages.map((lang, idx) => (
+                <Badge key={idx} variant="secondary">{lang}</Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Show expanded content */}
+        {isExpanded && (
+          <div className="mt-4">
+            <Separator className="my-4" />
+            
+            {/* Audio files section */}
+            <div className="mt-4">
+              <h4 className="text-sm font-medium mb-2">Audio Samples:</h4>
+              
+              {user.audio_files && user.audio_files.length > 0 ? (
+                <UserAudioFiles 
+                  // Update this to include created_at field
+                  audioFiles={user.audio_files.map(file => ({
+                    id: file.id,
+                    title: file.title, 
+                    audio_url: file.audio_url,
+                    created_at: file.created_at || new Date().toISOString() // Provide default if missing
+                  }))}
+                  playingAudio={playingAudio}
+                  onPlay={onAudioPlay}
+                  showLoginPrompt={showLoginPrompt}
+                />
+              ) : (
+                <p className="text-sm text-gray-500">No audio samples available.</p>
+              )}
+            </div>
+          </div>
+        )}
+      </CardContent>
+      
+      <CardFooter className="bg-gray-50 px-4 py-2">
+        <div className="w-full flex justify-between items-center">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-blue-600 p-0"
+            onClick={toggleExpand}
+          >
+            {isExpanded ? 'Show Less' : 'Show More'}
+          </Button>
+          
+          <div className="flex gap-2">
+            {showLoginPrompt ? (
+              <Button asChild variant="outline" size="sm" className="flex items-center gap-1">
+                <Link to="/auth">
+                  <Lock className="h-3 w-3" />
+                  View Full Profile
+                </Link>
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <PlayCircle className="h-3 w-3" />
+                {user.audio_files?.length || 0} Samples
+              </Button>
             )}
           </div>
         </div>
-      </CardContent>
-
-      {isExpanded && (
-        <>
-          {hasAudioFiles ? (
-            showLoginPrompt ? (
-              <CardFooter className="p-4 pt-0 border-t">
-                <div className="w-full p-4 bg-gray-50 rounded-md text-center">
-                  <p className="text-gray-600 mb-2">Please log in or register to listen to audio samples</p>
-                  <div className="flex justify-center gap-2">
-                    <Button asChild size="sm">
-                      <Link to="/auth">Log In</Link>
-                    </Button>
-                    <Button asChild variant="outline" size="sm">
-                      <Link to="/auth?tab=signup">Sign Up</Link>
-                    </Button>
-                  </div>
-                </div>
-              </CardFooter>
-            ) : (
-              <UserAudioFiles 
-                audioFiles={user.audio_files || []} 
-                playingAudio={playingAudio}
-                onAudioPlay={onAudioPlay}
-              />
-            )
-          ) : (
-            <CardFooter className="p-4 pt-0 border-t">
-              <p className="text-gray-500">No audio files available</p>
-            </CardFooter>
-          )}
-        </>
-      )}
+      </CardFooter>
     </>
   );
 };
