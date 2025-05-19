@@ -122,22 +122,6 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
             computer_skill_level: data.computer_skill_level || '',
             salary_expectation: data.salary_expectation || '500',
           });
-
-          // Try to fetch salary_expectation from professional_details if not in profiles
-          if (!data.salary_expectation) {
-            const { data: profData } = await supabase
-              .from('professional_details')
-              .select('salary_expectation')
-              .eq('user_id', actualUserId)
-              .maybeSingle();
-
-            if (profData?.salary_expectation) {
-              setProfileData(prev => ({
-                ...prev,
-                salary_expectation: profData.salary_expectation.toString()
-              }));
-            }
-          }
         } else {
           // Profile doesn't exist or is empty, create initial entry
           const { error: insertError } = await supabase
@@ -206,6 +190,7 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
           country: profileData.country,
           gender: profileData.gender,
           computer_skill_level: profileData.computer_skill_level,
+          salary_expectation: profileData.salary_expectation,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'id' });
 
@@ -213,41 +198,6 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
         console.error("Error updating profile:", error);
         toast.error("Failed to update profile.");
       } else {
-        // Also update the salary_expectation in professional_details
-        const { data: existingProfDetails } = await supabase
-          .from('professional_details')
-          .select('id')
-          .eq('user_id', actualUserId)
-          .maybeSingle();
-
-        if (existingProfDetails) {
-          // Update existing professional details
-          const { error: profError } = await supabase
-            .from('professional_details')
-            .update({
-              salary_expectation: Number(profileData.salary_expectation) || 500
-            })
-            .eq('user_id', actualUserId);
-
-          if (profError) {
-            console.error("Error updating salary expectation:", profError);
-          }
-        } else {
-          // Create new professional details
-          const { error: profError } = await supabase
-            .from('professional_details')
-            .insert({
-              user_id: actualUserId,
-              salary_expectation: Number(profileData.salary_expectation) || 500,
-              years_experience: '1', // Default value
-              languages: ['English'] // Default value
-            });
-
-          if (profError) {
-            console.error("Error creating professional details with salary:", profError);
-          }
-        }
-
         toast.success("Profile updated successfully!");
         // Optimistically update the user context
         setUser(prevUser => ({
