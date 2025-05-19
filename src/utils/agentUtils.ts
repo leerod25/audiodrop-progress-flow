@@ -23,6 +23,12 @@ export const convertUserToAgent = (user: User, teamIds: string[] = []): Agent =>
     country: user.country || null,
     city: user.city || null,
     gender: user.gender || null,
-    is_favorite: teamIds.includes(user.id)
+    is_favorite: teamIds.includes(user.id),
+    // Add private fields as well (they'll only be shown to admins)
+    full_name: user.full_name || null,
+    email: user.email || null,
+    phone: user.phone || null,
+    bio: user.bio || null,
+    computer_skill_level: user.computer_skill_level || null
   };
 };

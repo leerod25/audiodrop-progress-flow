@@ -2,10 +2,12 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star } from 'lucide-react';
+import { Star, Download } from 'lucide-react';
 import { useAgentAudio } from '@/hooks/useAgentAudio';
 import { Agent } from '@/types/Agent';
 import { Skeleton } from "@/components/ui/skeleton";
+import DownloadButton from '@/components/DownloadButton';
+import { useUserContext } from '@/contexts/UserContext';
 
 interface AgentDetailCardProps {
   agent: Agent;
@@ -20,6 +22,9 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
   formatUserId = (id) => id.substring(0, 8) + '...',
   toggleFavorite
 }) => {
+  const { userRole } = useUserContext();
+  const isAdmin = userRole === 'admin';
+  
   // Determine if we should fetch from storage
   const shouldUseHook = !agent.audioUrls || agent.audioUrls.length === 0;
   // Always call hook; we'll decide which list to display
@@ -59,6 +64,17 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
           </Button>
         )}
         
+        {/* Admin-only private details section */}
+        {isAdmin && (
+          <div className="my-4 p-4 bg-gray-50 rounded border">
+            <h3 className="font-medium text-lg mb-2">Private Details</h3>
+            {agent.full_name && <p><strong>Full Name:</strong> {agent.full_name}</p>}
+            {agent.email && <p><strong>Email:</strong> {agent.email}</p>}
+            {agent.phone && <p><strong>Phone:</strong> {agent.phone}</p>}
+            {agent.bio && <p><strong>Bio:</strong> {agent.bio}</p>}
+          </div>
+        )}
+        
         {/* Audio recordings display */}
         <div className="mt-4">
           <h3 className="text-lg font-medium mb-2">Audio Recordings</h3>
@@ -87,12 +103,22 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
               {displayAudioList.map((audio) => (
                 <div key={audio.id} className="p-3 border rounded-lg">
                   <div className="flex flex-col space-y-2">
-                    <div>
-                      <span className="font-medium">{audio.title}</span><br />
-                      {audio.updated_at && (
-                        <small className="text-gray-500">
-                          {new Date(audio.updated_at).toLocaleString()}
-                        </small>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <span className="font-medium">{audio.title}</span><br />
+                        {audio.updated_at && (
+                          <small className="text-gray-500">
+                            {new Date(audio.updated_at).toLocaleString()}
+                          </small>
+                        )}
+                      </div>
+                      
+                      {/* Download button for admin users */}
+                      {isAdmin && (
+                        <DownloadButton 
+                          url={audio.url} 
+                          filename={`${agent.id}_${audio.title}.webm`} 
+                        />
                       )}
                     </div>
                     
