@@ -141,7 +141,7 @@ const ProfessionalDetailsFormReadOnly = ({ userId }: ProfessionalDetailsFormRead
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
             <Briefcase className="h-5 w-5" />
-            Specialized Skills
+            Call Center Specialized Skills
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -162,7 +162,7 @@ const ProfessionalDetailsFormReadOnly = ({ userId }: ProfessionalDetailsFormRead
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
             <Briefcase className="h-5 w-5" />
-            Additional Skills
+            Additional Call Center Skills
           </CardTitle>
         </CardHeader>
         <CardContent>

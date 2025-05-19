@@ -52,17 +52,21 @@ const ProfessionalDetailsForm: React.FC<ProfessionalDetailsFormProps> = ({
     'Portuguese', 'Mandarin', 'Japanese', 'Arabic', 'Hindi'
   ];
   
+  // Updated specialized skills for call center roles
   const specializedOptions = [
-    'React', 'Next.js', 'Node.js', 'Python', 'Django',
-    'AWS', 'Docker', 'Kubernetes'
+    'Customer Service', 'Technical Support', 'Collections', 
+    'Lead Generation', 'Appointment Setting', 'Medical Support',
+    'Virtual Assistance', 'Email Support', 'Sales', 'Outbound Calling'
   ];
   
+  // Updated additional skills for call center roles
   const additionalOptions = [
-    'GraphQL', 'REST APIs', 'SQL', 'NoSQL', 'CI/CD',
-    'Unit Testing', 'Accessibility', 'Performance Tuning'
+    'CRM Software', 'Multi-tasking', 'Conflict Resolution', 
+    'Problem Solving', 'Active Listening', 'Data Entry',
+    'Upselling', 'Cold Calling', 'Bilingual Support', '24/7 Availability'
   ];
   
-  const availabilityOptions = ['Full-time', 'Part-time', 'Weekends', 'Evenings'];
+  const availabilityOptions = ['Full-time', 'Part-time', 'Weekends', 'Evenings', '24/7 Shifts', 'Overnight'];
 
   const computerSkillLevels = ['beginner', 'intermediate', 'advanced', 'expert'];
 
@@ -181,7 +185,7 @@ const ProfessionalDetailsForm: React.FC<ProfessionalDetailsFormProps> = ({
           name="specialized_skills"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Specialized Skills</FormLabel>
+              <FormLabel>Call Center Specialized Skills</FormLabel>
               <FormControl>
                 <div className="grid grid-cols-2 gap-2">
                   {specializedOptions.map(skill => (
@@ -211,7 +215,7 @@ const ProfessionalDetailsForm: React.FC<ProfessionalDetailsFormProps> = ({
           name="additional_skills"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Additional Skills</FormLabel>
+              <FormLabel>Additional Call Center Skills</FormLabel>
               <FormControl>
                 <div className="grid grid-cols-2 gap-2">
                   {additionalOptions.map(skill => (
