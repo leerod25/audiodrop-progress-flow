@@ -24,6 +24,7 @@ const AgentPreview: React.FC = () => {
           key={a.id}
           agent={{
             ...a,                               // include audio_files or audioUrls
+            has_audio: a.audio_files?.length > 0 || false, // Add the missing has_audio property
             audioUrls: a.audio_files?.map((file, idx) => ({
               id: file.id || String(idx),
               title: file.title || 'Recording',

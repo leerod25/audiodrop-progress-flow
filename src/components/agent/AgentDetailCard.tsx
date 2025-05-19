@@ -20,19 +20,16 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
   formatUserId = (id) => id.substring(0, 8) + '...',
   toggleFavorite
 }) => {
-  // Always fetch storage if they haven't been pre‐loaded
-  const shouldUseHook = !agent.audioUrls || agent.audioUrls.length === 0;
-  const { audioList, loading, error } = useAgentAudio(agent.id);
-  
-  // Prefer the passed-in list, but if empty use what the hook returned
-  const displayAudioList = 
-    (agent.audioUrls && agent.audioUrls.length > 0)
-      ? agent.audioUrls.map((url, idx) => ({
-          id: String(idx),
-          title: 'Recording',
-          url,
-          updated_at: ''
-        }))
+  // Decide whether to load from storage or use provided URLs
+  const useHook =
+    !agent.audioUrls || agent.audioUrls.length === 0;
+  const { audioList, loading, error } = useHook
+    ? useAgentAudio(agent.id)
+    : { audioList: [], loading: false, error: null };
+  // Pick whichever list actually has content
+  const displayAudioList =
+    agent.audioUrls && agent.audioUrls.length > 0
+      ? agent.audioUrls
       : audioList;
   
   return (
