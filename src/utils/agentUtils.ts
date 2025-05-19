@@ -48,7 +48,8 @@ export const convertUserToAgent = (user: User) => {
     audioUrls: user.audio_files?.map(file => ({
       id: file.id,
       title: file.title,
-      url: file.audio_url
+      url: file.audio_url,
+      updated_at: file.created_at || new Date().toISOString()
     })) || []
   };
 };

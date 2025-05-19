@@ -163,7 +163,7 @@ const Agents = () => {
           currentPageUsers={currentPageUsers}
           viewAgentDetails={viewAgentDetails}
           toggleTeamMember={toggleTeamMember}
-          convertToAgent={(user: User) => convertUserToAgent(user, team)}
+          convertToAgent={(user: User) => convertUserToAgent(user)}
         />
         
         {/* Pagination */}
