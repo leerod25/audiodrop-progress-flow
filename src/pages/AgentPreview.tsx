@@ -4,7 +4,7 @@ import { useUserContext } from '@/contexts/UserContext';
 import { useUsersData } from '@/hooks/useUsersData';
 import AgentDetailCard from '@/components/agent/AgentDetailCard';
 import AgentDetailsDialog from '@/components/agents/AgentDetailsDialog';
-import { Button } from "@/components/ui/button"; // Add this import
+import { Button } from "@/components/ui/button";
 
 const AgentPreview: React.FC = () => {
   const { user, userRole } = useUserContext();
@@ -57,7 +57,7 @@ const AgentPreview: React.FC = () => {
             size="sm"
             onClick={() => openAgentDetails(a.id)}
           >
-            View Details in Dialog
+            View Details and Audio
           </Button>
         </div>
       ))}

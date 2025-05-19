@@ -54,7 +54,7 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
         
         // Fetch agent's audio files
         const { data: audioFiles, error: audioError } = await supabase
-          .from('audio_files')
+          .from('audio_metadata')
           .select('*')
           .eq('user_id', selectedAgentId);
           
