@@ -29,7 +29,6 @@ export interface User {
   languages?: string[] | null;
   is_available?: boolean;
   role?: string;
-  salary_expectation?: string | null;
 }
 
 interface UsersResponse {
@@ -75,7 +74,7 @@ export const useUserFetch = (currentUser: any) => {
           // Try to get years experience and languages from professional_details
           const { data: professionalData } = await supabase
             .from('professional_details')
-            .select('years_experience, languages, salary_expectation')
+            .select('years_experience, languages')
             .eq('user_id', user.id)
             .single();
           
@@ -100,7 +99,6 @@ export const useUserFetch = (currentUser: any) => {
             city: profileData?.city || null,
             gender: profileData?.gender || null,
             role: profileData?.role || 'agent',
-            salary_expectation: professionalData?.salary_expectation?.toString() || null,
             is_available: !!availabilityData, // Available if they have professional details
             years_experience: professionalData?.years_experience || null,
             languages: professionalData?.languages || null,
@@ -146,8 +144,7 @@ export const useUserFetch = (currentUser: any) => {
           .insert({ 
             user_id: userId,
             years_experience: '1', // Default value
-            languages: ['English'], // Default value
-            salary_expectation: '500'  // String value
+            languages: ['English'] // Default value
           });
         
         if (error) {

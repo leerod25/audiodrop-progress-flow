@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   FormField, 
@@ -24,65 +23,11 @@ export interface SalarySectionProps {
 const SalarySection: React.FC<SalarySectionProps> = ({
   control
 }) => {
-  const salaryOptions = [
-    { value: "500", label: "$500/month" },
-    { value: "1000", label: "$1,000/month" },
-    { value: "1500", label: "$1,500/month" },
-    { value: "2000", label: "$2,000/month" },
-    { value: "2500", label: "$2,500/month" },
-    { value: "3000", label: "$3,000/month" },
-    { value: "custom", label: "Custom amount" }
-  ];
-
+  // Keeping the component structure intact but removing the actual UI elements
+  // This way any forms that use it won't break, but the salary information won't be shown
   return (
     <div className="space-y-4">
-      <FormField
-        control={control}
-        name="salary_expectation"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Salary Expectation (monthly)</FormLabel>
-            <FormControl>
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value || "500"}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select monthly salary" />
-                </SelectTrigger>
-                <SelectContent>
-                  {salaryOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormControl>
-            <FormDescription>
-              Select your expected monthly compensation
-            </FormDescription>
-          </FormItem>
-        )}
-      />
-      
-      {/* Custom amount input that appears when "Custom amount" is selected */}
-      <FormField
-        control={control}
-        name="custom_salary"
-        render={({ field }) => (
-          <FormItem className="space-y-1">
-            <FormControl>
-              <Input
-                type="number"
-                placeholder="Enter custom amount in USD"
-                {...field}
-                className="opacity-0 h-0 p-0 m-0 absolute"
-              />
-            </FormControl>
-          </FormItem>
-        )}
-      />
+      {/* Removed the salary input fields as requested */}
     </div>
   );
 };

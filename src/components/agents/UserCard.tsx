@@ -109,12 +109,6 @@ const UserCard: React.FC<UserCardProps> = ({
                 {user.languages.join(", ")}
               </p>
             )}
-            {user.salary_expectation && (
-              <p className="text-sm">
-                <span className="font-medium">Salary Expectation:</span>{" "}
-                ${user.salary_expectation}/month
-              </p>
-            )}
           </div>
           
           {/* Actions */}

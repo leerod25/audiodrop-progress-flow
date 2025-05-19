@@ -14,7 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { User } from '@/hooks/users/useUserFetch';
 
-// Sample agent data for demo purposes
+// Sample agent data for demo purposes (updated to North America and added one more profile)
 const sampleAgents: User[] = [
   {
     id: '550e8400-e29b-41d4-a716-446655440000',
@@ -28,8 +28,7 @@ const sampleAgents: User[] = [
     years_experience: '5',
     languages: ['English', 'Spanish'],
     is_available: true,
-    role: 'agent',
-    salary_expectation: '3500'
+    role: 'agent'
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440001',
@@ -37,14 +36,13 @@ const sampleAgents: User[] = [
     full_name: 'Maria Garcia',
     created_at: '2024-02-10',
     audio_files: [],
-    country: 'Spain',
-    city: 'Madrid',
+    country: 'Mexico',
+    city: 'Mexico City',
     gender: 'Female',
     years_experience: '7',
-    languages: ['Spanish', 'English', 'Portuguese'],
+    languages: ['Spanish', 'English'],
     is_available: true,
-    role: 'agent',
-    salary_expectation: '4000'
+    role: 'agent'
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440002',
@@ -58,23 +56,21 @@ const sampleAgents: User[] = [
     years_experience: '3',
     languages: ['English', 'French'],
     is_available: false,
-    role: 'agent',
-    salary_expectation: '3200'
+    role: 'agent'
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440003',
     email: 'agent4@example.com',
-    full_name: 'Sophia Chen',
+    full_name: 'Sofia Hernandez',
     created_at: '2024-01-25',
     audio_files: [],
-    country: 'Singapore',
-    city: 'Singapore',
+    country: 'El Salvador',
+    city: 'San Salvador',
     gender: 'Female',
     years_experience: '4',
-    languages: ['English', 'Mandarin', 'Malay'],
+    languages: ['Spanish', 'English'],
     is_available: true,
-    role: 'agent',
-    salary_expectation: '3800'
+    role: 'agent'
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440004',
@@ -82,14 +78,27 @@ const sampleAgents: User[] = [
     full_name: 'James Wilson',
     created_at: '2024-02-20',
     audio_files: [],
-    country: 'United Kingdom',
-    city: 'London',
+    country: 'United States',
+    city: 'Los Angeles',
     gender: 'Male',
     years_experience: '6',
     languages: ['English'],
     is_available: true,
-    role: 'agent',
-    salary_expectation: '4200'
+    role: 'agent'
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440005',
+    email: 'agent6@example.com',
+    full_name: 'Carlos Rodriguez',
+    created_at: '2024-03-15',
+    audio_files: [],
+    country: 'Mexico',
+    city: 'Guadalajara',
+    gender: 'Male',
+    years_experience: '8',
+    languages: ['Spanish', 'English', 'Portuguese'],
+    is_available: true,
+    role: 'agent'
   }
 ];
 
