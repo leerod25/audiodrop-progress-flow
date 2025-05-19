@@ -1,19 +1,17 @@
 
 import React from 'react';
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { InfoIcon } from "lucide-react";
-import AgentCard from '@/components/agents/AgentCard';
-import AgentsLoading from '@/components/agents/AgentsLoading';
-import AgentsPagination from '@/components/agents/AgentsPagination';
-import { getAvatarImage, getAvatarFallback } from '@/utils/avatarUtils';
 import { User } from '@/hooks/users/useUserFetch';
+import AgentsLoading from './AgentsLoading';
+import UsersError from './UsersError';
+import AgentsPagination from './AgentsPagination';
+import { Card } from '@/components/ui/card';
+import UserCard from './UserCard';
 
 interface AgentsListProps {
   users: User[];
   loading: boolean;
   error: string | null;
-  userRole: string | null;
+  userRole: string;
   canSeeAudio: boolean;
   currentPageUsers: User[];
   page: number;
@@ -21,7 +19,9 @@ interface AgentsListProps {
   fetchAllUsers: () => Promise<void>;
   setPage: (page: number) => void;
   viewAgentDetails: (userId: string) => void;
-  toggleAvailability?: (userId: string, currentStatus: boolean) => Promise<void>;
+  toggleAvailability: (userId: string, currentStatus: boolean) => void;
+  team?: string[];
+  toggleTeamMember?: (id: string) => void;
 }
 
 const AgentsList: React.FC<AgentsListProps> = ({
@@ -36,79 +36,57 @@ const AgentsList: React.FC<AgentsListProps> = ({
   fetchAllUsers,
   setPage,
   viewAgentDetails,
-  toggleAvailability
+  toggleAvailability,
+  team = [],
+  toggleTeamMember
 }) => {
-  const isAdmin = userRole === 'admin';
-  
-  if (error) {
-    return (
-      <div className="text-center py-8">
-        <Alert variant="destructive">
-          <InfoIcon className="h-5 w-5" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-        <Button 
-          onClick={() => fetchAllUsers()} 
-          className="mt-4"
-        >
-          Try Again
-        </Button>
-      </div>
-    );
-  }
-
+  // Show loading state
   if (loading) {
     return <AgentsLoading />;
   }
 
+  // Show error state
+  if (error) {
+    return <UsersError error={error} onRetry={fetchAllUsers} />;
+  }
+
+  // Show no results
   if (users.length === 0) {
     return (
-      <Alert className="my-4">
-        <InfoIcon className="h-5 w-5" />
-        <AlertDescription>
-          No agent profiles found. Please try refreshing or check back later.
-        </AlertDescription>
-        <Button 
-          onClick={() => fetchAllUsers()} 
-          className="mt-4"
-        >
-          Refresh
-        </Button>
-      </Alert>
+      <Card className="p-6 text-center">
+        <p className="text-lg font-medium">No agent profiles found</p>
+        <p className="text-gray-500 mt-2">
+          There are no agent profiles available at this time.
+        </p>
+      </Card>
     );
   }
 
   return (
-    <>
-      {/* Display agent cards */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-6">
-        {currentPageUsers.map((user) => {
-          const avatarImage = getAvatarImage(user.gender);
-          
-          return (
-            <AgentCard 
-              key={user.id}
-              user={user}
-              canSeeAudio={canSeeAudio}
-              avatarImage={avatarImage}
-              getAvatarFallback={getAvatarFallback}
-              onViewProfile={() => viewAgentDetails(user.id)}
-              toggleAvailability={toggleAvailability}
-              isAdminView={isAdmin}
-            />
-          );
-        })}
+    <div>
+      {/* Agents Grid */}
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-8">
+        {currentPageUsers.map((user) => (
+          <UserCard
+            key={user.id}
+            user={user}
+            userRole={userRole}
+            canSeeAudio={canSeeAudio}
+            onViewDetails={() => viewAgentDetails(user.id)}
+            onToggleAvailability={() => toggleAvailability(user.id, user.is_available || false)}
+            inTeam={team?.includes(user.id)}
+            onToggleTeam={toggleTeamMember ? () => toggleTeamMember(user.id) : undefined}
+          />
+        ))}
       </div>
-      
-      {/* Pagination component */}
-      {users.length > 0 && (
-        <AgentsPagination 
-          currentPage={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-        />
-      )}
-    </>
+
+      {/* Pagination */}
+      <AgentsPagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
+    </div>
   );
 };
 

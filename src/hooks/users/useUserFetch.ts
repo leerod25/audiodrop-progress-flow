@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
@@ -29,6 +30,7 @@ export interface User {
   languages?: string[] | null;
   is_available?: boolean;
   role?: string;
+  salary_expectation?: string | null;
 }
 
 interface UsersResponse {
@@ -47,7 +49,7 @@ export const useUserFetch = (currentUser: any) => {
       
       // Call our edge function to get all users
       const { data, error } = await supabase.functions.invoke('list-users', {
-        body: { businessOnly: false, adminMode: false }  // Set to false to exclude business profiles
+        body: { businessOnly: false, adminMode: false }
       });
       
       if (error) {
@@ -67,7 +69,7 @@ export const useUserFetch = (currentUser: any) => {
           // Try to get additional profile data from the profiles table
           const { data: profileData } = await supabase
             .from('profiles')
-            .select('country, city, gender, role')
+            .select('country, city, gender, role, salary_expectation')
             .eq('id', user.id)
             .single();
             
@@ -99,6 +101,7 @@ export const useUserFetch = (currentUser: any) => {
             city: profileData?.city || null,
             gender: profileData?.gender || null,
             role: profileData?.role || 'agent',
+            salary_expectation: profileData?.salary_expectation || null,
             is_available: !!availabilityData, // Available if they have professional details
             years_experience: professionalData?.years_experience || null,
             languages: professionalData?.languages || null,

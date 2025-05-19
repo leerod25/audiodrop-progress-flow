@@ -1,100 +1,130 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { CardContent, CardFooter } from '@/components/ui/card';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import UserAudioFiles, { AudioFile } from './UserAudioFiles';
-import { useUserContext } from '@/contexts/UserContext';
-import UserHeader from './UserHeader';
-import UserProfile from './UserProfile';
-import UserExpandedDetails from './UserExpandedDetails';
-import UserFooter from './UserFooter';
-
-interface User {
-  id: string;
-  email: string;
-  first_name?: string;
-  last_name?: string;
-  full_name?: string;
-  avatar_url?: string;
-  created_at: string;
-  audio_files: AudioFile[];
-  country?: string | null;
-  city?: string | null;
-  gender?: string | null;
-  years_experience?: string | null;
-  languages?: string[] | null;
-  is_available?: boolean;
-}
+import { User } from '@/hooks/users/useUserFetch';
+import { Button } from "@/components/ui/button";
+import { Info, Star, StarOff } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface UserCardProps {
   user: User;
-  isExpanded: boolean;
-  playingAudio: string | null;
-  toggleExpand: () => void;
-  onAudioPlay: (audioId: string) => void;
-  showLoginPrompt?: boolean;
-  toggleAvailability?: (userId: string, currentStatus: boolean) => Promise<void>;
+  userRole: string;
+  canSeeAudio: boolean;
+  onViewDetails: () => void;
+  onToggleAvailability: () => void;
+  inTeam?: boolean;
+  onToggleTeam?: () => void;
 }
 
 const UserCard: React.FC<UserCardProps> = ({
   user,
-  isExpanded,
-  playingAudio,
-  toggleExpand,
-  onAudioPlay,
-  showLoginPrompt = false,
-  toggleAvailability
+  userRole,
+  canSeeAudio,
+  onViewDetails,
+  onToggleAvailability,
+  inTeam = false,
+  onToggleTeam
 }) => {
-  const { userRole } = useUserContext();
   const isAdmin = userRole === 'admin';
   
   return (
-    <>
-      <CardContent className="p-4">
-        {/* User ID and Join Date */}
-        <div className="flex justify-between items-start">
-          <UserHeader
-            id={user.id}
-            email={user.email}
-            fullName={user.full_name}
-            gender={user.gender}
-            createdAt={user.created_at}
-            isAvailable={toggleAvailability ? user.is_available : undefined}
-            isAdmin={isAdmin}
-          />
-          <Button variant="ghost" size="sm" onClick={toggleExpand} className="p-1">
-            {isExpanded ? <ChevronUp /> : <ChevronDown />}
-          </Button>
-        </div>
-
-        {/* Profile Information Section - Always Visible */}
-        <UserProfile user={user} toggleAvailability={toggleAvailability} />
-
-        {/* Show expanded content */}
-        {isExpanded && (
-          <UserExpandedDetails
-            isAdmin={isAdmin}
-            userId={user.id}
-            email={user.email}
-            languages={user.languages}
-            audioFiles={user.audio_files}
-            playingAudio={playingAudio}
-            onAudioPlay={onAudioPlay}
-            showLoginPrompt={showLoginPrompt}
-          />
+    <Card className="overflow-hidden">
+      <div className="relative">
+        {/* Availability Badge */}
+        {user.is_available && (
+          <div className="absolute top-2 right-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+            Available
+          </div>
         )}
-      </CardContent>
-      
-      <CardFooter className="bg-gray-50 px-4 py-2">
-        <UserFooter
-          isExpanded={isExpanded}
-          toggleExpand={toggleExpand}
-          audioFilesCount={user.audio_files?.length || 0}
-          showLoginPrompt={showLoginPrompt}
-        />
-      </CardFooter>
-    </>
+        
+        {/* User Header with Avatar */}
+        <div className="p-4 bg-muted/30">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-600">
+              {(user.full_name?.[0] || user.email?.[0] || "?").toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold truncate">
+                {user.full_name || user.email || "Unknown User"}
+              </h3>
+              {user.country && (
+                <p className="text-sm text-muted-foreground">
+                  {user.city ? `${user.city}, ` : ''}{user.country}
+                </p>
+              )}
+            </div>
+            
+            {/* Team Button */}
+            {onToggleTeam && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onToggleTeam}
+                className={inTeam ? "text-yellow-500" : "text-gray-400"}
+                title={inTeam ? "Remove from team" : "Add to team"}
+              >
+                {inTeam ? <Star className="h-5 w-5" /> : <StarOff className="h-5 w-5" />}
+              </Button>
+            )}
+          </div>
+        </div>
+        
+        <CardContent className="p-4">
+          {/* User Details */}
+          <div className="space-y-2 mb-4">
+            {user.gender && (
+              <p className="text-sm">
+                <span className="font-medium">Gender:</span> {user.gender}
+              </p>
+            )}
+            {user.years_experience && (
+              <p className="text-sm">
+                <span className="font-medium">Experience:</span> {user.years_experience} years
+              </p>
+            )}
+            {user.languages && user.languages.length > 0 && (
+              <p className="text-sm">
+                <span className="font-medium">Languages:</span>{" "}
+                {user.languages.join(", ")}
+              </p>
+            )}
+          </div>
+          
+          {/* Actions */}
+          <div className="flex space-x-2 mt-4 justify-between">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1"
+              onClick={onViewDetails}
+            >
+              <Info className="h-4 w-4 mr-1" /> Details
+            </Button>
+            
+            {isAdmin && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="flex-1"
+                onClick={onToggleAvailability}
+              >
+                {user.is_available ? 'Set Unavailable' : 'Set Available'}
+              </Button>
+            )}
+            
+            {onToggleTeam && (
+              <Button 
+                variant={inTeam ? "destructive" : "outline"} 
+                size="sm"
+                className="flex-1"
+                onClick={onToggleTeam}
+              >
+                {inTeam ? 'Remove' : 'Add to Team'}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </div>
+    </Card>
   );
 };
 

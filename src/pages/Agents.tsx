@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import AuthAlert from '@/components/agents/AuthAlert';
 import { Navigate } from 'react-router-dom';
 import { useUsersData } from '@/hooks/useUsersData';
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import AgentsList from '@/components/agents/AgentsList';
 import AdminUsersList from '@/components/agents/AdminUsersList';
@@ -32,11 +32,21 @@ const Agents: React.FC = () => {
   const PAGE_SIZE = 9;
   const [page, setPage] = useState(1);
 
+  // Team state: store IDs of users added to team
+  const [team, setTeam] = useState<string[]>([]);
+
   // Calculate pagination values
   const totalPages = Math.ceil(users.length / PAGE_SIZE);
   const startIndex = (page - 1) * PAGE_SIZE;
   const currentPageUsers = users.slice(startIndex, startIndex + PAGE_SIZE);
   
+  // Toggle team member function
+  const toggleTeamMember = (id: string) => {
+    setTeam(prev =>
+      prev.includes(id) ? prev.filter(uid => uid !== id) : [...prev, id]
+    );
+  };
+
   // Force refresh on initial load
   useEffect(() => {
     console.log("Agents component mounted, userRole:", userRole);
@@ -82,7 +92,15 @@ const Agents: React.FC = () => {
   if (userRole === 'admin') {
     return (
       <div className="container mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-6">Agent Profiles ({users.length})</h1>
+        <div className="flex justify-between items-center mb-6">
+          <Button asChild variant="outline" className="flex items-center gap-2">
+            <a href="/">
+              <ArrowLeft className="h-4 w-4" />
+              Return to Dashboard
+            </a>
+          </Button>
+          <h1 className="text-3xl font-bold">Agent Profiles ({users.length})</h1>
+        </div>
         
         {renderAdminActions()}
         
@@ -105,7 +123,15 @@ const Agents: React.FC = () => {
   console.log("Rendering regular view with userRole:", userRole, "and users:", users.length);
   return (
     <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-6">Agent Profiles ({users.length})</h1>
+      <div className="flex justify-between items-center mb-6">
+        <Button asChild variant="outline" className="flex items-center gap-2">
+          <a href="/">
+            <ArrowLeft className="h-4 w-4" />
+            Return to Dashboard
+          </a>
+        </Button>
+        <h1 className="text-3xl font-bold">Agent Profiles ({users.length})</h1>
+      </div>
       
       {/* Admin actions */}
       {renderAdminActions()}
@@ -113,10 +139,15 @@ const Agents: React.FC = () => {
       {/* Show auth alert for non-authenticated users */}
       {!user && <AuthAlert />}
       
-      {/* Debug info - REMOVED THE EMAIL DISPLAY HERE */}
+      {/* Debug info */}
       <div className="text-sm text-gray-500 mb-4">
         Role: {userRole || 'Unknown'} | User ID: {user?.id?.substring(0, 8) || 'Not logged in'}
       </div>
+      
+      {/* Team Members Count */}
+      {team.length > 0 && (
+        <p className="mb-4 font-medium">Team Members: {team.length}</p>
+      )}
       
       {/* Agent List Component */}
       <AgentsList
@@ -132,7 +163,50 @@ const Agents: React.FC = () => {
         setPage={setPage}
         viewAgentDetails={viewAgentDetails}
         toggleAvailability={toggleAvailability}
+        team={team}
+        toggleTeamMember={toggleTeamMember}
       />
+
+      {/* Team Members Section */}
+      {team.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-2xl font-semibold mb-4">My Team Members</h2>
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {team.map(id => {
+              const member = users.find(u => u.id === id);
+              if (!member) return null;
+              return (
+                <div key={id} className="p-4 border rounded shadow-sm space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium truncate">
+                      {member.full_name || member.email || `User ${id.substring(0, 8)}`}
+                    </span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-red-600 hover:text-red-800"
+                      onClick={() => toggleTeamMember(id)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                  {member.country && (
+                    <p className="text-sm">{member.city ? `${member.city}, ` : ''}{member.country}</p>
+                  )}
+                  {member.audio_files && member.audio_files.length > 0 ? (
+                    <audio controls className="w-full mt-2">
+                      <source src={member.audio_files[0].audio_url} />
+                      Your browser doesn't support audio.
+                    </audio>
+                  ) : (
+                    <p className="text-sm text-gray-500">No audio available</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Agent Details Dialog */}
       <AgentDetailsDialog 
