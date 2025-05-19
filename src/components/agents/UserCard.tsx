@@ -1,16 +1,14 @@
 
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CardContent, CardFooter } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { ChevronDown, ChevronUp, Clock, MapPin, PlayCircle, Lock, Globe, Briefcase, User } from 'lucide-react';
-import { formatDate } from '@/utils/dateUtils';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import UserAudioFiles, { AudioFile } from './UserAudioFiles';
-import { Link } from 'react-router-dom';
-import { Switch } from '@/components/ui/switch';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useUserContext } from '@/contexts/UserContext';
+import UserHeader from './UserHeader';
+import UserProfile from './UserProfile';
+import UserExpandedDetails from './UserExpandedDetails';
+import UserFooter from './UserFooter';
 
 interface User {
   id: string;
@@ -51,197 +49,50 @@ const UserCard: React.FC<UserCardProps> = ({
   const { userRole } = useUserContext();
   const isAdmin = userRole === 'admin';
   
-  // Format the user ID to show only first 8 characters
-  const formatUserId = (id: string) => `${id.substring(0, 8)}...`;
-  
-  const handleAvailabilityToggle = async () => {
-    if (toggleAvailability) {
-      await toggleAvailability(user.id, !!user.is_available);
-    }
-  };
-  
-  // Helper function to get avatar image based on gender - default to male if not specified
-  const getAvatarImage = (gender: string | null | undefined) => {
-    // Default to male if gender is not specified
-    if (!gender) {
-      return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
-    }
-    
-    if (gender === 'male' || gender === 'Male') {
-      return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
-    } else if (gender === 'female' || gender === 'Female') {
-      return '/lovable-uploads/7889d5d0-d6bd-4ccf-8dbd-62fe95fc1946.png';
-    }
-    // Default to male for any other value
-    return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
-  };
-
-  // Helper function to get avatar fallback text
-  const getAvatarFallback = (email: string, gender: string | null | undefined) => {
-    if (email && email.length > 0) {
-      return email.charAt(0).toUpperCase();
-    }
-    return gender === 'female' || gender === 'Female' ? 'F' : 'M'; // Default to M
-  };
-  
-  const avatarImage = getAvatarImage(user.gender);
-  
   return (
     <>
       <CardContent className="p-4">
         {/* User ID and Join Date */}
         <div className="flex justify-between items-start">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 border">
-              <AvatarImage src={avatarImage} alt={user.gender || 'Agent'} />
-              <AvatarFallback>{getAvatarFallback(user.email, user.gender)}</AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="flex items-center gap-2">
-                {/* Show full name only for admins */}
-                <h3 className="text-lg font-medium">
-                  {isAdmin && user.full_name ? user.full_name : formatUserId(user.id)}
-                </h3>
-                {toggleAvailability && (
-                  <Badge 
-                    variant={user.is_available ? "default" : "destructive"}
-                    className="ml-2"
-                  >
-                    {user.is_available ? 'Available' : 'On Project'}
-                  </Badge>
-                )}
-              </div>
-              <div className="text-sm text-gray-500 mt-1 flex items-center">
-                <Clock className="h-4 w-4 mr-1" />
-                <span>Joined {formatDate(user.created_at)}</span>
-              </div>
-            </div>
-          </div>
+          <UserHeader
+            id={user.id}
+            email={user.email}
+            fullName={user.full_name}
+            gender={user.gender}
+            createdAt={user.created_at}
+            isAvailable={toggleAvailability ? user.is_available : undefined}
+            isAdmin={isAdmin}
+          />
           <Button variant="ghost" size="sm" onClick={toggleExpand} className="p-1">
             {isExpanded ? <ChevronUp /> : <ChevronDown />}
           </Button>
         </div>
 
         {/* Profile Information Section - Always Visible */}
-        <div className="mt-4 space-y-3">
-          {/* Location information */}
-          {(user.country || user.city) && (
-            <div className="flex items-center">
-              <MapPin className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
-              <span className="text-sm">{[user.city, user.country].filter(Boolean).join(", ")}</span>
-            </div>
-          )}
-          
-          {/* Experience information */}
-          {user.years_experience && (
-            <div className="flex items-center">
-              <Briefcase className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
-              <span className="text-sm">{user.years_experience} years experience</span>
-            </div>
-          )}
-
-          {/* Languages Section */}
-          {user.languages && user.languages.length > 0 && (
-            <div className="mt-2">
-              <div className="flex items-center">
-                <Globe className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
-                <div className="text-sm font-medium">Languages:</div>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2 ml-6">
-                {user.languages.map((lang, idx) => (
-                  <Badge key={idx} variant="secondary" className="text-xs">{lang}</Badge>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Availability toggle */}
-          {toggleAvailability && (
-            <div className="mt-4 flex items-center justify-between border-t pt-3">
-              <span className="text-sm font-medium">Availability Status:</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">{user.is_available ? 'Available' : 'On Project'}</span>
-                <Switch
-                  checked={!!user.is_available}
-                  onCheckedChange={handleAvailabilityToggle}
-                />
-              </div>
-            </div>
-          )}
-        </div>
+        <UserProfile user={user} toggleAvailability={toggleAvailability} />
 
         {/* Show expanded content */}
         {isExpanded && (
-          <div className="mt-4">
-            <Separator className="my-4" />
-            
-            {/* Full view with additional details */}
-            <div className="grid grid-cols-1 gap-4 mb-4">
-              <div>
-                {/* Only show full ID and email for admin */}
-                {isAdmin && (
-                  <>
-                    <p className="font-medium">User ID</p>
-                    <p className="text-sm text-gray-600 break-all">{user.id}</p>
-                    <p className="font-medium">Email</p>
-                    <p className="text-sm text-gray-600 break-all">{user.email}</p>
-                  </>
-                )}
-                <p className="font-medium">Languages Spoken</p>
-                <p className="text-sm text-gray-600">
-                  {user.languages && user.languages.length > 0 
-                    ? user.languages.join(', ') 
-                    : 'Not specified'}
-                </p>
-              </div>
-            </div>
-            
-            {/* Audio files section */}
-            <div className="mt-4">
-              <h4 className="text-sm font-medium mb-2">Audio Samples:</h4>
-              
-              {user.audio_files && user.audio_files.length > 0 ? (
-                <UserAudioFiles 
-                  audioFiles={user.audio_files}
-                  playingAudio={playingAudio}
-                  onPlay={onAudioPlay}
-                  showLoginPrompt={showLoginPrompt}
-                />
-              ) : (
-                <p className="text-sm text-gray-500">No audio samples available.</p>
-              )}
-            </div>
-          </div>
+          <UserExpandedDetails
+            isAdmin={isAdmin}
+            userId={user.id}
+            email={user.email}
+            languages={user.languages}
+            audioFiles={user.audio_files}
+            playingAudio={playingAudio}
+            onAudioPlay={onAudioPlay}
+            showLoginPrompt={showLoginPrompt}
+          />
         )}
       </CardContent>
       
       <CardFooter className="bg-gray-50 px-4 py-2">
-        <div className="w-full flex justify-between items-center">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-blue-600 p-0"
-            onClick={toggleExpand}
-          >
-            {isExpanded ? 'Show Less' : 'Show More'}
-          </Button>
-          
-          <div className="flex gap-2">
-            {showLoginPrompt ? (
-              <Button asChild variant="outline" size="sm" className="flex items-center gap-1">
-                <Link to="/auth">
-                  <Lock className="h-3 w-3" />
-                  View Full Profile
-                </Link>
-              </Button>
-            ) : (
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
-                <PlayCircle className="h-3 w-3" />
-                {user.audio_files?.length || 0} Samples
-              </Button>
-            )}
-          </div>
-        </div>
+        <UserFooter
+          isExpanded={isExpanded}
+          toggleExpand={toggleExpand}
+          audioFilesCount={user.audio_files?.length || 0}
+          showLoginPrompt={showLoginPrompt}
+        />
       </CardFooter>
     </>
   );
