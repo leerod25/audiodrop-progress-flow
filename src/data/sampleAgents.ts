@@ -27,7 +27,13 @@ const createSampleAgent = (id: string, city: string, country: string) => {
     languages: ["English", "Spanish"],
     is_available: true,
     role: "agent",
-    has_audio: true
+    has_audio: true,
+    audioUrls: [{
+      id: "sample-audio-1",
+      title: "Welcome Message",
+      url: sampleAudioUrl,
+      updated_at: new Date().toISOString()
+    }]
   };
 };
 
