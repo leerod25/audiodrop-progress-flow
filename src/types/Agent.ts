@@ -1,7 +1,7 @@
 
 export interface Agent {
   id: string;
-  email: string; // Changed from optional to required
+  email: string; // Required but can be empty string
   has_audio: boolean;
   audio_url?: string | null;
   audioUrls?: {
@@ -26,5 +26,5 @@ export interface Agent {
   is_available?: boolean;
   years_experience?: string | null;
   languages?: string[] | null;
-  created_at?: string;
+  created_at: string; // Changed from optional to required to match User interface
 }

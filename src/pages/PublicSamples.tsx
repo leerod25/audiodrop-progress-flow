@@ -58,46 +58,50 @@ export default function PublicSamplesPage() {
           No sign-up required to preview these samples.
         </p>
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {sampleProfiles.map(agent => (
-            <div key={agent.id}>
-              <AgentListCard
-                agent={{
-                  ...agent,
-                  has_audio: (agent.audioUrls?.length || 0) > 0,
-                }}
-                onViewDetails={() => {}}
-                onAddToTeam={() => {}}
-                onPlaySample={() => handlePlay({
-                  ...agent,
-                  has_audio: (agent.audioUrls?.length || 0) > 0,
-                })}
-              />
+          {sampleProfiles.map(agent => {
+            // Convert sample profile to Agent type
+            const agentData: Agent = {
+              ...agent,
+              has_audio: (agent.audioUrls?.length || 0) > 0,
+              email: `sample-${agent.id}@example.com`, // Add required email field
+              created_at: agent.created_at || new Date().toISOString()
+            };
+            
+            return (
+              <div key={agent.id}>
+                <AgentListCard
+                  agent={agentData}
+                  onViewDetails={() => {}}
+                  onAddToTeam={() => {}}
+                  onPlaySample={() => handlePlay(agentData)}
+                />
 
-              {playing?.id === agent.id && (
-                <div className="mt-2 p-4 bg-gray-100 rounded">
-                  <h4 className="text-sm font-medium mb-2">{playing.title}</h4>
-                  
-                  {audioError ? (
-                    <div className="p-3 bg-red-50 text-red-600 rounded text-sm">
-                      {audioError}
-                      <button 
-                        className="ml-2 text-red-700 underline" 
-                        onClick={() => setAudioError(null)}
-                      >
-                        Try Again
-                      </button>
-                    </div>
-                  ) : (
-                    <AudioPlayer 
-                      audioUrl={playing.url} 
-                      autoPlay={true}
-                      onError={handleAudioError}
-                    />
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+                {playing?.id === agent.id && (
+                  <div className="mt-2 p-4 bg-gray-100 rounded">
+                    <h4 className="text-sm font-medium mb-2">{playing.title}</h4>
+                    
+                    {audioError ? (
+                      <div className="p-3 bg-red-50 text-red-600 rounded text-sm">
+                        {audioError}
+                        <button 
+                          className="ml-2 text-red-700 underline" 
+                          onClick={() => setAudioError(null)}
+                        >
+                          Try Again
+                        </button>
+                      </div>
+                    ) : (
+                      <AudioPlayer 
+                        audioUrl={playing.url} 
+                        autoPlay={true}
+                        onError={handleAudioError}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </main>
       <Footer />

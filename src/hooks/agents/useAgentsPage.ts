@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect } from 'react';
 import { User } from '@/hooks/users/useUserFetch';
 import { Agent } from '@/types/Agent';
@@ -43,7 +42,8 @@ export const useAgentsPage = ({ apiUsers, user, sampleAgents }: UseAgentsPagePro
     
     return apiUsers.map(user => ({
       ...user,
-      email: '', // Remove email
+      // Keep email since it's required, but could replace with a dummy value if needed
+      email: user.email || `agent-${user.id.substring(0, 8)}@example.com`, 
       full_name: `Agent ID: ${user.id.substring(0, 8)}`, // Replace name with agent ID
       // Remove any other potential contact information
       phone: undefined, 
@@ -133,7 +133,31 @@ export const useAgentsPage = ({ apiUsers, user, sampleAgents }: UseAgentsPagePro
     setFilters(newFilters);
   };
 
-  // New function to handle playing audio samples
+  // Function to get the latest audio URL from an agent
+  const getLatestAudioUrl = (agent: Agent): string | undefined => {
+    // Try to get from audio_files (from API)
+    if (agent.audio_files && agent.audio_files.length > 0) {
+      // Find the latest audio file by created_at date
+      const audioFiles = [...agent.audio_files].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      return audioFiles[0].audio_url;
+    }
+    
+    // Try to get from audioUrls (from samples)
+    if (agent.audioUrls && agent.audioUrls.length > 0) {
+      // Find the latest audio url by updated_at date
+      const audioUrls = [...agent.audioUrls].sort((a, b) => 
+        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      );
+      return audioUrls[0].url;
+    }
+    
+    // Fallback to audio_url if available
+    return agent.audio_url || undefined;
+  };
+
+  // Enhanced function to handle playing audio samples
   const handlePlaySample = (agent: Agent) => {
     // If this agent is already playing, stop it
     if (playingAgent?.id === agent.id) {
@@ -141,10 +165,14 @@ export const useAgentsPage = ({ apiUsers, user, sampleAgents }: UseAgentsPagePro
       return;
     }
     
-    // Otherwise, play the first available audio from this agent
-    const firstClip = agent.audioUrls?.[0]?.url;
-    if (firstClip) {
-      setPlayingAgent({ id: agent.id, url: firstClip });
+    // Get the latest audio URL for this agent
+    const audioUrl = getLatestAudioUrl(agent);
+    
+    if (audioUrl) {
+      console.log(`Playing audio for agent ${agent.id} from ${audioUrl}`);
+      setPlayingAgent({ id: agent.id, url: audioUrl });
+    } else {
+      console.error(`No audio found for agent ${agent.id}`);
     }
   };
 

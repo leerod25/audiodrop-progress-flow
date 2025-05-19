@@ -24,7 +24,7 @@ const sampleProfiles: SampleAgent[] = [
       {
         id: "greeting-1",
         title: "Professional Greeting",
-        url: "https://assets.mixkit.co/sfx/preview/mixkit-professional-female-introduction-18.mp3",
+        url: "https://assets.mixkit.co/sfx/preview/mixkit-female-voice-saying-hello-85.mp3",
         updated_at: new Date().toISOString(),
       },
       {
@@ -98,7 +98,7 @@ const sampleProfiles: SampleAgent[] = [
       {
         id: "intro-5",
         title: "Professional Introduction",
-        url: "https://assets.mixkit.co/sfx/preview/mixkit-professional-female-introduction-18.mp3",
+        url: "https://assets.mixkit.co/sfx/preview/mixkit-female-professional-introduction-98.mp3",
         updated_at: new Date().toISOString(),
       }
     ],

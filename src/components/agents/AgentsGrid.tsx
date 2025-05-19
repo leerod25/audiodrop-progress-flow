@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { User } from '@/hooks/users/useUserFetch';
 import { Agent } from '@/types/Agent';
 import AgentListCard from '@/components/agent/AgentListCard';
 import { useUserContext } from '@/contexts/UserContext';
 import LoginStatusBadge from '@/components/LoginStatusBadge';
+import AudioPlayer from '@/components/AudioPlayer';
 
 interface AgentsGridProps {
   loading: boolean;
@@ -26,6 +27,12 @@ const AgentsGrid: React.FC<AgentsGridProps> = ({
   playingAgent
 }) => {
   const { userRole } = useUserContext();
+  const [audioError, setAudioError] = useState<string | null>(null);
+
+  const handleAudioError = (error: string) => {
+    setAudioError(error);
+    console.error("Audio playback error:", error);
+  };
   
   if (loading) {
     return (
@@ -67,10 +74,24 @@ const AgentsGrid: React.FC<AgentsGridProps> = ({
               {/* Audio player for currently playing agent */}
               {playingAgent && playingAgent.id === agent.id && (
                 <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                  <audio controls autoPlay className="w-full">
-                    <source src={playingAgent.url} type="audio/mpeg" />
-                    Your browser doesn't support audio playback.
-                  </audio>
+                  {audioError ? (
+                    <div className="p-2 bg-red-50 text-red-600 rounded text-sm">
+                      {audioError}
+                      <button 
+                        className="ml-2 text-red-700 underline" 
+                        onClick={() => setAudioError(null)}
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  ) : (
+                    <AudioPlayer 
+                      audioUrl={playingAgent.url} 
+                      autoPlay={true}
+                      onError={handleAudioError}
+                      className="w-full"
+                    />
+                  )}
                 </div>
               )}
             </div>
