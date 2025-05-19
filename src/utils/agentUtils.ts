@@ -1,60 +1,59 @@
 
-// Add any utility functions related to agents here
+import { User } from '@/hooks/users/useUserFetch';
+import { Agent } from '@/types/Agent';
 
-import { User } from '@/hooks/useUserFetch';
-
-// Convert audio URL to a downloadable link if needed
-export const getDownloadableAudioUrl = (audioUrl: string): string => {
-  // In a real app, you might need to transform the URL
-  // For now, we'll just return the URL as is
-  return audioUrl;
-};
-
-// Generate a filename for downloaded audio
-export const generateAudioFilename = (title: string): string => {
-  const sanitizedTitle = title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-  return `${sanitizedTitle}.webm`;
-};
-
-export const formatAudioDuration = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-};
-
-export const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-};
-
-// Add this to fix the error in Agents.tsx
-export const convertUserToAgent = (user: User, team: string[] = []) => {
-  return {
+/**
+ * Converts a User object to an Agent object
+ * @param user The user object to convert
+ * @returns An Agent object
+ */
+export function convertUserToAgent(user: User): Agent {
+  const agent: Agent = {
     id: user.id,
     email: user.email || '',
     created_at: user.created_at || new Date().toISOString(),
-    name: user.full_name || 'Unnamed Agent',
-    location: user.city && user.country ? `${user.city}, ${user.country}` : 'Location not provided',
-    experience: user.years_experience || 'Not specified',
-    languages: user.languages || [],
-    audioSamples: user.audio_files || [],
-    isAvailable: user.is_available || false,
-    avatar: user.avatar_url || '',
-    gender: user.gender || 'Not specified',
-    has_audio: user.audio_files && user.audio_files.length > 0,
-    is_favorite: team ? team.includes(user.id) : false,
-    audioUrls: user.audio_files?.map(file => ({
-      id: file.id,
-      title: file.title,
-      url: file.audio_url,
-      updated_at: file.created_at
-    })) || [],
+    has_audio: Boolean(user.audio_files?.length),
     country: user.country || null,
     city: user.city || null,
-    computer_skill_level: user.computer_skill_level || null
+    is_favorite: Boolean(user.is_favorite),
+    gender: user.gender || null,
   };
-};
+
+  // Add audio URL if available
+  if (user.audio_files && user.audio_files.length > 0) {
+    agent.audio_url = user.audio_files[0].url;
+  }
+
+  // Map audio files to audioUrls format
+  if (user.audio_files && user.audio_files.length > 0) {
+    agent.audioUrls = user.audio_files.map(file => ({
+      id: file.id,
+      title: file.title || 'Untitled Recording',
+      url: file.url,
+      updated_at: file.updated_at
+    }));
+  }
+
+  // Add profile fields if available
+  if (user.profile) {
+    agent.full_name = user.profile.full_name || null;
+    agent.phone = user.profile.phone || null;
+    agent.bio = user.profile.bio || null;
+    
+    // Handle computer skill level
+    if (user.profile.computer_skill_level) {
+      agent.computer_skill_level = user.profile.computer_skill_level;
+    }
+  }
+
+  return agent;
+}
+
+/**
+ * Formats a user ID for display
+ * @param id The user ID to format
+ * @returns A formatted user ID (shortened with ellipsis)
+ */
+export function formatUserId(id: string): string {
+  return id.substring(0, 8) + '…';
+}

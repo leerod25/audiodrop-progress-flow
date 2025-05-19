@@ -102,13 +102,15 @@ export function useAgentProfiles() {
         // Map filtered profiles to agents
         const agentsWithAudioInfo = filteredProfiles.map(profile => ({
           id: profile.id,
+          email: profile.email || '', // Make sure email is included
+          created_at: profile.created_at || new Date().toISOString(), // Make sure created_at is included
           has_audio: true, // Set all profiles to have audio for testing
           audio_url: audioMap.get(profile.id) || null,
           country: profile.country,
           city: profile.city,
           computer_skill_level: profile.computer_skill_level,
           is_favorite: Array.isArray(favorites) && favorites.includes(profile.id)
-        }));
+        } as Agent));
         
         console.log('Processed agents:', agentsWithAudioInfo.length, agentsWithAudioInfo);
         setAgents(agentsWithAudioInfo);
