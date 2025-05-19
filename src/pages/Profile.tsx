@@ -87,9 +87,9 @@ const Profile = () => {
           )}
         </Card>
 
-        {isAgent && (
+        {isAgent && user?.id && (
           <Card className="p-6 shadow-sm">
-            <ProfessionalDetailsForm userId={user?.id} />
+            <ProfessionalDetailsForm />
           </Card>
         )}
 

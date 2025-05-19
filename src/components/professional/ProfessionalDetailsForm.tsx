@@ -11,7 +11,6 @@ import LanguagesSection from './LanguagesSection';
 import SkillsSection from './SkillsSection';
 import ComputerSkillsSection from './ComputerSkillsSection';
 import AvailabilitySection from './AvailabilitySection';
-import SalarySection from './SalarySection';
 
 interface ProfessionalDetailsForm {
   yearsExperience: string;
@@ -20,7 +19,6 @@ interface ProfessionalDetailsForm {
   additionalSkills: string[];
   availability: string[];
   computerSkillLevel: string;
-  salaryExpectation: string;
 }
 
 export interface ProfessionalDetails {
@@ -32,7 +30,6 @@ export interface ProfessionalDetails {
   additional_skills?: string[];
   availability?: string[];
   computer_skill_level?: string;
-  salary_expectation?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -46,7 +43,6 @@ const ProfessionalDetailsForm = () => {
   const [additionalSkills, setAdditionalSkills] = useState<string[]>([]);
   const [availability, setAvailability] = useState<string[]>([]);
   const [computerSkillLevel, setComputerSkillLevel] = useState('');
-  const [salaryExpectation, setSalaryExpectation] = useState('');
   const [detailsId, setDetailsId] = useState<string | null>(null);
   
   const form = useForm<ProfessionalDetailsForm>({
@@ -57,7 +53,6 @@ const ProfessionalDetailsForm = () => {
       additionalSkills: [],
       availability: [],
       computerSkillLevel: '',
-      salaryExpectation: ''
     },
   });
 
@@ -94,7 +89,6 @@ const ProfessionalDetailsForm = () => {
         setAdditionalSkills(data.additional_skills || []);
         setAvailability(data.availability || []);
         setComputerSkillLevel(data.computer_skill_level || '');
-        setSalaryExpectation(data.salary_expectation || '');
       }
     } catch (err) {
       console.error('Unexpected error:', err);
@@ -122,7 +116,6 @@ const ProfessionalDetailsForm = () => {
         additional_skills: additionalSkills,
         availability,
         computer_skill_level: computerSkillLevel,
-        salary_expectation: salaryExpectation,
       };
       
       let result;
@@ -168,7 +161,6 @@ const ProfessionalDetailsForm = () => {
   const updateYearsExperience = (years: string) => setYearsExperience(years);
   const updateComputerSkillLevel = (level: string) => setComputerSkillLevel(level);
   const updateAvailability = (newAvailability: string[]) => setAvailability(newAvailability);
-  const updateSalaryExpectation = (salary: string) => setSalaryExpectation(salary);
 
   return (
     <Form {...form}>
@@ -203,12 +195,6 @@ const ProfessionalDetailsForm = () => {
         <AvailabilitySection
           availability={availability}
           onAvailabilityChange={updateAvailability}
-        />
-        
-        {/* Salary Expectation Section */}
-        <SalarySection
-          salaryExpectation={salaryExpectation}
-          onSalaryExpectationChange={updateSalaryExpectation}
         />
         
         {/* Submit Button */}

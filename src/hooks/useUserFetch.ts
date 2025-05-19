@@ -146,8 +146,7 @@ export const useUserFetch = (currentUser: any) => {
             years_experience: '1', // Default value
             languages: ['English'], // Default value
             salary_expectation: '45000'  // Default value as string
-          })
-          .select();
+          });
         
         if (error) {
           console.error('Error updating availability:', error);

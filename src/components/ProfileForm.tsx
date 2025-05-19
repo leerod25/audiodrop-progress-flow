@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Flag, Computer } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormDescription } from "@/components/ui/form";
 
 type ProfileData = {
   full_name: string | null;
@@ -23,6 +24,7 @@ type ProfileData = {
   country: string | null;
   gender: string | null;
   computer_skill_level: string | null;
+  salary_expectation: string | null;
 };
 
 interface ProfileFormProps {
@@ -45,6 +47,7 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
     country: initialData?.country || '',
     gender: initialData?.gender || '',
     computer_skill_level: initialData?.computer_skill_level || '',
+    salary_expectation: initialData?.salary_expectation || '',
   });
   const [loading, setLoading] = useState(!initialData);
   const [initialLoad, setInitialLoad] = useState(!initialData);
@@ -84,6 +87,7 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
           country: initialData.country || '',
           gender: initialData.gender || '',
           computer_skill_level: initialData.computer_skill_level || '',
+          salary_expectation: initialData.salary_expectation || '',
         });
         setLoading(false);
         setInitialLoad(false);
@@ -116,6 +120,7 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
             country: data.country || '',
             gender: data.gender || '',
             computer_skill_level: data.computer_skill_level || '',
+            salary_expectation: data.salary_expectation || '',
           });
         } else {
           // Profile doesn't exist or is empty, create initial entry
@@ -185,6 +190,7 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
           country: profileData.country,
           gender: profileData.gender,
           computer_skill_level: profileData.computer_skill_level,
+          salary_expectation: profileData.salary_expectation,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'id' });
 
@@ -346,6 +352,26 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
             required
           />
         </div>
+      </div>
+
+      {/* Salary Expectation - Moved from ProfessionalDetails */}
+      <div className="grid gap-2">
+        <Label htmlFor="salary_expectation">Salary Expectation (USD) <span className="text-muted-foreground font-normal">(Confidential)</span></Label>
+        <div className="flex items-center space-x-2">
+          <span className="text-lg">$</span>
+          <Input
+            id="salary_expectation"
+            name="salary_expectation"
+            type="text"
+            value={profileData.salary_expectation || ''}
+            onChange={handleChange}
+            placeholder="e.g. 45,000"
+            className="flex-1"
+          />
+        </div>
+        <p className="text-sm text-muted-foreground">
+          You can enter a specific amount or a range (e.g. "45,000-55,000")
+        </p>
       </div>
       
       {/* Gender selection */}

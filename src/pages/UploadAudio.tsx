@@ -94,7 +94,7 @@ export default function UploadAudio() {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Recording Instructions */}
-          <Alert variant="outline" className="border-blue-200 bg-blue-50">
+          <Alert className="border-blue-200 bg-blue-50">
             <Info className="h-4 w-4 text-blue-500" />
             <AlertTitle className="font-medium mb-2">Recording Instructions</AlertTitle>
             <AlertDescription className="text-sm">
@@ -109,7 +109,7 @@ export default function UploadAudio() {
           </Alert>
 
           {/* Script Template */}
-          <Alert variant="outline" className="border-purple-200 bg-purple-50">
+          <Alert className="border-purple-200 bg-purple-50">
             <AlertCircle className="h-4 w-4 text-purple-500" />
             <AlertTitle className="font-medium mb-2">Suggested Script Template</AlertTitle>
             <AlertDescription className="text-sm">
