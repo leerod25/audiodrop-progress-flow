@@ -2,7 +2,7 @@
 import React from 'react';
 import { User } from '@/hooks/users/useUserFetch';
 import { Button } from "@/components/ui/button";
-import { Info, Star, StarOff, ChevronDown, ChevronUp, Play, Pause } from "lucide-react";
+import { Info, Star, StarOff, ChevronDown, ChevronUp, Play } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import UserExpandedDetails from './UserExpandedDetails';
 
@@ -40,6 +40,9 @@ const UserCard: React.FC<UserCardProps> = ({
   // Generate a display name that only shows the agent ID (first 8 chars)
   const displayName = `Agent ID: ${user.id.substring(0, 8)}`;
   
+  // Check if user has audio files
+  const hasAudio = user.audio_files && user.audio_files.length > 0;
+  
   return (
     <Card className="overflow-hidden">
       <div className="relative">
@@ -57,9 +60,19 @@ const UserCard: React.FC<UserCardProps> = ({
               {user.id.substring(0, 1).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold truncate">
-                {displayName}
-              </h3>
+              <div className="flex items-center">
+                <h3 className="text-lg font-semibold truncate">
+                  {displayName}
+                </h3>
+                {/* Audio indicator */}
+                {hasAudio && (
+                  <Play 
+                    className="ml-2 text-green-500 hover:text-green-600" 
+                    size={16}
+                    aria-label="Has audio samples"
+                  />
+                )}
+              </div>
               {user.country && (
                 <p className="text-sm text-muted-foreground">
                   {user.city ? `${user.city}, ` : ''}{user.country}
@@ -94,6 +107,7 @@ const UserCard: React.FC<UserCardProps> = ({
           </div>
         </div>
         
+        {/* User Details - Only showing professional details, no contact info */}
         <CardContent className="p-4">
           {/* User Details - Only showing professional details, no contact info */}
           <div className="space-y-2 mb-4">

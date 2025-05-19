@@ -143,6 +143,9 @@ export type Database = {
       }
       profiles: {
         Row: {
+          additional_skills: string[] | null
+          availability: string[] | null
+          bio: string | null
           city: string | null
           computer_skill_level: string | null
           country: string | null
@@ -153,12 +156,19 @@ export type Database = {
           gender: string | null
           id: string
           is_verified: boolean
+          languages: string[] | null
           phone: string | null
           role: string
+          salary: number | null
+          specialized_skills: string[] | null
           updated_at: string | null
           whatsapp: string | null
+          years_experience: string | null
         }
         Insert: {
+          additional_skills?: string[] | null
+          availability?: string[] | null
+          bio?: string | null
           city?: string | null
           computer_skill_level?: string | null
           country?: string | null
@@ -169,12 +179,19 @@ export type Database = {
           gender?: string | null
           id: string
           is_verified?: boolean
+          languages?: string[] | null
           phone?: string | null
           role?: string
+          salary?: number | null
+          specialized_skills?: string[] | null
           updated_at?: string | null
           whatsapp?: string | null
+          years_experience?: string | null
         }
         Update: {
+          additional_skills?: string[] | null
+          availability?: string[] | null
+          bio?: string | null
           city?: string | null
           computer_skill_level?: string | null
           country?: string | null
@@ -185,10 +202,14 @@ export type Database = {
           gender?: string | null
           id?: string
           is_verified?: boolean
+          languages?: string[] | null
           phone?: string | null
           role?: string
+          salary?: number | null
+          specialized_skills?: string[] | null
           updated_at?: string | null
           whatsapp?: string | null
+          years_experience?: string | null
         }
         Relationships: []
       }

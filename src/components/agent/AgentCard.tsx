@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, FileAudio, CheckCircle, XCircle, Star } from 'lucide-react';
+import { User, FileAudio, CheckCircle, XCircle, Star, Play } from 'lucide-react';
 import { Agent } from '@/types/Agent';
 
 interface AgentCardProps {
@@ -47,6 +47,15 @@ const AgentCard: React.FC<AgentCardProps> = ({
           <div className="flex items-center">
             <User className="mr-2 text-gray-500" size={18} />
             <span className="font-semibold text-gray-700">{formatUserId(agent.id)}</span>
+            
+            {/* Display play icon if agent has audio */}
+            {agent.has_audio && (
+              <Play 
+                className="ml-2 text-green-500 hover:text-green-600" 
+                size={16}
+                aria-label="Has audio samples"
+              />
+            )}
           </div>
           
           <div className="flex items-center">
