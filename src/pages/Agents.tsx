@@ -12,6 +12,8 @@ import { useNavigate } from 'react-router-dom';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { User } from '@/hooks/users/useUserFetch';
 import AgentFilterBar from '@/components/agents/AgentFilterBar';
+import Header from '@/components/landing/Header';
+import Footer from '@/components/landing/Footer';
 
 // Sample agent data for North America (6 profiles)
 const sampleAgents: User[] = [
@@ -205,6 +207,8 @@ const Agents = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header />
+      
       {/* Hero Banner */}
       <section className="w-full relative">
         <AspectRatio ratio={3/1} className="bg-gradient-to-r from-gray-700 to-gray-900">
@@ -253,30 +257,6 @@ const Agents = () => {
               {filteredUsers.length} agents found • {team.length} in team
             </p>
           </div>
-          
-          <div className="flex gap-2">
-            {/* Navigation buttons */}
-            <Button
-              variant="outline"
-              onClick={() => navigate('/')}
-            >
-              Home
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/services')}
-            >
-              Services
-            </Button>
-            {!user && (
-              <Button
-                variant="default"
-                onClick={() => navigate('/auth')}
-              >
-                Login
-              </Button>
-            )}
-          </div>
         </div>
         
         {/* Authentication alert */}
@@ -315,6 +295,8 @@ const Agents = () => {
           onClose={() => setSelectedAgentId(null)}
         />
       )}
+      
+      <Footer />
     </div>
   );
 };
