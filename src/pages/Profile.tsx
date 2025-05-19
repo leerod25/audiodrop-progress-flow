@@ -1,138 +1,107 @@
-
-import React, { useState, useEffect } from "react";
-import { useUserContext } from "@/contexts/UserContext";
-import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
-import ProfileForm from "@/components/ProfileForm";
-import ProfileIncompleteAlert from "@/components/profile/ProfileIncompleteAlert";
-import BusinessProfileForm from "@/components/BusinessProfileForm";
-import BusinessProfileIncompleteAlert from "@/components/profile/BusinessProfileIncompleteAlert";
-import ProfileSkeleton from "@/components/profile/ProfileSkeleton";
-import { useNavigate } from "react-router-dom";
-import ProfessionalDetailsForm from "@/components/ProfessionalDetailsForm";
-import ProfileAudioList from "@/components/profile/ProfileAudioList";
-import UserProfileHeader from "@/components/profile/UserProfileHeader";
-import BusinessProfileHeader from "@/components/profile/BusinessProfileHeader";
-import { toast } from "sonner";
+import React, { useState, useEffect } from 'react';
+import { useUserContext } from '@/contexts/UserContext';
+import { useNavigate } from 'react-router-dom';
+import { Container } from '@/components/ui/container';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useToast } from '@/components/ui/use-toast';
+import { Loader2 } from 'lucide-react';
+import { useProfile } from '@/hooks/useProfile';
+import ProfileForm from '@/components/profile/ProfileForm';
+import SubscriptionInfo from '@/components/profile/SubscriptionInfo';
+import SecuritySettings from '@/components/profile/SecuritySettings';
+import NotificationSettings from '@/components/profile/NotificationSettings';
+import Header from '@/components/landing/Header';
+import Footer from '@/components/landing/Footer';
 
 const Profile = () => {
   const { user, userRole } = useUserContext();
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<any>(null);
-  const [professionalDetails, setProfessionalDetails] = useState<any>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('profile');
+  
+  const { 
+    profile, 
+    loading, 
+    error, 
+    setProfile,
+    updateProfile,
+    changePassword,
+    updateNotificationSettings
+  } = useProfile();
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        navigate("/auth");
-      }
-    };
+    if (!user) {
+      navigate('/auth');
+    }
+  }, [user, navigate]);
 
-    checkSession();
-  }, [navigate]);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user) return;
-
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-
-        if (error) throw error;
-        setProfile(data);
-
-        // Also fetch professional details if user is an agent
-        if (userRole === "agent") {
-          const { data: profDetails, error: profError } = await supabase
-            .from("professional_details")
-            .select("*")
-            .eq("user_id", user.id)
-            .maybeSingle();
-            
-          if (!profError) {
-            setProfessionalDetails(profDetails || {});
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, [user, userRole]);
-
-  if (loading) {
-    return <ProfileSkeleton />;
+  if (!user) {
+    return null;
   }
 
-  const isAgent = userRole === "agent";
-  const isBusiness = userRole === "business";
-  
-  // Determine profile completion status
-  const isProfileComplete = isAgent 
-    ? Boolean(profile?.full_name && profile?.email && profile?.phone)
-    : Boolean(profile?.company_name || profile?.business_name);
-
-  const handleProfileUpdate = (updatedProfile: any) => {
-    setProfile({...profile, ...updatedProfile});
-    toast.success("Profile information updated successfully!");
-  };
-  
-  const handleProfessionalDetailsUpdate = (updatedDetails: any) => {
-    setProfessionalDetails({...professionalDetails, ...updatedDetails});
-    toast.success("Professional details updated successfully!");
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      {isBusiness ? (
-        <BusinessProfileHeader profileCompleted={isProfileComplete} profile={profile} />
-      ) : (
-        <UserProfileHeader profileCompleted={isProfileComplete} profile={profile} />
-      )}
-
-      <div className="mt-8 grid gap-8 grid-cols-1">
-        {isAgent && !profile?.full_name && <ProfileIncompleteAlert isVisible={true} />}
-        {isBusiness && !profile?.company_name && !profile?.business_name && <BusinessProfileIncompleteAlert isVisible={true} />}
-
-        <Card className="p-6 shadow-sm border-blue-200 border-2">
-          <h2 className="text-xl font-semibold mb-2">Private Information</h2>
-          <p className="text-sm text-gray-500 mb-4">This information is only visible to you and administrators</p>
-          {isBusiness ? (
-            <BusinessProfileForm userId={user?.id} initialData={profile} onProfileUpdate={handleProfileUpdate} />
-          ) : (
-            <ProfileForm userId={user?.id} initialData={profile} onProfileUpdate={handleProfileUpdate} />
-          )}
-        </Card>
-
-        {isAgent && user?.id && (
-          <Card className="p-6 shadow-sm border-green-200 border-2">
-            <h2 className="text-xl font-semibold mb-2">Public Professional Details</h2>
-            <p className="text-sm text-gray-500 mb-4">This information is visible to everyone</p>
-            <ProfessionalDetailsForm 
-              userId={user?.id} 
-              initialData={professionalDetails} 
-              onDetailsUpdate={handleProfessionalDetailsUpdate}
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      <Container className="py-8">
+        <h1 className="text-3xl font-bold mb-6">Account Settings</h1>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="subscription">Subscription</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="profile" className="space-y-4">
+            <ProfileForm 
+              profile={profile} 
+              loading={loading}
+              setProfile={(updatedProfile) => setProfile(updatedProfile)}
+              updateProfile={updateProfile}
+              userRole={userRole}
             />
-          </Card>
-        )}
-
-        {isAgent && (
-          <Card className="p-6 shadow-sm">
-            <h2 className="text-xl font-semibold mb-4">Your Audio Samples</h2>
-            <ProfileAudioList userId={user?.id} />
-          </Card>
-        )}
-      </div>
+          </TabsContent>
+          
+          <TabsContent value="subscription" className="space-y-4">
+            <SubscriptionInfo 
+              subscription={profile?.subscription} 
+              userRole={userRole}
+            />
+          </TabsContent>
+          
+          <TabsContent value="security" className="space-y-4">
+            <SecuritySettings 
+              changePassword={changePassword}
+            />
+          </TabsContent>
+          
+          <TabsContent value="notifications" className="space-y-4">
+            <NotificationSettings 
+              settings={profile?.notification_settings}
+              updateSettings={updateNotificationSettings}
+            />
+          </TabsContent>
+        </Tabs>
+      </Container>
+      
+      <Footer />
     </div>
   );
 };

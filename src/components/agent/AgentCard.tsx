@@ -102,14 +102,30 @@ const AgentCard: React.FC<AgentCardProps> = ({
             </Button>
           )}
           
-          <Button 
-            variant="outline"
-            size="sm"
-            onClick={handleViewAllRecordings}
-            className="text-sm font-medium"
-          >
-            View All Recordings
-          </Button>
+          <div className="flex space-x-2">
+            {agent.has_audio && (
+              <Button 
+                size="sm"
+                className="bg-green-500 hover:bg-green-600 text-white"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openAudioModal(agent);
+                }}
+              >
+                <Play className="mr-1 h-4 w-4" />
+                Play Sample
+              </Button>
+            )}
+            
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={handleViewAllRecordings}
+              className="text-sm font-medium"
+            >
+              View All Recordings
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
