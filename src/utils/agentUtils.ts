@@ -15,13 +15,13 @@ export function convertUserToAgent(user: User): Agent {
     has_audio: Boolean(user.audio_files?.length),
     country: user.country || null,
     city: user.city || null,
-    is_favorite: Boolean(user.is_favorite),
+    is_favorite: false, // Default value since User doesn't have is_favorite
     gender: user.gender || null,
   };
 
   // Add audio URL if available
   if (user.audio_files && user.audio_files.length > 0) {
-    agent.audio_url = user.audio_files[0].url;
+    agent.audio_url = user.audio_files[0].audio_url;
   }
 
   // Map audio files to audioUrls format
@@ -29,21 +29,18 @@ export function convertUserToAgent(user: User): Agent {
     agent.audioUrls = user.audio_files.map(file => ({
       id: file.id,
       title: file.title || 'Untitled Recording',
-      url: file.url,
-      updated_at: file.updated_at
+      url: file.audio_url,
+      updated_at: file.created_at
     }));
   }
 
-  // Add profile fields if available
-  if (user.profile) {
-    agent.full_name = user.profile.full_name || null;
-    agent.phone = user.profile.phone || null;
-    agent.bio = user.profile.bio || null;
-    
-    // Handle computer skill level
-    if (user.profile.computer_skill_level) {
-      agent.computer_skill_level = user.profile.computer_skill_level;
-    }
+  // Add additional fields if available
+  if (user.full_name) {
+    agent.full_name = user.full_name;
+  }
+  
+  if (user.years_experience) {
+    agent.computer_skill_level = user.years_experience;
   }
 
   return agent;

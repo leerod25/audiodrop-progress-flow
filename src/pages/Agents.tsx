@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { useUsersData } from '@/hooks/useUsersData';
@@ -163,7 +162,7 @@ const Agents = () => {
           currentPageUsers={currentPageUsers}
           viewAgentDetails={viewAgentDetails}
           toggleTeamMember={toggleTeamMember}
-          convertToAgent={(user: User) => convertUserToAgent(user, team)}
+          convertToAgent={convertUserToAgent}
         />
         
         {/* Pagination */}
