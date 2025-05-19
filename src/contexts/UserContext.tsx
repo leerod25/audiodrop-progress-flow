@@ -4,10 +4,12 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 // Define the shape of our context
+type UserRole = "agent" | "business" | "admin" | null;
+
 type UserContextType = {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
-  userRole: "agent" | "business" | "admin" | null;
+  userRole: UserRole;
   isVerified: boolean;
 };
 
@@ -26,7 +28,7 @@ interface UserProviderProps {
 
 export const UserProvider = ({ children }: UserProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
-  const [userRole, setUserRole] = useState<"agent" | "business" | "admin" | null>(null);
+  const [userRole, setUserRole] = useState<UserRole>(null);
   const [isVerified, setIsVerified] = useState<boolean>(false);
 
   // Fetch user role when user changes
@@ -63,12 +65,12 @@ export const UserProvider = ({ children }: UserProviderProps) => {
 
         // Set user role with priority to auth role table
         if (roleData && (roleData.role === 'agent' || roleData.role === 'business' || roleData.role === 'admin')) {
-          setUserRole(roleData.role);
+          setUserRole(roleData.role as UserRole);
         } else if (profileData && profileData.role) {
-          setUserRole(profileData.role as "agent" | "business" | "admin");
+          setUserRole(profileData.role as UserRole);
         } else if (user.user_metadata?.role && 
             (user.user_metadata.role === 'agent' || user.user_metadata.role === 'business' || user.user_metadata.role === 'admin')) {
-          setUserRole(user.user_metadata.role);
+          setUserRole(user.user_metadata.role as UserRole);
         } else {
           // Default to agent if not specified
           setUserRole("agent");
