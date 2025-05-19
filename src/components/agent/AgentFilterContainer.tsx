@@ -60,6 +60,8 @@ const AgentFilterContainer: React.FC<AgentFilterContainerProps> = ({ onApplyFilt
         // Transform the profile data to match the Agent type
         const agents: Agent[] = filteredProfiles.map(profile => ({
           id: profile.id,
+          email: profile.email || '', // Required field in Agent type
+          created_at: profile.created_at || new Date().toISOString(), // Required field in Agent type
           has_audio: true, // Setting a default value
           audio_url: null, // Default to null
           country: profile.country,

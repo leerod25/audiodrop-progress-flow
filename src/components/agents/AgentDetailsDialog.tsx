@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { 
   Dialog,
@@ -85,9 +84,11 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
           }
         }
         
-        // Create the agent object with proper null checks for arrays
+        // Create the agent object with proper null checks for arrays and include all required fields
         setAgent({
           id: selectedAgentId,
+          email: profileData?.email || '',
+          created_at: profileData?.created_at || new Date().toISOString(), // Ensure created_at is included
           has_audio: (audioFiles?.length || 0) > 0,
           country: profileData?.country || null,
           city: profileData?.city || null,
@@ -101,7 +102,6 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
           })) : [],
           // Add private fields for admin users
           full_name: profileData?.full_name || null,
-          email: profileData?.email || null,
           phone: profileData?.phone || null,
           bio: profileData?.bio || null
         });
