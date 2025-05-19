@@ -5,7 +5,6 @@ export type ProfessionalDetailsData = {
   additional_skills: string[];
   years_experience: string;
   availability: string[];
-  salary_expectation: number | null;
   computer_skill_level: string;
 };
 

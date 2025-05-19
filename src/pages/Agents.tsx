@@ -1,21 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from "@/components/ui/button";
-import AgentCard from '@/components/agents/AgentCard';
-import AgentsPagination from '@/components/agents/AgentsPagination';
 import AuthAlert from '@/components/agents/AuthAlert';
-import AgentsLoading from '@/components/agents/AgentsLoading';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { InfoIcon, ShieldAlert, ShieldCheck, X } from "lucide-react";
 import { Navigate } from 'react-router-dom';
 import { useUsersData } from '@/hooks/useUsersData';
-import UsersList from '@/components/agents/UsersList';
+import { InfoIcon, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import { User } from '@/hooks/users/useUserFetch';
-import ProfessionalDetailsFormReadOnly from '@/components/ProfessionalDetailsFormReadOnly';
+import AgentsList from '@/components/agents/AgentsList';
+import AdminUsersList from '@/components/agents/AdminUsersList';
+import AgentDetailsDialog from '@/components/agents/AgentDetailsDialog';
 
 const Agents: React.FC = () => {
   const { user, userRole } = useUserContext();
@@ -92,31 +87,17 @@ const Agents: React.FC = () => {
         
         {renderAdminActions()}
         
-        {error ? (
-          <div className="text-center py-8">
-            <Alert variant="destructive">
-              <InfoIcon className="h-5 w-5" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-            <Button 
-              onClick={() => fetchAllUsers()} 
-              className="mt-4"
-            >
-              Try Again
-            </Button>
-          </div>
-        ) : (
-          <UsersList
-            users={users}
-            loading={loading}
-            expandedUser={expandedUser}
-            playingAudio={playingAudio}
-            toggleUserExpand={toggleUserExpand}
-            handleAudioPlay={handleAudioPlay}
-            fetchAllUsers={fetchAllUsers}
-            toggleAvailability={toggleAvailability}
-          />
-        )}
+        <AdminUsersList
+          users={users}
+          loading={loading}
+          error={error}
+          expandedUser={expandedUser}
+          playingAudio={playingAudio}
+          toggleUserExpand={toggleUserExpand}
+          handleAudioPlay={handleAudioPlay}
+          fetchAllUsers={fetchAllUsers}
+          toggleAvailability={toggleAvailability}
+        />
       </div>
     );
   }
@@ -138,115 +119,29 @@ const Agents: React.FC = () => {
         Role: {userRole || 'Unknown'} | User ID: {user?.id?.substring(0, 8) || 'Not logged in'}
       </div>
       
-      {/* Error state */}
-      {error ? (
-        <div className="text-center py-8">
-          <Alert variant="destructive">
-            <InfoIcon className="h-5 w-5" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-          <Button 
-            onClick={() => fetchAllUsers()} 
-            className="mt-4"
-          >
-            Try Again
-          </Button>
-        </div>
-      ) : loading ? (
-        <AgentsLoading />
-      ) : users.length === 0 ? (
-        <Alert className="my-4">
-          <InfoIcon className="h-5 w-5" />
-          <AlertDescription>
-            No agent profiles found. Please try refreshing or check back later.
-          </AlertDescription>
-          <Button 
-            onClick={() => fetchAllUsers()} 
-            className="mt-4"
-          >
-            Refresh
-          </Button>
-        </Alert>
-      ) : (
-        <>
-          {/* Display agent cards */}
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-6">
-            {currentPageUsers.map((u) => {
-              // Everyone can see basic agent data
-              const canSeeAudio = userRole === 'business' || userRole === 'admin' || u.id === user?.id;
-              const avatarImage = getAvatarImage(u.gender);
-              const isAdmin = userRole === 'admin';
-              
-              return (
-                <AgentCard 
-                  key={u.id}
-                  user={u}
-                  canSeeAudio={canSeeAudio}
-                  avatarImage={avatarImage}
-                  getAvatarFallback={getAvatarFallback}
-                  onViewProfile={() => viewAgentDetails(u.id)}
-                  toggleAvailability={toggleAvailability}
-                  isAdminView={isAdmin}
-                />
-              );
-            })}
-          </div>
-          
-          {/* Pagination component */}
-          {users.length > 0 && (
-            <AgentsPagination 
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-            />
-          )}
-        </>
-      )}
+      {/* Agent List Component */}
+      <AgentsList
+        users={users}
+        loading={loading}
+        error={error}
+        userRole={userRole}
+        canSeeAudio={userRole === 'business' || userRole === 'admin' || false}
+        currentPageUsers={currentPageUsers}
+        page={page}
+        totalPages={totalPages}
+        fetchAllUsers={fetchAllUsers}
+        setPage={setPage}
+        viewAgentDetails={viewAgentDetails}
+        toggleAvailability={toggleAvailability}
+      />
 
       {/* Agent Details Dialog */}
-      <Dialog open={!!selectedAgentId} onOpenChange={(open) => !open && closeAgentDetails()}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span>Agent Professional Details</span>
-              <Button variant="ghost" size="icon" onClick={closeAgentDetails}>
-                <X className="h-4 w-4" />
-              </Button>
-            </DialogTitle>
-            <DialogDescription>
-              Review this agent's professional qualifications and experience
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedAgentId && <ProfessionalDetailsFormReadOnly userId={selectedAgentId} />}
-        </DialogContent>
-      </Dialog>
+      <AgentDetailsDialog 
+        selectedAgentId={selectedAgentId}
+        onClose={closeAgentDetails}
+      />
     </div>
   );
-
-  // Helper function to get avatar image based on gender
-  function getAvatarImage(gender: string | null | undefined) {
-    // Default to male avatar if gender is not specified
-    if (!gender) {
-      return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
-    }
-    
-    if (gender === 'male' || gender === 'Male') {
-      return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
-    } else if (gender === 'female' || gender === 'Female') {
-      return '/lovable-uploads/7889d5d0-d6bd-4ccf-8dbd-62fe95fc1946.png';
-    }
-    // Default to male if gender doesn't match known values
-    return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
-  }
-
-  // Helper function to get avatar fallback text
-  function getAvatarFallback(email: string, gender: string | null | undefined) {
-    if (email && email.length > 0) {
-      return email.charAt(0).toUpperCase();
-    }
-    return gender === 'female' || gender === 'Female' ? 'F' : 'M'; // Default to M if not female
-  }
 };
 
 export default Agents;
