@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { useUsersData } from '@/hooks/useUsersData';
@@ -6,13 +7,14 @@ import AuthAlert from '@/components/agents/AuthAlert';
 import AgentDetailsDialog from '@/components/agents/AgentDetailsDialog';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
-import AgentsList from '@/components/agents/AgentsList';
 import { useNavigate } from 'react-router-dom';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { User } from '@/hooks/users/useUserFetch';
 import AgentFilterBar from '@/components/agents/AgentFilterBar';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
+import AgentListCard from '@/components/agent/AgentListCard';
+import { Agent } from '@/types/Agent';
 
 // Sample agent data for North America (6 profiles) - REMOVED EMAIL fields
 const sampleAgents: User[] = [
@@ -217,6 +219,18 @@ const Agents = () => {
     setFilters(newFilters);
   };
 
+  // Convert User to Agent type for AgentListCard
+  const convertToAgent = (user: User): Agent => {
+    return {
+      id: user.id,
+      has_audio: user.audio_files && user.audio_files.length > 0,
+      country: user.country || null,
+      city: user.city || null,
+      gender: user.gender || null,
+      is_favorite: team.includes(user.id)
+    };
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -281,23 +295,57 @@ const Agents = () => {
           onFilterChange={handleFilterChange}
         />
         
-        {/* Agent list */}
-        <AgentsList
-          users={filteredUsers}
-          loading={loading && user !== null} // Only show loading if trying to fetch actual users
-          error={error}
-          userRole={userRole || 'agent'}
-          canSeeAudio={!!user && (userRole === 'admin' || userRole === 'business')}
-          currentPageUsers={currentPageUsers}
-          page={page}
-          totalPages={totalPages}
-          fetchAllUsers={fetchAllUsers}
-          setPage={setPage}
-          viewAgentDetails={viewAgentDetails}
-          toggleAvailability={toggleAvailability}
-          team={team}
-          toggleTeamMember={toggleTeamMember}
-        />
+        {/* Agent list - updated to use AgentListCard */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, index) => (
+              <div key={index} className="h-48 bg-gray-100 rounded-lg animate-pulse"></div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="p-4 text-red-500 bg-red-50 rounded-lg">Error loading agents: {error}</div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+              {currentPageUsers.map((user) => {
+                console.log(user.id, 'has audio?', user.audio_files && user.audio_files.length > 0);
+                const agent = convertToAgent(user);
+                return (
+                  <AgentListCard 
+                    key={user.id}
+                    agent={agent}
+                    onViewDetails={() => viewAgentDetails(user.id)}
+                    onAddToTeam={() => toggleTeamMember(user.id)}
+                    onPlaySample={handleAudioPlay}
+                  />
+                );
+              })}
+            </div>
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-6 gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setPage(p => Math.max(1, p - 1))} 
+                  disabled={page === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center px-4">
+                  Page {page} of {totalPages}
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+                  disabled={page === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </>
+        )}
       </Container>
 
       {/* Agent details dialog */}

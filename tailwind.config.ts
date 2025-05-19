@@ -10,6 +10,11 @@ export default {
 		"./src/**/*.{ts,tsx}",
 	],
 	prefix: "",
+	safelist: [
+		'bg-green-500',
+		'hover:bg-green-600',
+		'border-green-500',
+	],
 	theme: {
 		container: {
 			center: true,
