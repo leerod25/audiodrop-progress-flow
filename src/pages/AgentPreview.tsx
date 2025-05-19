@@ -24,7 +24,12 @@ const AgentPreview: React.FC = () => {
           key={a.id}
           agent={{
             ...a,                               // include audio_files or audioUrls
-            audioUrls: a.audio_files || [],     // map your fetched URLs into the prop
+            audioUrls: a.audio_files?.map((file, idx) => ({
+              id: file.id || String(idx),
+              title: file.title || 'Recording',
+              url: file.audio_url,
+              updated_at: file.created_at || ''
+            })) || [],     
             computer_skill_level: a.years_experience?.toString() || null
           }}
           isBusinessAccount={userRole === 'business'}
