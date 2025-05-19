@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import UploadAudio from "./pages/UploadAudio";
 import Profile from "./pages/Profile";
 import LandingPage from "./pages/LandingPage";
+import PublicSamples from "./pages/PublicSamples";
 import AgentPreview from "./pages/AgentPreview";
 import BusinessSignup from "./pages/BusinessSignup";
 import Agents from "./pages/Agents";
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/" element={<AppLayout><LandingPage /></AppLayout>} />
             <Route path="/dashboard" element={<AppLayout><Index /></AppLayout>} />
             <Route path="/landing" element={<AppLayout><LandingPage /></AppLayout>} />
+            <Route path="/samples" element={<AppLayout><PublicSamples /></AppLayout>} />
             <Route path="/auth" element={<AppLayout><Auth /></AppLayout>} />
             <Route path="/business-signup" element={<AppLayout><BusinessSignup /></AppLayout>} />
             <Route path="/upload" element={<AppLayout><UploadAudio /></AppLayout>} />

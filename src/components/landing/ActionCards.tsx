@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileAudio, Users, UserCheck, LogIn } from 'lucide-react';
+import { ArrowRight, FileAudio, Users, UserCheck, LogIn, Play } from 'lucide-react';
 import { useUserContext } from '@/contexts/UserContext';
 
 const ActionCards: React.FC = () => {
@@ -72,8 +72,15 @@ const ActionCards: React.FC = () => {
           </Card>
         </div>
         
-        <div className="mt-12 text-center">
-          <p className="text-gray-600 mb-4">Already registered?</p>
+        <div className="mt-12 text-center space-y-4">
+          <Button asChild variant="outline" className="bg-amber-50 hover:bg-amber-100 flex items-center gap-2 mx-auto border-amber-200">
+            <Link to="/samples" className="flex items-center gap-2">
+              <Play className="h-4 w-4 text-amber-700" />
+              Listen to Voice Samples
+            </Link>
+          </Button>
+          
+          <p className="text-gray-600 mt-6">Already registered?</p>
           <Button asChild variant="outline" className="flex items-center gap-2 mx-auto">
             <Link to="/auth">
               <LogIn className="h-4 w-4" />

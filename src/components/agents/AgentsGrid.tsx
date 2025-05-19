@@ -12,6 +12,7 @@ interface AgentsGridProps {
   viewAgentDetails: (userId: string) => void;
   toggleTeamMember: (id: string) => void;
   convertToAgent: (user: User) => Agent;
+  handlePlaySample?: (agent: Agent) => void;
 }
 
 const AgentsGrid: React.FC<AgentsGridProps> = ({
@@ -19,7 +20,8 @@ const AgentsGrid: React.FC<AgentsGridProps> = ({
   currentPageUsers,
   viewAgentDetails,
   toggleTeamMember,
-  convertToAgent
+  convertToAgent,
+  handlePlaySample
 }) => {
   const { userRole } = useUserContext();
   
@@ -56,6 +58,7 @@ const AgentsGrid: React.FC<AgentsGridProps> = ({
               agent={agent}
               onViewDetails={() => viewAgentDetails(user.id)}
               onAddToTeam={() => toggleTeamMember(user.id)}
+              onPlaySample={(agent) => handlePlaySample ? handlePlaySample(agent) : {}}
             />
           );
         })}
