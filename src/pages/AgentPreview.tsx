@@ -23,12 +23,9 @@ const AgentPreview: React.FC = () => {
         <AgentDetailCard
           key={a.id}
           agent={{
-            id: a.id,
-            has_audio: a.audio_files && a.audio_files.length > 0,
-            country: a.country || null,
-            city: a.city || null,
-            computer_skill_level: a.years_experience || null,
-            is_favorite: false
+            ...a,                               // include audio_files or audioUrls
+            audioUrls: a.audio_files || [],     // map your fetched URLs into the prop
+            computer_skill_level: a.years_experience?.toString() || null
           }}
           isBusinessAccount={userRole === 'business'}
           formatUserId={(id) => id.substring(0, 8) + '...'}
