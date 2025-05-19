@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -58,8 +59,13 @@ const countries = [
   'El Salvador', 'Guatemala', 'Honduras', 'Nicaragua', 'Costa Rica', 'Panama'
 ];
 
-export default function ProfileForm() {
-  const { user, userProfile, refreshUserProfile } = useUserContext();
+interface ProfileFormProps {
+  userId?: string;
+  initialData?: any;
+}
+
+export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
+  const { user } = useUserContext();
   const [isLoading, setIsLoading] = useState(false);
 
   // Initialize the form with react-hook-form
@@ -76,20 +82,20 @@ export default function ProfileForm() {
     },
   });
 
-  // Update form values when userProfile changes
+  // Update form values when initialData changes
   useEffect(() => {
-    if (userProfile) {
+    if (initialData) {
       form.reset({
-        full_name: userProfile.full_name || '',
-        bio: userProfile.bio || '',
-        country: userProfile.country || '',
-        city: userProfile.city || '',
-        gender: userProfile.gender || '',
-        years_experience: userProfile.years_experience || '',
-        languages: userProfile.languages || [],
+        full_name: initialData.full_name || '',
+        bio: initialData.bio || '',
+        country: initialData.country || '',
+        city: initialData.city || '',
+        gender: initialData.gender || '',
+        years_experience: initialData.years_experience || '',
+        languages: initialData.languages || [],
       });
     }
-  }, [userProfile, form]);
+  }, [initialData, form]);
 
   // Handle form submission
   async function onSubmit(data: ProfileFormValues) {
@@ -112,12 +118,19 @@ export default function ProfileForm() {
           languages: data.languages,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', user.id);
+        .eq('id', userId || user.id);
 
       if (error) throw error;
       
       toast.success('Profile updated successfully');
-      refreshUserProfile();
+      
+      // Refresh the profile data if available in parent component
+      if (typeof window !== 'undefined') {
+        // Force a refresh of the page to get updated data
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      }
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast.error(error.message || 'Failed to update profile');

@@ -11,6 +11,7 @@ type UserContextType = {
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   userRole: UserRole;
   isVerified: boolean;
+  refreshUserProfile: () => Promise<void>;
 };
 
 // Create the context with a default value
@@ -19,6 +20,7 @@ const UserContext = createContext<UserContextType>({
   setUser: () => null,
   userRole: null,
   isVerified: false,
+  refreshUserProfile: async () => {},
 });
 
 // Create a provider component
@@ -30,6 +32,30 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [isVerified, setIsVerified] = useState<boolean>(false);
+
+  const refreshUserProfile = async () => {
+    if (!user) return;
+    
+    try {
+      // Refresh profile data for potential updates
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('role, is_verified')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error refreshing profile:', profileError);
+      }
+
+      // Update verification status from profile
+      if (profileData) {
+        setIsVerified(profileData.is_verified || false);
+      }
+    } catch (err) {
+      console.error('Error refreshing user profile:', err);
+    }
+  };
 
   // Fetch user role when user changes
   useEffect(() => {
@@ -90,7 +116,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   }, [user]);
 
   return (
-    <UserContext.Provider value={{ user, setUser, userRole, isVerified }}>
+    <UserContext.Provider value={{ user, setUser, userRole, isVerified, refreshUserProfile }}>
       {children}
     </UserContext.Provider>
   );
