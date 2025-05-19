@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   FormField, 
   FormItem, 
@@ -46,6 +46,7 @@ const SalarySection: React.FC<SalarySectionProps> = ({
               <Select 
                 onValueChange={field.onChange} 
                 defaultValue={field.value || "500"}
+                value={field.value || "500"}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select monthly salary" />
@@ -77,7 +78,7 @@ const SalarySection: React.FC<SalarySectionProps> = ({
                 type="number"
                 placeholder="Enter custom amount in USD"
                 {...field}
-                className="opacity-0 h-0 p-0 m-0 absolute"
+                className={field.value === "custom" ? "" : "opacity-0 h-0 p-0 m-0 absolute"}
               />
             </FormControl>
           </FormItem>

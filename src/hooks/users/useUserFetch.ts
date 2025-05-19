@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
@@ -68,14 +69,14 @@ export const useUserFetch = (currentUser: any) => {
           // Try to get additional profile data from the profiles table
           const { data: profileData } = await supabase
             .from('profiles')
-            .select('country, city, gender, role, salary_expectation')
+            .select('country, city, gender, role')
             .eq('id', user.id)
             .single();
             
-          // Try to get years experience and languages from professional_details
+          // Try to get salary_expectation, years experience and languages from professional_details
           const { data: professionalData } = await supabase
             .from('professional_details')
-            .select('years_experience, languages')
+            .select('years_experience, languages, salary_expectation')
             .eq('user_id', user.id)
             .single();
           
@@ -100,7 +101,7 @@ export const useUserFetch = (currentUser: any) => {
             city: profileData?.city || null,
             gender: profileData?.gender || null,
             role: profileData?.role || 'agent',
-            salary_expectation: profileData?.salary_expectation || null,
+            salary_expectation: professionalData?.salary_expectation?.toString() || null,
             is_available: !!availabilityData, // Available if they have professional details
             years_experience: professionalData?.years_experience || null,
             languages: professionalData?.languages || null,
@@ -146,7 +147,8 @@ export const useUserFetch = (currentUser: any) => {
           .insert({ 
             user_id: userId,
             years_experience: '1', // Default value
-            languages: ['English'] // Default value
+            languages: ['English'], // Default value
+            salary_expectation: '500' // Default value as string
           });
         
         if (error) {
