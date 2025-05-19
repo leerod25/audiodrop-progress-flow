@@ -11,7 +11,12 @@ export interface Audio {
   created_at: string;
 }
 
-export function useUserAudios(user: User | null | { id: string }) {
+// This interface allows us to handle different user object shapes
+export interface UserIdentifier {
+  id: string;
+}
+
+export function useUserAudios(user: User | null | UserIdentifier) {
   const [audios, setAudios] = useState<Audio[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,7 +26,8 @@ export function useUserAudios(user: User | null | { id: string }) {
       return;
     }
 
-    const userId = 'id' in user ? user.id : user.id;
+    // Safely extract user ID regardless of user object shape
+    const userId = user.id;
     
     const fetchAudios = async () => {
       try {
@@ -56,7 +62,7 @@ export function useUserAudios(user: User | null | { id: string }) {
         .from('audio_metadata')
         .delete()
         .eq('id', id)
-        .eq('user_id', 'id' in user ? user.id : user.id);
+        .eq('user_id', user.id);
       
       if (error) {
         toast.error('Failed to delete recording');
@@ -83,7 +89,7 @@ export function useUserAudios(user: User | null | { id: string }) {
         .from('audio_metadata')
         .update({ title: newTitle.trim() })
         .eq('id', id)
-        .eq('user_id', 'id' in user ? user.id : user.id);
+        .eq('user_id', user.id);
       
       if (error) {
         toast.error('Failed to rename recording');
