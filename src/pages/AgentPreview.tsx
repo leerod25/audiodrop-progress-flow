@@ -5,6 +5,7 @@ import { useUsersData } from '@/hooks/useUsersData';
 import AgentDetailCard from '@/components/agent/AgentDetailCard';
 import AgentDetailsDialog from '@/components/agents/AgentDetailsDialog';
 import { Button } from "@/components/ui/button";
+import { FileAudio } from 'lucide-react';
 
 const AgentPreview: React.FC = () => {
   const { user, userRole } = useUserContext();
@@ -57,7 +58,8 @@ const AgentPreview: React.FC = () => {
             size="sm"
             onClick={() => openAgentDetails(a.id)}
           >
-            View Details and Audio
+            <FileAudio className="mr-1" />
+            Listen to Audio & View Details
           </Button>
         </div>
       ))}
