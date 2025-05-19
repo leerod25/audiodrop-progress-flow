@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { useUsersData } from '@/hooks/useUsersData';
@@ -15,12 +14,12 @@ import AgentFilterBar from '@/components/agents/AgentFilterBar';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 
-// Sample agent data for North America (6 profiles)
+// Sample agent data for North America (6 profiles) - REMOVED EMAIL fields
 const sampleAgents: User[] = [
   {
     id: '550e8400-e29b-41d4-a716-446655440000',
-    email: 'agent1@example.com',
-    full_name: 'Alex Smith',
+    email: '', // Removed email
+    full_name: 'Agent ID: 550e8400',
     created_at: '2024-01-15',
     audio_files: [],
     country: 'United States',
@@ -33,8 +32,8 @@ const sampleAgents: User[] = [
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440001',
-    email: 'agent2@example.com',
-    full_name: 'Maria Garcia',
+    email: '', // Removed email
+    full_name: 'Agent ID: 550e8401',
     created_at: '2024-02-10',
     audio_files: [],
     country: 'Mexico',
@@ -47,8 +46,8 @@ const sampleAgents: User[] = [
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440002',
-    email: 'agent3@example.com',
-    full_name: 'John Lee',
+    email: '', // Removed email
+    full_name: 'Agent ID: 550e8402',
     created_at: '2024-03-05',
     audio_files: [],
     country: 'Canada',
@@ -61,8 +60,8 @@ const sampleAgents: User[] = [
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440003',
-    email: 'agent4@example.com',
-    full_name: 'Sofia Hernandez',
+    email: '', // Removed email
+    full_name: 'Agent ID: 550e8403',
     created_at: '2024-01-25',
     audio_files: [],
     country: 'El Salvador',
@@ -75,8 +74,8 @@ const sampleAgents: User[] = [
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440004',
-    email: 'agent5@example.com',
-    full_name: 'James Wilson',
+    email: '', // Removed email
+    full_name: 'Agent ID: 550e8404',
     created_at: '2024-02-20',
     audio_files: [],
     country: 'United States',
@@ -89,8 +88,8 @@ const sampleAgents: User[] = [
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440005',
-    email: 'agent6@example.com',
-    full_name: 'Carlos Rodriguez',
+    email: '', // Removed email
+    full_name: 'Agent ID: 550e8405',
     created_at: '2024-03-15',
     audio_files: [],
     country: 'Mexico',
@@ -114,8 +113,22 @@ const Agents = () => {
   // Team state: store IDs of users added to team
   const [team, setTeam] = useState<string[]>([]);
   
-  // Use sample agents if not logged in, or API users if logged in
-  const users = user ? apiUsers : sampleAgents;
+  // Process users to remove any contact information and replace full_name with agent ID
+  const processedApiUsers = useMemo(() => {
+    if (!apiUsers) return [];
+    
+    return apiUsers.map(user => ({
+      ...user,
+      email: '', // Remove email
+      full_name: `Agent ID: ${user.id.substring(0, 8)}`, // Replace name with agent ID
+      // Remove any other potential contact information
+      phone: undefined, 
+      whatsapp: undefined
+    }));
+  }, [apiUsers]);
+  
+  // Use sample agents if not logged in, or processed API users if logged in
+  const users = user ? processedApiUsers : sampleAgents;
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -152,13 +165,12 @@ const Agents = () => {
       // Text search filter
       if (filters.searchQuery) {
         const query = filters.searchQuery.toLowerCase();
-        const nameMatch = user.full_name?.toLowerCase().includes(query) || false;
-        const emailMatch = user.email?.toLowerCase().includes(query) || false;
+        const idMatch = user.id?.toLowerCase().includes(query) || false;
         const locationMatch = 
           (user.country?.toLowerCase().includes(query) || false) || 
           (user.city?.toLowerCase().includes(query) || false);
           
-        if (!nameMatch && !emailMatch && !locationMatch) return false;
+        if (!idMatch && !locationMatch) return false;
       }
       
       // Country filter

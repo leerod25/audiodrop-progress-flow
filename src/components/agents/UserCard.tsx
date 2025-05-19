@@ -36,6 +36,9 @@ const UserCard: React.FC<UserCardProps> = ({
 }) => {
   const isAdmin = userRole === 'admin';
   
+  // Generate a display name that only shows the agent ID (first 8 chars)
+  const displayName = `Agent ID: ${user.id.substring(0, 8)}`;
+  
   return (
     <Card className="overflow-hidden">
       <div className="relative">
@@ -50,11 +53,11 @@ const UserCard: React.FC<UserCardProps> = ({
         <div className="p-4 bg-muted/30">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-600">
-              {(user.full_name?.[0] || user.email?.[0] || "?").toUpperCase()}
+              {user.id.substring(0, 1).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-semibold truncate">
-                {user.full_name || user.email || "Unknown User"}
+                {displayName}
               </h3>
               {user.country && (
                 <p className="text-sm text-muted-foreground">
@@ -91,7 +94,7 @@ const UserCard: React.FC<UserCardProps> = ({
         </div>
         
         <CardContent className="p-4">
-          {/* User Details */}
+          {/* User Details - Only showing professional details, no contact info */}
           <div className="space-y-2 mb-4">
             {user.gender && (
               <p className="text-sm">

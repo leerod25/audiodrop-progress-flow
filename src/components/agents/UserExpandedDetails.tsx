@@ -28,16 +28,14 @@ const UserExpandedDetails: React.FC<UserExpandedDetailsProps> = ({
     <div className="mt-4">
       <Separator className="my-4" />
       
-      {/* Full view with additional details */}
+      {/* Full view with additional details - Only showing ID for admins */}
       <div className="grid grid-cols-1 gap-4 mb-4">
         <div>
-          {/* Only show full ID and email for admin */}
+          {/* Only show ID for admin, never show email */}
           {isAdmin && (
             <>
               <p className="font-medium">User ID</p>
               <p className="text-sm text-gray-600 break-all">{userId}</p>
-              <p className="font-medium">Email</p>
-              <p className="text-sm text-gray-600 break-all">{email}</p>
             </>
           )}
           <p className="font-medium">Languages Spoken</p>
