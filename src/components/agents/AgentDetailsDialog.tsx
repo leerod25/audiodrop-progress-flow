@@ -95,7 +95,12 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
             title: file.title || `Recording`,
             url: file.audio_url || '',
             updated_at: file.created_at || ''
-          })) : []
+          })) : [],
+          // Add private fields for admin users
+          full_name: profileData?.full_name || null,
+          email: profileData?.email || null,
+          phone: profileData?.phone || null,
+          bio: profileData?.bio || null
         });
       } catch (err) {
         console.error('Error fetching agent data:', err);

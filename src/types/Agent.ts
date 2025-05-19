@@ -15,4 +15,10 @@ export interface Agent {
   is_favorite?: boolean;
   gender?: string | null;
   audio_files?: any[]; // Add this to match the structure from useUsersData
+  
+  // Add private fields that only admins should access
+  full_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  bio?: string | null;
 }
