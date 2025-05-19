@@ -1,7 +1,8 @@
 
 // Sample agents data to display when a user is not logged in
 
-export const sampleAudioUrl = "path/to/your/audio-file.mp3"; // Replace with actual public audio URL
+// Use an existing audio URL from the user's profile
+export const sampleAudioUrl = "https://hoeprpjndjhhotccljdm.supabase.co/storage/v1/object/public/audio-bucket/recordings/80257eb7-c7d5-4874-bc38-c9cbf12727d4.webm"; 
 
 const sampleAudio = {
   id: "sample-audio-1",
