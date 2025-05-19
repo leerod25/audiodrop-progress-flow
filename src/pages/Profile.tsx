@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
 import { Container } from '@/components/ui/container';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
@@ -15,6 +15,7 @@ import SecuritySettings from '@/components/profile/SecuritySettings';
 import NotificationSettings from '@/components/profile/NotificationSettings';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
+import { useToast } from '@/components/ui/use-toast';
 
 const Profile = () => {
   const { user, userRole } = useUserContext();
