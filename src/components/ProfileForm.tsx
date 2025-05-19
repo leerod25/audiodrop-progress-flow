@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { supabase } from "@/integrations/supabase/client";
@@ -8,8 +9,10 @@ import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Flag, Computer } from 'lucide-react';
+import { MapPin, Flag, Computer, DollarSign } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 
 type ProfileData = {
   full_name: string | null;
@@ -21,11 +24,12 @@ type ProfileData = {
   country: string | null;
   gender: string | null;
   computer_skill_level: string | null;
+  salary_expectation: number | null;
 };
 
 interface ProfileFormProps {
   userId?: string;
-  initialData?: any; // Added initialData prop to match usage in Profile.tsx
+  initialData?: any;
   onProfileUpdate?: () => void;
 }
 
@@ -43,6 +47,7 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
     country: initialData?.country || '',
     gender: initialData?.gender || '',
     computer_skill_level: initialData?.computer_skill_level || '',
+    salary_expectation: initialData?.salary_expectation || 500, // Default suggestion of $500
   });
   const [loading, setLoading] = useState(!initialData);
   const [initialLoad, setInitialLoad] = useState(!initialData);
@@ -82,6 +87,7 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
           country: initialData.country || '',
           gender: initialData.gender || '',
           computer_skill_level: initialData.computer_skill_level || '',
+          salary_expectation: initialData.salary_expectation || 500,
         });
         setLoading(false);
         setInitialLoad(false);
@@ -114,6 +120,7 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
             country: data.country || '',
             gender: data.gender || '',
             computer_skill_level: data.computer_skill_level || '',
+            salary_expectation: data.salary_expectation || 500,
           });
         } else {
           // Profile doesn't exist or is empty, create initial entry
@@ -183,6 +190,7 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
           country: profileData.country,
           gender: profileData.gender,
           computer_skill_level: profileData.computer_skill_level,
+          salary_expectation: profileData.salary_expectation,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'id' });
 
@@ -344,6 +352,74 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
             required
           />
         </div>
+      </div>
+      
+      {/* Gender selection */}
+      <div className="grid gap-2">
+        <Label htmlFor="gender">Gender <span className="text-red-500">*</span></Label>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <input 
+              type="radio" 
+              id="male" 
+              name="gender" 
+              value="male"
+              checked={profileData.gender === 'male'}
+              onChange={(e) => handleSelectChange('gender', e.target.value)}
+              className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+              required
+            />
+            <Label htmlFor="male" className="cursor-pointer">Male</Label>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input 
+              type="radio" 
+              id="female" 
+              name="gender" 
+              value="female"
+              checked={profileData.gender === 'female'}
+              onChange={(e) => handleSelectChange('gender', e.target.value)}
+              className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+            />
+            <Label htmlFor="female" className="cursor-pointer">Female</Label>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input 
+              type="radio" 
+              id="other" 
+              name="gender" 
+              value="other"
+              checked={profileData.gender === 'other'}
+              onChange={(e) => handleSelectChange('gender', e.target.value)}
+              className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+            />
+            <Label htmlFor="other" className="cursor-pointer">Other</Label>
+          </div>
+        </div>
+      </div>
+      
+      {/* Monthly Salary Expectation */}
+      <div className="grid gap-2">
+        <Label htmlFor="salary_expectation">
+          Monthly Salary Expectation ($) <span className="text-red-500">*</span>
+        </Label>
+        <div className="relative">
+          <DollarSign className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+          <Input
+            type="number"
+            id="salary_expectation"
+            name="salary_expectation"
+            value={profileData.salary_expectation || ''}
+            onChange={handleChange}
+            placeholder="500"
+            className="pl-10"
+            min="0"
+            required
+          />
+        </div>
+        <p className="text-sm text-gray-500">Suggested: $500/month</p>
       </div>
       
       {/* Computer Skills as mandatory field */}
