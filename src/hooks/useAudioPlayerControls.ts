@@ -10,6 +10,7 @@ export const useAudioPlayerControls = (audioUrl: string, suppressErrors: boolean
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [volume, setVolume] = useState(1); // Default to full volume
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
@@ -24,6 +25,9 @@ export const useAudioPlayerControls = (audioUrl: string, suppressErrors: boolean
     // Create audio element on mount
     const audio = new Audio();
     audioRef.current = audio;
+
+    // Set initial volume
+    audio.volume = volume;
 
     // Set up event listeners
     const handleLoadedMetadata = () => {
@@ -148,16 +152,37 @@ export const useAudioPlayerControls = (audioUrl: string, suppressErrors: boolean
     audio.currentTime = position * audio.duration;
   };
 
+  const adjustVolume = (value: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    
+    // Ensure volume is between 0 and 1
+    const newVolume = Math.max(0, Math.min(1, value));
+    audio.volume = newVolume;
+    setVolume(newVolume);
+    
+    // Update mute state based on volume
+    if (newVolume === 0) {
+      audio.muted = true;
+      setIsMuted(true);
+    } else if (isMuted) {
+      audio.muted = false;
+      setIsMuted(false);
+    }
+  };
+
   return {
     audioRef,
     isPlaying,
     isMuted,
     progress,
     duration,
+    volume,
     error,
     isLoading,
     togglePlay,
     toggleMute,
-    seekToPosition
+    seekToPosition,
+    adjustVolume
   };
 };

@@ -23,11 +23,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     isMuted,
     progress,
     duration,
+    volume,
     error,
     isLoading,
     togglePlay,
     toggleMute,
-    seekToPosition
+    seekToPosition,
+    adjustVolume
   } = useAudioPlayerControls(audioUrl, suppressErrors);
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -35,6 +37,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     const rect = progressBar.getBoundingClientRect();
     const pos = (e.clientX - rect.left) / rect.width;
     seekToPosition(pos);
+  };
+
+  const handleVolumeChange = (values: number[]) => {
+    adjustVolume(values[0]);
   };
 
   if (error && !suppressErrors) {
@@ -54,9 +60,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         progress={progress}
         duration={duration}
         currentTime={audioRef.current?.currentTime || 0}
+        volume={volume}
         onPlayPause={togglePlay}
         onMuteToggle={toggleMute}
         onProgressClick={handleProgressClick}
+        onVolumeChange={handleVolumeChange}
       />
     </div>
   );
