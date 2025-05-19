@@ -85,13 +85,9 @@ const CommandGroup = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Group>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Group>
 >(({ className, ...props }, ref) => {
-  // Ensure children is safely processed
-  const safeProps = { 
-    ...props,
-    // Ensure children is properly handled and always iterable
-    children: props.children || null 
-  };
-  
+  // Ensure children is defined before iterating over it
+  const safeChildren = props.children || null;
+
   return (
     <CommandPrimitive.Group
       ref={ref}
@@ -99,7 +95,8 @@ const CommandGroup = React.forwardRef<
         "overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground",
         className
       )}
-      {...safeProps}
+      {...props}
+      children={safeChildren}
     />
   );
 })

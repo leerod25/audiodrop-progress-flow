@@ -13,11 +13,13 @@ import ProfessionalDetailsForm from "@/components/ProfessionalDetailsForm";
 import ProfileAudioList from "@/components/profile/ProfileAudioList";
 import UserProfileHeader from "@/components/profile/UserProfileHeader";
 import BusinessProfileHeader from "@/components/profile/BusinessProfileHeader";
+import { toast } from "sonner";
 
 const Profile = () => {
   const { user, userRole } = useUserContext();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
+  const [professionalDetails, setProfessionalDetails] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,6 +47,19 @@ const Profile = () => {
 
         if (error) throw error;
         setProfile(data);
+
+        // Also fetch professional details if user is an agent
+        if (userRole === "agent") {
+          const { data: profDetails, error: profError } = await supabase
+            .from("professional_details")
+            .select("*")
+            .eq("user_id", user.id)
+            .maybeSingle();
+            
+          if (!profError) {
+            setProfessionalDetails(profDetails || {});
+          }
+        }
       } catch (error) {
         console.error("Error fetching profile:", error);
       } finally {
@@ -53,7 +68,7 @@ const Profile = () => {
     };
 
     fetchProfile();
-  }, [user]);
+  }, [user, userRole]);
 
   if (loading) {
     return <ProfileSkeleton />;
@@ -66,6 +81,16 @@ const Profile = () => {
   const isProfileComplete = isAgent 
     ? Boolean(profile?.full_name && profile?.email && profile?.phone)
     : Boolean(profile?.company_name || profile?.business_name);
+
+  const handleProfileUpdate = (updatedProfile) => {
+    setProfile({...profile, ...updatedProfile});
+    toast.success("Profile information updated successfully!");
+  };
+  
+  const handleProfessionalDetailsUpdate = (updatedDetails) => {
+    setProfessionalDetails({...professionalDetails, ...updatedDetails});
+    toast.success("Professional details updated successfully!");
+  };
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -83,9 +108,9 @@ const Profile = () => {
           <h2 className="text-xl font-semibold mb-2">Private Information</h2>
           <p className="text-sm text-gray-500 mb-4">This information is only visible to you and administrators</p>
           {isBusiness ? (
-            <BusinessProfileForm userId={user?.id} initialData={profile} />
+            <BusinessProfileForm userId={user?.id} initialData={profile} onProfileUpdate={handleProfileUpdate} />
           ) : (
-            <ProfileForm userId={user?.id} initialData={profile} />
+            <ProfileForm userId={user?.id} initialData={profile} onProfileUpdate={handleProfileUpdate} />
           )}
         </Card>
 
@@ -93,7 +118,11 @@ const Profile = () => {
           <Card className="p-6 shadow-sm border-green-200 border-2">
             <h2 className="text-xl font-semibold mb-2">Public Professional Details</h2>
             <p className="text-sm text-gray-500 mb-4">This information is visible to everyone</p>
-            <ProfessionalDetailsForm />
+            <ProfessionalDetailsForm 
+              userId={user?.id} 
+              initialData={professionalDetails} 
+              onDetailsUpdate={handleProfessionalDetailsUpdate}
+            />
           </Card>
         )}
 

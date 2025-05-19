@@ -49,9 +49,10 @@ const countries = [
 interface ProfileFormProps {
   userId?: string;
   initialData?: any;
+  onProfileUpdate?: (data: any) => void;
 }
 
-export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
+export default function ProfileForm({ userId, initialData, onProfileUpdate }: ProfileFormProps) {
   const { user } = useUserContext();
   const [isLoading, setIsLoading] = useState(false);
   const [professionalDetails, setProfessionalDetails] = useState<any>(null);
@@ -131,10 +132,11 @@ export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
     setIsLoading(true);
     try {
       // Update the profile table
-      const { error } = await supabase
+      const { data: profileData, error } = await supabase
         .from('profiles')
         .update({
           full_name: data.full_name,
+          bio: data.bio,
           country: data.country,
           city: data.city,
           gender: data.gender,
@@ -144,12 +146,12 @@ export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
           whatsapp: data.whatsapp,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', userId || user.id);
+        .eq('id', userId || user.id)
+        .select();
 
       if (error) throw error;
       
       // Update the professional_details table with salary_expectation
-      // First check if professional details exists
       const salaryValue = data.salary_expectation ? parseFloat(data.salary_expectation) : null;
       
       const { data: existingDetails } = await supabase
@@ -190,12 +192,8 @@ export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
       
       toast.success('Profile updated successfully');
       
-      // Refresh the profile data if available in parent component
-      if (typeof window !== 'undefined') {
-        // Force a refresh of the page to get updated data
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+      if (onProfileUpdate && profileData?.[0]) {
+        onProfileUpdate(profileData[0]);
       }
     } catch (error: any) {
       console.error('Error updating profile:', error);
