@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
@@ -67,7 +66,7 @@ export const useUserFetch = (currentUser: any) => {
           // Try to get additional profile data from the profiles table
           const { data: profileData } = await supabase
             .from('profiles')
-            .select('country, city, gender, is_available')
+            .select('country, city, gender')
             .eq('id', user.id)
             .single();
             
@@ -75,6 +74,13 @@ export const useUserFetch = (currentUser: any) => {
           const { data: professionalData } = await supabase
             .from('professional_details')
             .select('years_experience, languages')
+            .eq('user_id', user.id)
+            .single();
+          
+          // Check if the user has availability information in professional_details
+          const { data: availabilityData } = await supabase
+            .from('professional_details')
+            .select('id')
             .eq('user_id', user.id)
             .single();
           
@@ -96,7 +102,7 @@ export const useUserFetch = (currentUser: any) => {
             country: profileData?.country || null,
             city: profileData?.city || null,
             gender: profileData?.gender || null,
-            is_available: profileData?.is_available || false,
+            is_available: !!availabilityData, // Available if they have professional details
             years_experience: professionalData?.years_experience || null,
             languages: professionalData?.languages || null,
             audio_files: validAudioFiles
@@ -119,15 +125,37 @@ export const useUserFetch = (currentUser: any) => {
 
   const toggleAvailability = async (userId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ is_available: !currentStatus })
-        .eq('id', userId);
-      
-      if (error) {
-        console.error('Error updating availability:', error);
-        toast.error("Failed to update availability");
-        return;
+      // For now, we'll store availability in professional_details
+      // If the user has professional details, we'll keep them (available)
+      // If not, we'll create them (making them available)
+      if (currentStatus) {
+        // If currently available, remove their professional_details entry
+        const { error } = await supabase
+          .from('professional_details')
+          .delete()
+          .eq('user_id', userId);
+        
+        if (error) {
+          console.error('Error updating availability:', error);
+          toast.error("Failed to update availability");
+          return;
+        }
+      } else {
+        // If currently unavailable, add a professional_details entry
+        const { error } = await supabase
+          .from('professional_details')
+          .insert({ 
+            user_id: userId,
+            years_experience: '1', // Default value
+            languages: ['English'] // Default value
+          })
+          .select();
+        
+        if (error) {
+          console.error('Error updating availability:', error);
+          toast.error("Failed to update availability");
+          return;
+        }
       }
       
       // Update the local state

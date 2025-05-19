@@ -67,7 +67,7 @@ const UserCard: React.FC<UserCardProps> = ({
               {toggleAvailability && (
                 <Badge 
                   variant={user.is_available ? "success" : "destructive"}
-                  className={`ml-2 ${user.is_available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                  className="ml-2"
                 >
                   {user.is_available ? 'Available' : 'On Project'}
                 </Badge>
