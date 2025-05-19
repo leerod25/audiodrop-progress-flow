@@ -20,16 +20,20 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
   formatUserId = (id) => id.substring(0, 8) + '...',
   toggleFavorite
 }) => {
-  // Decide whether to load from storage or use provided URLs
-  const useHook =
-    !agent.audioUrls || agent.audioUrls.length === 0;
-  const { audioList, loading, error } = useHook
-    ? useAgentAudio(agent.id)
-    : { audioList: [], loading: false, error: null };
-  // Pick whichever list actually has content
+  // Determine if we should fetch from storage
+  const shouldUseHook = !agent.audioUrls || agent.audioUrls.length === 0;
+  // Always call hook; we'll decide which list to display
+  const { audioList, loading, error } = useAgentAudio(agent.id);
+
+  // Use provided audioUrls if non-empty, else fallback to hook results
   const displayAudioList =
     agent.audioUrls && agent.audioUrls.length > 0
-      ? agent.audioUrls
+      ? agent.audioUrls.map((url, idx) => ({
+          id: String(idx),
+          title: `Recording ${idx + 1}`,
+          url,
+          updated_at: ''
+        }))
       : audioList;
   
   return (
@@ -39,8 +43,8 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
       </CardHeader>
       <CardContent>
         <p className="text-sm text-gray-500 mb-4">
-          {agent.country} {agent.city ? `· ${agent.city}` : ''}
-          {agent.computer_skill_level && <> · Skill level: {agent.computer_skill_level}</>}
+          {agent.country}{agent.city ? ` · ${agent.city}` : ''}
+          {agent.computer_skill_level && ` · Skill: ${agent.computer_skill_level}`}
         </p>
         
         {isBusinessAccount && (
@@ -85,7 +89,11 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
                   <div className="flex flex-col space-y-2">
                     <div>
                       <span className="font-medium">{audio.title}</span><br />
-                      <small className="text-gray-500">{audio.updated_at ? new Date(audio.updated_at).toLocaleString() : ''}</small>
+                      {audio.updated_at && (
+                        <small className="text-gray-500">
+                          {new Date(audio.updated_at).toLocaleString()}
+                        </small>
+                      )}
                     </div>
                     
                     <div className="w-full">
