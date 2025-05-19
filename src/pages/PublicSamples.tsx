@@ -5,6 +5,7 @@ import AgentListCard from "@/components/agent/AgentListCard";
 import { Agent } from "@/types/Agent";
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
+import AudioPlayer from '@/components/AudioPlayer';
 
 export default function PublicSamplesPage() {
   const [playing, setPlaying] = useState<{ id: string; url: string } | null>(null);
@@ -46,10 +47,10 @@ export default function PublicSamplesPage() {
 
               {playing?.id === agent.id && (
                 <div className="mt-2 p-4 bg-gray-100 rounded">
-                  <audio controls autoPlay className="w-full">
-                    <source src={playing.url} type="audio/mpeg" />
-                    Your browser doesn't support audio playback.
-                  </audio>
+                  <AudioPlayer 
+                    audioUrl={playing.url} 
+                    autoPlay={true}
+                  />
                 </div>
               )}
             </div>

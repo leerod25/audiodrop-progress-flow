@@ -26,4 +26,5 @@ export interface Agent {
   is_available?: boolean;
   years_experience?: string | null;
   languages?: string[] | null;
+  created_at?: string; // Add this to fix the type error
 }

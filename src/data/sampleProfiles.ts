@@ -4,21 +4,23 @@ export interface SampleAgent {
   country: string;
   city: string;
   audioUrls: { id: string; title: string; url: string; updated_at: string }[];
+  created_at: string; // Add this field to fix type issues
 }
 
-// Replace this URL with your actual public audio URL
-const yourAudioUrl = "https://example.com/your-public-audio.mp3";
+// Use a public sample audio URL
+const sampleAudioUrl = "https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav";
 
 // Your "real" profile data
 const me: SampleAgent = {
   id: "leerod25",
   country: "Canada",
   city: "Montreal",
+  created_at: new Date().toISOString(),
   audioUrls: [
     {
       id: "welcome",
       title: "Welcome Message",
-      url: yourAudioUrl,
+      url: sampleAudioUrl,
       updated_at: new Date().toISOString(),
     },
   ],
