@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { useUsersData } from '@/hooks/useUsersData';
@@ -15,6 +14,7 @@ import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import AgentListCard from '@/components/agent/AgentListCard';
 import { Agent } from '@/types/Agent';
+import { useAgentAudio } from '@/hooks/useAgentAudio';
 
 // Sample agent data for North America (6 profiles) - REMOVED EMAIL fields
 const sampleAgents: User[] = [
@@ -221,9 +221,20 @@ const Agents = () => {
 
   // Convert User to Agent type for AgentListCard
   const convertToAgent = (user: User): Agent => {
+    // Get audio files if they exist
+    const audioUrls = user.audio_files ? 
+      user.audio_files.map(file => ({
+        id: file.id,
+        title: file.title,
+        url: file.audio_url,
+        updated_at: file.created_at
+      })) : 
+      undefined;
+    
     return {
       id: user.id,
       has_audio: user.audio_files && user.audio_files.length > 0,
+      audioUrls: audioUrls,
       country: user.country || null,
       city: user.city || null,
       gender: user.gender || null,
@@ -295,7 +306,7 @@ const Agents = () => {
           onFilterChange={handleFilterChange}
         />
         
-        {/* Agent list - updated to use AgentListCard */}
+        {/* Agent list - updated to use AgentListCard with inline audio */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, index) => (
@@ -309,6 +320,9 @@ const Agents = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               {currentPageUsers.map((user) => {
                 console.log(user.id, 'has audio?', user.audio_files && user.audio_files.length > 0);
+                if (user.audio_files && user.audio_files.length > 0) {
+                  console.log('Audio URLs:', user.audio_files.map(f => f.audio_url));
+                }
                 const agent = convertToAgent(user);
                 return (
                   <AgentListCard 
@@ -316,7 +330,6 @@ const Agents = () => {
                     agent={agent}
                     onViewDetails={() => viewAgentDetails(user.id)}
                     onAddToTeam={() => toggleTeamMember(user.id)}
-                    onPlaySample={handleAudioPlay}
                   />
                 );
               })}
