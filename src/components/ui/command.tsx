@@ -88,7 +88,7 @@ const CommandGroup = React.forwardRef<
   // Ensure children is safely processed
   const safeProps = { 
     ...props,
-    // Ensure children is properly handled
+    // Ensure children is properly handled and always iterable
     children: props.children || null 
   };
   

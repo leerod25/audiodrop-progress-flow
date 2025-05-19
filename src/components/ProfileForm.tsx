@@ -19,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { useUserContext } from '@/contexts/UserContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
+import { Loader2, DollarSign } from 'lucide-react';
 
 // Define the form schema with Zod
 const profileFormSchema = z.object({
@@ -32,6 +32,7 @@ const profileFormSchema = z.object({
   email: z.string().email('Please enter a valid email').optional(),
   phone: z.string().optional(),
   whatsapp: z.string().optional(),
+  salary_expectation: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -53,6 +54,7 @@ interface ProfileFormProps {
 export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
   const { user } = useUserContext();
   const [isLoading, setIsLoading] = useState(false);
+  const [professionalDetails, setProfessionalDetails] = useState<any>(null);
 
   // Initialize the form with react-hook-form
   const form = useForm<ProfileFormValues>({
@@ -67,8 +69,39 @@ export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
       email: '',
       phone: '',
       whatsapp: '',
+      salary_expectation: '',
     },
   });
+
+  // Fetch professional details to get the salary expectation
+  useEffect(() => {
+    const fetchProfessionalDetails = async () => {
+      if (!userId && !user?.id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('professional_details')
+          .select('*')
+          .eq('user_id', userId || user?.id)
+          .single();
+          
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching professional details:', error);
+          return;
+        }
+        
+        if (data) {
+          setProfessionalDetails(data);
+          // Update form with salary expectation if available
+          form.setValue('salary_expectation', data.salary_expectation ? String(data.salary_expectation) : '');
+        }
+      } catch (err) {
+        console.error('Error in fetchProfessionalDetails:', err);
+      }
+    };
+    
+    fetchProfessionalDetails();
+  }, [userId, user, form]);
 
   // Update form values when initialData changes
   useEffect(() => {
@@ -83,9 +116,10 @@ export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
         email: initialData.email || '',
         phone: initialData.phone || '',
         whatsapp: initialData.whatsapp || '',
+        salary_expectation: professionalDetails?.salary_expectation ? String(professionalDetails.salary_expectation) : '',
       });
     }
-  }, [initialData, form]);
+  }, [initialData, form, professionalDetails]);
 
   // Handle form submission
   async function onSubmit(data: ProfileFormValues) {
@@ -96,11 +130,11 @@ export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
 
     setIsLoading(true);
     try {
+      // Update the profile table
       const { error } = await supabase
         .from('profiles')
         .update({
           full_name: data.full_name,
-          bio: data.bio,
           country: data.country,
           city: data.city,
           gender: data.gender,
@@ -113,6 +147,46 @@ export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
         .eq('id', userId || user.id);
 
       if (error) throw error;
+      
+      // Update the professional_details table with salary_expectation
+      // First check if professional details exists
+      const salaryValue = data.salary_expectation ? parseFloat(data.salary_expectation) : null;
+      
+      const { data: existingDetails } = await supabase
+        .from('professional_details')
+        .select('id')
+        .eq('user_id', userId || user.id)
+        .maybeSingle();
+        
+      if (existingDetails) {
+        // Update existing record
+        const { error: salaryError } = await supabase
+          .from('professional_details')
+          .update({
+            salary_expectation: salaryValue,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', userId || user.id);
+          
+        if (salaryError) {
+          console.error('Error updating salary expectation:', salaryError);
+          toast.error('Failed to update salary information');
+        }
+      } else if (salaryValue) {
+        // Create new record if salary is provided
+        const { error: insertError } = await supabase
+          .from('professional_details')
+          .insert({
+            user_id: userId || user.id,
+            salary_expectation: salaryValue,
+            updated_at: new Date().toISOString(),
+          });
+          
+        if (insertError) {
+          console.error('Error creating salary expectation record:', insertError);
+          toast.error('Failed to save salary information');
+        }
+      }
       
       toast.success('Profile updated successfully');
       
@@ -278,6 +352,30 @@ export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
                 )}
               />
             </div>
+
+            {/* Salary Expectation */}
+            <FormField
+              control={form.control}
+              name="salary_expectation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Monthly Salary Expectation (USD)</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <DollarSign className="absolute left-2 top-2.5 h-5 w-5 text-gray-500" />
+                      <Input 
+                        type="number" 
+                        placeholder="500" 
+                        className="pl-9" 
+                        {...field} 
+                        value={field.value || ''} 
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {/* Contact Information */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
