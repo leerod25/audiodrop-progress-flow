@@ -56,14 +56,20 @@ const UserCard: React.FC<UserCardProps> = ({
     }
   };
   
-  // Helper function to get avatar image based on gender
+  // Helper function to get avatar image based on gender - default to male if not specified
   const getAvatarImage = (gender: string | null | undefined) => {
-    if (gender === 'male') {
+    // Default to male if gender is not specified
+    if (!gender) {
       return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
-    } else if (gender === 'female') {
+    }
+    
+    if (gender === 'male' || gender === 'Male') {
+      return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
+    } else if (gender === 'female' || gender === 'Female') {
       return '/lovable-uploads/7889d5d0-d6bd-4ccf-8dbd-62fe95fc1946.png';
     }
-    return null;
+    // Default to male for any other value
+    return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
   };
 
   // Helper function to get avatar fallback text
@@ -71,7 +77,7 @@ const UserCard: React.FC<UserCardProps> = ({
     if (email && email.length > 0) {
       return email.charAt(0).toUpperCase();
     }
-    return gender === 'male' ? 'M' : gender === 'female' ? 'F' : 'A';
+    return gender === 'female' || gender === 'Female' ? 'F' : 'M'; // Default to M
   };
   
   const avatarImage = getAvatarImage(user.gender);
@@ -83,9 +89,7 @@ const UserCard: React.FC<UserCardProps> = ({
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10 border">
-              {avatarImage ? (
-                <AvatarImage src={avatarImage} alt={user.gender || 'Agent'} />
-              ) : null}
+              <AvatarImage src={avatarImage} alt={user.gender || 'Agent'} />
               <AvatarFallback>{getAvatarFallback(user.email, user.gender)}</AvatarFallback>
             </Avatar>
             <div>

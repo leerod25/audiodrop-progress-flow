@@ -23,6 +23,9 @@ interface User {
   country?: string | null;
   city?: string | null;
   gender?: string | null;
+  years_experience?: string | null;
+  languages?: string[] | null;
+  is_available?: boolean;
 }
 
 interface AgentCardProps {
@@ -49,7 +52,9 @@ const AgentCard: React.FC<AgentCardProps> = ({
               <Avatar className="h-12 w-12 border">
                 {avatarImage ? (
                   <AvatarImage src={avatarImage} alt={user.gender || 'Agent'} />
-                ) : null}
+                ) : (
+                  <AvatarImage src="/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png" alt="Agent" />
+                )}
                 <AvatarFallback>{getAvatarFallback(user.email, user.gender)}</AvatarFallback>
               </Avatar>
               <div>
