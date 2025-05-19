@@ -31,12 +31,12 @@ const createSampleAgent = (id: string, city: string, country: string) => {
   };
 };
 
-// Create 6 sample agents with the same profile but different locations
+// Create 6 sample agents with the same profile but different locations with valid UUIDs
 export const sampleAgents = [
   createSampleAgent("3a067ecc-1234-5678-9abc-def012345678", "New York", "United States"),
   createSampleAgent("4b178fdd-2345-6789-abcd-ef0123456789", "Los Angeles", "United States"),
   createSampleAgent("5c289fee-3456-789a-bcde-f01234567890", "London", "United Kingdom"),
   createSampleAgent("6d39a0ff-4567-89ab-cdef-012345678901", "Sydney", "Australia"),
   createSampleAgent("7e4ab100-5678-9abc-def0-123456789012", "Toronto", "Canada"),
-  createSampleAgent("8f5bc201-6789-abcd-ef01-23456789012", "Berlin", "Germany")
+  createSampleAgent("8f5bc201-6789-abcd-ef01-234567890123", "Berlin", "Germany")
 ];

@@ -19,6 +19,10 @@ export function isValidUrl(url: string): boolean {
     if (url.startsWith('data:audio/')) {
       return true;
     }
+    // For Supabase storage URLs
+    if (url.includes('supabase.co/storage/v1/object/public/')) {
+      return true;
+    }
     // For relative paths, we'll consider them valid if they match certain patterns
     if (url.startsWith('path/') || url.startsWith('/') || /^[a-zA-Z0-9]/.test(url)) {
       return true;

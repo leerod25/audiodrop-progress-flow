@@ -1,8 +1,10 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Agent } from '@/types/Agent';
+import { Loader2 } from 'lucide-react';
+import AudioPlayer from '@/components/AudioPlayer';
 
 interface AgentListCardProps {
   agent: Agent;
@@ -15,9 +17,18 @@ const AgentListCard: React.FC<AgentListCardProps> = ({
   onViewDetails,
   onAddToTeam,
 }) => {
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showPlayer, setShowPlayer] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  
   // Pick the very first URL from audioUrls
   const sampleUrl = agent.audioUrls && agent.audioUrls[0]?.url;
+
+  const handlePlayAudio = () => {
+    setIsLoading(true);
+    setShowPlayer(true);
+    setIsLoading(false);
+  };
 
   return (
     <Card className="relative">
@@ -31,7 +42,7 @@ const AgentListCard: React.FC<AgentListCardProps> = ({
           {agent.country}
         </p>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <Button
             variant="outline"
             size="sm"
@@ -49,27 +60,32 @@ const AgentListCard: React.FC<AgentListCardProps> = ({
           </Button>
 
           {sampleUrl && (
-            <>
-              <Button
-                size="sm"
-                className="bg-green-500 hover:bg-green-600 border-green-500 text-white"
-                onClick={() => {
-                  if (audioRef.current) {
-                    audioRef.current.play();
-                  }
-                }}
-              >
-                ▶︎ Play Sample
-              </Button>
-              <audio
-                ref={audioRef}
-                src={sampleUrl}
-                preload="none"
-                className="hidden"
-              />
-            </>
+            <Button
+              size="sm"
+              className="bg-green-500 hover:bg-green-600 border-green-500 text-white"
+              onClick={handlePlayAudio}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                '▶︎ Play Sample'
+              )}
+            </Button>
           )}
         </div>
+        
+        {showPlayer && sampleUrl && (
+          <div className="mt-2">
+            <AudioPlayer 
+              audioUrl={sampleUrl} 
+              suppressErrors={true}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
