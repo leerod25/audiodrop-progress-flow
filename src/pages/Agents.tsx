@@ -1,20 +1,19 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { useUsersData } from '@/hooks/useUsersData';
 import { Container } from '@/components/ui/container';
 import AuthAlert from '@/components/agents/AuthAlert';
-import AgentFilters from '@/components/agents/AgentFilters';
 import AgentDetailsDialog from '@/components/agents/AgentDetailsDialog';
 import { Button } from '@/components/ui/button';
-import { FilterIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import AgentsList from '@/components/agents/AgentsList';
 import { useNavigate } from 'react-router-dom';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { User } from '@/hooks/users/useUserFetch';
+import AgentFilterBar from '@/components/agents/AgentFilterBar';
 
-// Sample agent data for demo purposes (updated to North America and added one more profile)
+// Sample agent data for North America (6 profiles)
 const sampleAgents: User[] = [
   {
     id: '550e8400-e29b-41d4-a716-446655440000',
@@ -105,8 +104,6 @@ const sampleAgents: User[] = [
 const Agents = () => {
   const { user, userRole } = useUserContext();
   const { users: apiUsers, loading, error, expandedUser, playingAudio, fetchAllUsers, toggleUserExpand, handleAudioPlay, toggleAvailability } = useUsersData(user);
-  const [currentFilter, setCurrentFilter] = useState('all');
-  const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const isMobile = useIsMobile();
@@ -117,6 +114,15 @@ const Agents = () => {
   
   // Use sample agents if not logged in, or API users if logged in
   const users = user ? apiUsers : sampleAgents;
+  
+  // Filter states
+  const [filters, setFilters] = useState({
+    searchQuery: '',
+    country: '',
+    city: '',
+    availableOnly: false,
+    experiencedOnly: false
+  });
 
   const toggleTeamMember = (id: string) => {
     setTeam(prev =>
@@ -124,14 +130,59 @@ const Agents = () => {
     );
   };
   
-  // Filter users based on current filter
-  const filteredUsers = users.filter(user => {
-    if (currentFilter === 'all') return true;
-    if (currentFilter === 'audio') return user.audio_files?.length > 0;
-    if (currentFilter === 'available') return user.is_available;
-    if (currentFilter === 'favorites') return team.includes(user.id);
-    return true;
-  });
+  // Get unique countries and cities from the data
+  const countries = useMemo(() => {
+    return Array.from(new Set(users.map(user => user.country).filter(Boolean) as string[])).sort();
+  }, [users]);
+
+  const cities = useMemo(() => {
+    // If country filter is applied, only show cities from that country
+    const filteredUsers = filters.country 
+      ? users.filter(user => user.country === filters.country)
+      : users;
+      
+    return Array.from(new Set(filteredUsers.map(user => user.city).filter(Boolean) as string[])).sort();
+  }, [users, filters.country]);
+  
+  // Filter users based on filters
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => {
+      // Text search filter
+      if (filters.searchQuery) {
+        const query = filters.searchQuery.toLowerCase();
+        const nameMatch = user.full_name?.toLowerCase().includes(query) || false;
+        const emailMatch = user.email?.toLowerCase().includes(query) || false;
+        const locationMatch = 
+          (user.country?.toLowerCase().includes(query) || false) || 
+          (user.city?.toLowerCase().includes(query) || false);
+          
+        if (!nameMatch && !emailMatch && !locationMatch) return false;
+      }
+      
+      // Country filter
+      if (filters.country && user.country !== filters.country) {
+        return false;
+      }
+      
+      // City filter
+      if (filters.city && user.city !== filters.city) {
+        return false;
+      }
+      
+      // Availability filter
+      if (filters.availableOnly && !user.is_available) {
+        return false;
+      }
+      
+      // Experience filter (3+ years)
+      if (filters.experiencedOnly) {
+        const years = parseInt(user.years_experience || '0');
+        if (years < 3) return false;
+      }
+      
+      return true;
+    });
+  }, [users, filters]);
 
   // Calculate pagination
   const PAGE_SIZE = 9;
@@ -142,18 +193,15 @@ const Agents = () => {
   // Reset page when filter changes
   useEffect(() => {
     setPage(1);
-  }, [currentFilter]);
+  }, [filters]);
   
   const viewAgentDetails = (userId: string) => {
     setSelectedAgentId(userId);
   };
 
-  // Create empty props for AgentFilters since we're still using the old component
-  const emailFilter = "";
-  const setEmailFilter = () => {};
-  const dateRange = { from: null, to: null };
-  const setDateRange = () => {};
-  const resetFilters = () => {};
+  const handleFilterChange = (newFilters: typeof filters) => {
+    setFilters(newFilters);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -175,6 +223,24 @@ const Agents = () => {
             <p className="mt-3 text-lg">
               <strong>You're in control</strong> - handpick your team for guaranteed success.
             </p>
+            <div className="flex gap-4 mt-6">
+              <Button 
+                size="lg" 
+                variant="default" 
+                onClick={() => navigate('/services')}
+              >
+                Our Services
+              </Button>
+              {!user && (
+                <Button 
+                  size="lg" 
+                  variant="secondary"
+                  onClick={() => navigate('/auth')}
+                >
+                  Login / Sign Up
+                </Button>
+              )}
+            </div>
           </div>
         </AspectRatio>
       </section>
@@ -189,21 +255,25 @@ const Agents = () => {
           </div>
           
           <div className="flex gap-2">
-            {/* Return to home button */}
+            {/* Navigation buttons */}
             <Button
               variant="outline"
               onClick={() => navigate('/')}
             >
-              Return to Home
+              Home
             </Button>
-            
-            {isMobile && (
+            <Button
+              variant="outline"
+              onClick={() => navigate('/services')}
+            >
+              Services
+            </Button>
+            {!user && (
               <Button
-                variant="outline"
-                onClick={() => setFilterMenuOpen(true)}
+                variant="default"
+                onClick={() => navigate('/auth')}
               >
-                <FilterIcon className="h-4 w-4 mr-2" />
-                Filters
+                Login
               </Button>
             )}
           </div>
@@ -212,54 +282,30 @@ const Agents = () => {
         {/* Authentication alert */}
         {!user && <AuthAlert />}
         
-        {/* Main content with filters */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Filters sidebar - hidden on mobile */}
-          {!isMobile && (
-            <div className="lg:col-span-1">
-              <AgentFilters
-                emailFilter={emailFilter}
-                setEmailFilter={setEmailFilter}
-                dateRange={dateRange}
-                setDateRange={setDateRange}
-                resetFilters={resetFilters}
-              />
-            </div>
-          )}
-          
-          {/* Mobile filter drawer */}
-          {isMobile && (
-            <AgentFilters
-              emailFilter={emailFilter}
-              setEmailFilter={setEmailFilter}
-              dateRange={dateRange}
-              setDateRange={setDateRange}
-              resetFilters={resetFilters}
-              isCalendarOpen={filterMenuOpen}
-              setIsCalendarOpen={setFilterMenuOpen}
-            />
-          )}
-          
-          {/* Agent list */}
-          <div className="lg:col-span-3">
-            <AgentsList
-              users={filteredUsers}
-              loading={loading && user !== null} // Only show loading if trying to fetch actual users
-              error={error}
-              userRole={userRole || 'agent'}
-              canSeeAudio={!!user && (userRole === 'admin' || userRole === 'business')}
-              currentPageUsers={currentPageUsers}
-              page={page}
-              totalPages={totalPages}
-              fetchAllUsers={fetchAllUsers}
-              setPage={setPage}
-              viewAgentDetails={viewAgentDetails}
-              toggleAvailability={toggleAvailability}
-              team={team}
-              toggleTeamMember={toggleTeamMember}
-            />
-          </div>
-        </div>
+        {/* Filter component */}
+        <AgentFilterBar 
+          countries={countries}
+          cities={cities}
+          onFilterChange={handleFilterChange}
+        />
+        
+        {/* Agent list */}
+        <AgentsList
+          users={filteredUsers}
+          loading={loading && user !== null} // Only show loading if trying to fetch actual users
+          error={error}
+          userRole={userRole || 'agent'}
+          canSeeAudio={!!user && (userRole === 'admin' || userRole === 'business')}
+          currentPageUsers={currentPageUsers}
+          page={page}
+          totalPages={totalPages}
+          fetchAllUsers={fetchAllUsers}
+          setPage={setPage}
+          viewAgentDetails={viewAgentDetails}
+          toggleAvailability={toggleAvailability}
+          team={team}
+          toggleTeamMember={toggleTeamMember}
+        />
       </Container>
 
       {/* Agent details dialog */}
