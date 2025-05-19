@@ -30,7 +30,7 @@ const profileFormSchema = z.object({
   city: z.string().optional(),
   gender: z.string().optional(),
   years_experience: z.string().optional(),
-  languages: z.array(z.string()).optional(),
+  languages: z.array(z.string()).optional().default([]),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -92,7 +92,8 @@ export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
         city: initialData.city || '',
         gender: initialData.gender || '',
         years_experience: initialData.years_experience || '',
-        languages: initialData.languages || [],
+        // Ensure languages is always an array
+        languages: Array.isArray(initialData.languages) ? initialData.languages : [],
       });
     }
   }, [initialData, form]);
@@ -115,7 +116,8 @@ export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
           city: data.city,
           gender: data.gender,
           years_experience: data.years_experience,
-          languages: data.languages,
+          // Ensure languages is always an array before saving
+          languages: Array.isArray(data.languages) ? data.languages : [],
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId || user.id);
@@ -290,20 +292,24 @@ export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
             <FormField
               control={form.control}
               name="languages"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Languages Spoken</FormLabel>
-                  <FormControl>
-                    <MultiSelect
-                      options={languageOptions}
-                      selected={field.value || []}
-                      onChange={field.onChange}
-                      placeholder="Select languages"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                // Ensure field.value is always an array
+                const safeValue = Array.isArray(field.value) ? field.value : [];
+                return (
+                  <FormItem>
+                    <FormLabel>Languages Spoken</FormLabel>
+                    <FormControl>
+                      <MultiSelect
+                        options={languageOptions}
+                        selected={safeValue}
+                        onChange={(newValue) => field.onChange(newValue)}
+                        placeholder="Select languages"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             <CardFooter className="px-0 pt-4">
