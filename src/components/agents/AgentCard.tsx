@@ -2,8 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, PlayCircle, Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { MapPin, PlayCircle } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface AudioFile {
@@ -33,13 +32,15 @@ interface AgentCardProps {
   canSeeAudio: boolean;
   avatarImage: string | null;
   getAvatarFallback: (email: string, gender: string | null | undefined) => string;
+  onViewProfile: () => void;
 }
 
 const AgentCard: React.FC<AgentCardProps> = ({ 
   user, 
   canSeeAudio,
   avatarImage,
-  getAvatarFallback
+  getAvatarFallback,
+  onViewProfile
 }) => {
   const audioFiles = canSeeAudio ? user.audio_files : [];
   
@@ -102,14 +103,14 @@ const AgentCard: React.FC<AgentCardProps> = ({
             )}
           </div>
           
-          {/* View profile link */}
+          {/* View profile button */}
           <div className="mt-4 flex justify-end">
             <Button
-              asChild
               size="sm"
               variant="outline"
+              onClick={onViewProfile}
             >
-              <Link to={`/agents/${user.id}`}>View Full Profile</Link>
+              View Full Profile
             </Button>
           </div>
         </div>

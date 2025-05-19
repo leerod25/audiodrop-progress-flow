@@ -182,23 +182,28 @@ serve(async (req) => {
         return role === 'business';
       });
       console.log(`Filtered to show only business profiles: ${filteredUsers.length} found`);
-    } else if (!adminMode) {
-      // Default behavior - remove business users
+    } else {
+      // Filter out business users - they should never be visible in agent listings
       const beforeLength = filteredUsers.length;
       filteredUsers = filteredUsers.filter(user => {
         const role = roleMap.get(user.id);
-        return role !== 'business';
+        const keepProfile = role !== 'business';
+        
+        if (!keepProfile) {
+          console.log(`Filtering out business profile: ${user.id}, role: ${role}`);
+        }
+        
+        return keepProfile;
       });
-      console.log(`Filtered out business profiles: ${beforeLength - filteredUsers.length} removed`);
+      console.log(`Filtered out business profiles, remaining: ${filteredUsers.length} out of ${beforeLength}`);
       
-      // If not admin or business, can only see their own profile
-      if (currentUserRole !== 'business' && currentUserRole !== 'admin') {
+      // If not admin and not in admin mode, can only see their own profile
+      if (currentUserRole !== 'business' && currentUserRole !== 'admin' && !adminMode) {
         console.log("Non-business, non-admin user - restricting to only their own profile");
         filteredUsers = filteredUsers.filter(u => u.id === currentUserId);
         console.log(`After restricting to own profile: ${filteredUsers.length} profiles`);
       }
     }
-    // If adminMode is true and user is admin, we don't filter and show all users
     
     console.log(`Final filtered users: ${filteredUsers.length}, User role: ${currentUserRole}`);
     

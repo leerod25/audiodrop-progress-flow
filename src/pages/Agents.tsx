@@ -8,35 +8,14 @@ import AgentsPagination from '@/components/agents/AgentsPagination';
 import AuthAlert from '@/components/agents/AuthAlert';
 import AgentsLoading from '@/components/agents/AgentsLoading';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InfoIcon, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { InfoIcon, ShieldAlert, ShieldCheck, X } from "lucide-react";
 import { Navigate } from 'react-router-dom';
 import { useUsersData } from '@/hooks/useUsersData';
 import UsersList from '@/components/agents/UsersList';
 import { toast } from "sonner";
-
-interface AudioFile {
-  id: string;
-  title: string;
-  audio_url: string;
-  created_at: string;
-}
-
-interface User {
-  id: string;
-  email: string;
-  full_name?: string;
-  avatar_url?: string;
-  created_at: string;
-  audio_files: AudioFile[];
-  country?: string | null;
-  city?: string | null;
-  gender?: string | null;
-  years_experience?: string | null;
-  languages?: string[] | null;
-  is_available?: boolean;
-  role?: string;
-  is_verified?: boolean;
-}
+import { User } from '@/hooks/users/useUserFetch';
+import ProfessionalDetailsFormReadOnly from '@/components/ProfessionalDetailsFormReadOnly';
 
 const Agents: React.FC = () => {
   const { user, userRole } = useUserContext();
@@ -53,6 +32,7 @@ const Agents: React.FC = () => {
   } = useUsersData(user);
   
   const [forbidden, setForbidden] = useState(false);
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   
   // Pagination state
   const PAGE_SIZE = 9;
@@ -71,6 +51,16 @@ const Agents: React.FC = () => {
       toast.error("Failed to load agent profiles");
     });
   }, []);
+
+  // Function to view agent's professional details
+  const viewAgentDetails = (userId: string) => {
+    setSelectedAgentId(userId);
+  };
+
+  // Function to close the agent details dialog
+  const closeAgentDetails = () => {
+    setSelectedAgentId(null);
+  };
 
   // Redirect if forbidden
   if (forbidden) {
@@ -131,7 +121,7 @@ const Agents: React.FC = () => {
     );
   }
 
-  // Regular non-admin view (cards)
+  // Regular business user view (cards)
   console.log("Rendering regular view with userRole:", userRole, "and users:", users.length);
   return (
     <div className="container mx-auto py-8 px-4">
@@ -164,13 +154,6 @@ const Agents: React.FC = () => {
         </div>
       ) : loading ? (
         <AgentsLoading />
-      ) : ((userRole !== 'business' && userRole !== 'admin') && users.length === 0) ? (
-        <Alert className="my-4">
-          <ShieldAlert className="h-5 w-5" />
-          <AlertDescription>
-            You need a business account to view all agents. You can only see your own profile.
-          </AlertDescription>
-        </Alert>
       ) : users.length === 0 ? (
         <Alert className="my-4">
           <InfoIcon className="h-5 w-5" />
@@ -189,7 +172,7 @@ const Agents: React.FC = () => {
           {/* Display agent cards */}
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-6">
             {currentPageUsers.map((u) => {
-              // If user is a business or viewing their own profile, show audio
+              // Everyone can see basic agent data
               const canSeeAudio = userRole === 'business' || userRole === 'admin' || u.id === user?.id;
               const avatarImage = getAvatarImage(u.gender);
               
@@ -200,6 +183,7 @@ const Agents: React.FC = () => {
                   canSeeAudio={canSeeAudio}
                   avatarImage={avatarImage}
                   getAvatarFallback={getAvatarFallback}
+                  onViewProfile={() => viewAgentDetails(u.id)}
                 />
               );
             })}
@@ -215,6 +199,25 @@ const Agents: React.FC = () => {
           )}
         </>
       )}
+
+      {/* Agent Details Dialog */}
+      <Dialog open={!!selectedAgentId} onOpenChange={(open) => !open && closeAgentDetails()}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Agent Professional Details</span>
+              <Button variant="ghost" size="icon" onClick={closeAgentDetails}>
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+            <DialogDescription>
+              Review this agent's professional qualifications and experience
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedAgentId && <ProfessionalDetailsFormReadOnly userId={selectedAgentId} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 

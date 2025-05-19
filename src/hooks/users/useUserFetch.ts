@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
@@ -29,6 +28,8 @@ export interface User {
   years_experience?: string | null;
   languages?: string[] | null;
   is_available?: boolean;
+  role?: string;
+  salary_expectation?: number | null;
 }
 
 interface UsersResponse {
@@ -47,7 +48,7 @@ export const useUserFetch = (currentUser: any) => {
       
       // Call our edge function to get all users
       const { data, error } = await supabase.functions.invoke('list-users', {
-        body: { businessOnly: false, adminMode: true }  // Set adminMode to true to get all profiles
+        body: { businessOnly: false, adminMode: false }  // Set to false to exclude business profiles
       });
       
       if (error) {
@@ -67,14 +68,14 @@ export const useUserFetch = (currentUser: any) => {
           // Try to get additional profile data from the profiles table
           const { data: profileData } = await supabase
             .from('profiles')
-            .select('country, city, gender')
+            .select('country, city, gender, role')
             .eq('id', user.id)
             .single();
             
           // Try to get years experience and languages from professional_details
           const { data: professionalData } = await supabase
             .from('professional_details')
-            .select('years_experience, languages')
+            .select('years_experience, languages, salary_expectation')
             .eq('user_id', user.id)
             .single();
           
@@ -91,11 +92,6 @@ export const useUserFetch = (currentUser: any) => {
             validAudioFiles = user.audio_files.filter(file => 
               isValidUrl(file.audio_url)
             );
-            
-            // Log info about valid vs. total audio files
-            if (validAudioFiles.length !== user.audio_files.length) {
-              console.log(`User ${user.id}: ${validAudioFiles.length} valid audio files out of ${user.audio_files.length} total`);
-            }
           }
           
           return {
@@ -103,9 +99,11 @@ export const useUserFetch = (currentUser: any) => {
             country: profileData?.country || null,
             city: profileData?.city || null,
             gender: profileData?.gender || null,
+            role: profileData?.role || 'agent',
             is_available: !!availabilityData, // Available if they have professional details
             years_experience: professionalData?.years_experience || null,
             languages: professionalData?.languages || null,
+            salary_expectation: professionalData?.salary_expectation || null,
             audio_files: validAudioFiles
           };
         }));
