@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, FileAudio, CheckCircle, XCircle, Star, Play } from 'lucide-react';
+import { User, FileAudio, CheckCircle, XCircle, Star, Play, Pause } from 'lucide-react';
 import { Agent } from '@/types/Agent';
 
 interface AgentCardProps {
@@ -32,6 +32,9 @@ const AgentCard: React.FC<AgentCardProps> = ({
     console.log("View All Recordings clicked for agent:", agent.id);
     showAgentDetails(agent);
   };
+
+  // Determine if this agent's audio is currently playing
+  const isThisAgentPlaying = isPlaying && agent.id === currentAudio;
   
   return (
     <Card 
@@ -112,8 +115,12 @@ const AgentCard: React.FC<AgentCardProps> = ({
                   openAudioModal(agent);
                 }}
               >
-                <Play className="mr-1 h-4 w-4" />
-                Play Sample
+                {isThisAgentPlaying ? (
+                  <Pause className="mr-1 h-4 w-4" />
+                ) : (
+                  <Play className="mr-1 h-4 w-4" />
+                )}
+                {isThisAgentPlaying ? 'Pause' : 'Play Sample'}
               </Button>
             )}
             

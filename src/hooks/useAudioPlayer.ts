@@ -46,10 +46,10 @@ export function useAudioPlayer() {
     }
   }, [audioRef.current, isLoading]);
 
-  // Play/pause audio
+  // Toggle Play/Pause audio
   const toggleAudio = (audioUrl: string) => {
     try {
-      console.log('Attempting to play audio:', audioUrl);
+      console.log('Toggle audio:', audioUrl);
       
       if (currentAudio === audioUrl && isPlaying && audioRef.current) {
         // Pause current audio
@@ -58,25 +58,38 @@ export function useAudioPlayer() {
         return;
       }
       
-      // Stop any currently playing audio
-      if (audioRef.current) {
-        audioRef.current.pause();
+      if (currentAudio !== audioUrl) {
+        // Stop any currently playing audio
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+        
+        // Create new audio instance or reuse existing
+        if (!audioRef.current) {
+          audioRef.current = new Audio();
+        }
+        
+        // Set new source and prepare for playback
+        const audio = audioRef.current;
+        audio.src = audioUrl;
+        audio.currentTime = 0;
+        setCurrentAudio(audioUrl);
+        setIsLoading(true);
+        
+        // Try to play immediately (may be prevented by browser policies)
+        audio.load();
+      } else {
+        // Same audio, but we're resuming playback
+        audioRef.current.play()
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch(err => {
+            console.error('Error resuming audio playback:', err);
+            toast.error('Failed to resume audio playback');
+          });
       }
-      
-      // Create new audio instance or reuse existing
-      if (!audioRef.current) {
-        audioRef.current = new Audio();
-      }
-      
-      // Set new source and prepare for playback
-      const audio = audioRef.current;
-      audio.src = audioUrl;
-      audio.currentTime = 0;
-      setCurrentAudio(audioUrl);
-      setIsLoading(true);
-      
-      // Try to play immediately (may be prevented by browser policies)
-      audio.load();
       
       // Update UI state - actual playback will happen in canplaythrough event
       setIsPlaying(true);
@@ -92,8 +105,9 @@ export function useAudioPlayer() {
 
   // Stop any playing audio
   const stopAudio = () => {
-    if (audioRef.current && isPlaying) {
+    if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.currentTime = 0;  // Reset to beginning
       setIsPlaying(false);
     }
   };

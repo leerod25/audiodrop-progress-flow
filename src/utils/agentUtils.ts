@@ -32,11 +32,12 @@ export const formatDate = (dateString: string): string => {
 };
 
 // Add this to fix the error in Agents.tsx
-export const convertUserToAgent = (user: User) => {
+export const convertUserToAgent = (user: User, team: string[] = []) => {
   return {
     id: user.id,
+    email: user.email || '',
+    created_at: user.created_at || new Date().toISOString(),
     name: user.full_name || 'Unnamed Agent',
-    email: user.email,
     location: user.city && user.country ? `${user.city}, ${user.country}` : 'Location not provided',
     experience: user.years_experience || 'Not specified',
     languages: user.languages || [],
@@ -45,10 +46,15 @@ export const convertUserToAgent = (user: User) => {
     avatar: user.avatar_url || '',
     gender: user.gender || 'Not specified',
     has_audio: user.audio_files && user.audio_files.length > 0,
+    is_favorite: team ? team.includes(user.id) : false,
     audioUrls: user.audio_files?.map(file => ({
       id: file.id,
       title: file.title,
-      url: file.audio_url
-    })) || []
+      url: file.audio_url,
+      updated_at: file.created_at
+    })) || [],
+    country: user.country || null,
+    city: user.city || null,
+    computer_skill_level: user.computer_skill_level || null
   };
 };

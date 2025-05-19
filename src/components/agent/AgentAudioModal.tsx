@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Star } from 'lucide-react';
+import { Play, Pause, Stop, Star } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Agent } from '@/types/Agent';
+import AudioPlayer from '@/components/AudioPlayer';
 
 interface AgentAudioModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ interface AgentAudioModalProps {
   currentAgent: Agent | null;
   isPlaying: boolean;
   toggleAudio: (audioUrl: string) => void;
+  stopAudio: () => void;
   closeAudioModal: () => void;
   toggleFavorite: (agentId: string, currentStatus: boolean) => void;
   isBusinessAccount: boolean;
@@ -30,6 +32,7 @@ const AgentAudioModal: React.FC<AgentAudioModalProps> = ({
   currentAgent,
   isPlaying,
   toggleAudio,
+  stopAudio,
   closeAudioModal,
   toggleFavorite,
   isBusinessAccount,
@@ -37,6 +40,11 @@ const AgentAudioModal: React.FC<AgentAudioModalProps> = ({
   showAgentDetails,
 }) => {
   if (!currentAgent) return null;
+  
+  const audioUrl = currentAgent.audio_url || 
+                  (currentAgent.audioUrls && currentAgent.audioUrls.length > 0 ? 
+                   currentAgent.audioUrls[0].url : 
+                   null);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -55,24 +63,45 @@ const AgentAudioModal: React.FC<AgentAudioModalProps> = ({
               {currentAgent.country} {currentAgent.city ? `· ${currentAgent.city}` : ''}
             </div>
             
-            <div className="flex justify-center">
-              <Button
-                onClick={() => currentAgent.audio_url && toggleAudio(currentAgent.audio_url)}
-                className="mx-auto"
-              >
-                {isPlaying ? (
-                  <>
-                    <Pause className="mr-2 h-4 w-4" />
-                    Pause
-                  </>
-                ) : (
-                  <>
-                    <Play className="mr-2 h-4 w-4" />
-                    Play
-                  </>
+            {audioUrl ? (
+              <>
+                <div className="flex justify-center mb-4 space-x-2">
+                  <Button
+                    onClick={() => toggleAudio(audioUrl)}
+                    className="bg-green-500 hover:bg-green-600 text-white"
+                  >
+                    {isPlaying ? (
+                      <>
+                        <Pause className="mr-2 h-4 w-4" />
+                        Pause
+                      </>
+                    ) : (
+                      <>
+                        <Play className="mr-2 h-4 w-4" />
+                        Play
+                      </>
+                    )}
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={stopAudio}
+                    disabled={!isPlaying}
+                  >
+                    <Stop className="mr-2 h-4 w-4" />
+                    Stop
+                  </Button>
+                </div>
+                
+                {isPlaying && (
+                  <div className="mt-2">
+                    <AudioPlayer audioUrl={audioUrl} suppressErrors={true} />
+                  </div>
                 )}
-              </Button>
-            </div>
+              </>
+            ) : (
+              <p className="text-center text-gray-500">No audio sample available</p>
+            )}
           </div>
           
           {isBusinessAccount && !currentAgent.is_favorite && (

@@ -1,6 +1,8 @@
 
 export interface Agent {
   id: string;
+  email: string;
+  created_at: string;
   has_audio: boolean;
   audio_url?: string | null;
   audioUrls?: {
@@ -18,7 +20,7 @@ export interface Agent {
   
   // Add private fields that only admins should access
   full_name?: string | null;
-  email?: string | null;
   phone?: string | null;
   bio?: string | null;
+  whatsapp?: string | null;
 }
