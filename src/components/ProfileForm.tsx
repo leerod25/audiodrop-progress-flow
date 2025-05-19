@@ -20,7 +20,6 @@ import { toast } from 'sonner';
 import { useUserContext } from '@/contexts/UserContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
-import { MultiSelect } from '@/components/ui/multi-select';
 
 // Define the form schema with Zod
 const profileFormSchema = z.object({
@@ -30,25 +29,12 @@ const profileFormSchema = z.object({
   city: z.string().optional(),
   gender: z.string().optional(),
   years_experience: z.string().optional(),
-  languages: z.array(z.string()).optional().default([]),
+  email: z.string().email('Please enter a valid email').optional(),
+  phone: z.string().optional(),
+  whatsapp: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
-
-// List of languages for the multi-select
-const languageOptions = [
-  { label: 'English', value: 'English' },
-  { label: 'Spanish', value: 'Spanish' },
-  { label: 'French', value: 'French' },
-  { label: 'German', value: 'German' },
-  { label: 'Italian', value: 'Italian' },
-  { label: 'Portuguese', value: 'Portuguese' },
-  { label: 'Russian', value: 'Russian' },
-  { label: 'Mandarin', value: 'Mandarin' },
-  { label: 'Japanese', value: 'Japanese' },
-  { label: 'Arabic', value: 'Arabic' },
-  { label: 'Hindi', value: 'Hindi' },
-];
 
 // List of countries for the select
 const countries = [
@@ -78,7 +64,9 @@ export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
       city: '',
       gender: '',
       years_experience: '',
-      languages: [],
+      email: '',
+      phone: '',
+      whatsapp: '',
     },
   });
 
@@ -92,8 +80,9 @@ export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
         city: initialData.city || '',
         gender: initialData.gender || '',
         years_experience: initialData.years_experience || '',
-        // Ensure languages is always an array
-        languages: Array.isArray(initialData.languages) ? initialData.languages : [],
+        email: initialData.email || '',
+        phone: initialData.phone || '',
+        whatsapp: initialData.whatsapp || '',
       });
     }
   }, [initialData, form]);
@@ -116,8 +105,9 @@ export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
           city: data.city,
           gender: data.gender,
           years_experience: data.years_experience,
-          // Ensure languages is always an array before saving
-          languages: Array.isArray(data.languages) ? data.languages : [],
+          email: data.email,
+          phone: data.phone,
+          whatsapp: data.whatsapp,
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId || user.id);
@@ -146,7 +136,7 @@ export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
       <CardHeader>
         <CardTitle>Profile Information</CardTitle>
         <CardDescription>
-          Update your personal information and preferences
+          Update your personal information and preferences (Private - Only visible to you and admins)
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -289,28 +279,50 @@ export default function ProfileForm({ userId, initialData }: ProfileFormProps) {
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="languages"
-              render={({ field }) => {
-                // Ensure field.value is always an array
-                const safeValue = Array.isArray(field.value) ? field.value : [];
-                return (
+            {/* Contact Information */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Languages Spoken</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <MultiSelect
-                        options={languageOptions}
-                        selected={safeValue}
-                        onChange={(newValue) => field.onChange(newValue)}
-                        placeholder="Select languages"
-                      />
+                      <Input type="email" placeholder="Your email" {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
-                );
-              }}
-            />
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your phone number" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="whatsapp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>WhatsApp</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your WhatsApp number" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <CardFooter className="px-0 pt-4">
               <Button type="submit" disabled={isLoading} className="ml-auto">

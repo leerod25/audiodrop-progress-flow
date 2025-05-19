@@ -79,7 +79,9 @@ const Profile = () => {
         {isAgent && !profile?.full_name && <ProfileIncompleteAlert isVisible={true} />}
         {isBusiness && !profile?.company_name && !profile?.business_name && <BusinessProfileIncompleteAlert isVisible={true} />}
 
-        <Card className="p-6 shadow-sm">
+        <Card className="p-6 shadow-sm border-blue-200 border-2">
+          <h2 className="text-xl font-semibold mb-2">Private Information</h2>
+          <p className="text-sm text-gray-500 mb-4">This information is only visible to you and administrators</p>
           {isBusiness ? (
             <BusinessProfileForm userId={user?.id} initialData={profile} />
           ) : (
@@ -88,7 +90,9 @@ const Profile = () => {
         </Card>
 
         {isAgent && user?.id && (
-          <Card className="p-6 shadow-sm">
+          <Card className="p-6 shadow-sm border-green-200 border-2">
+            <h2 className="text-xl font-semibold mb-2">Public Professional Details</h2>
+            <p className="text-sm text-gray-500 mb-4">This information is visible to everyone</p>
             <ProfessionalDetailsForm />
           </Card>
         )}
