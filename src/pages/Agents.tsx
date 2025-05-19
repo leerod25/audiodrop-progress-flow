@@ -1,155 +1,47 @@
-import React, { useState, useEffect, useMemo } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { useUsersData } from '@/hooks/useUsersData';
 import { Container } from '@/components/ui/container';
-import AuthAlert from '@/components/agents/AuthAlert';
-import AgentDetailsDialog from '@/components/agents/AgentDetailsDialog';
-import { useIsMobile } from '@/hooks/use-mobile';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
-import AgentFilterBar from '@/components/agents/AgentFilterBar';
-import AgentsHeroBanner from '@/components/agents/AgentsHeroBanner';
-import AgentsGrid from '@/components/agents/AgentsGrid';
-import AgentListPagination from '@/components/agents/AgentListPagination';
+import { User } from '@/hooks/users/useUserFetch';
+import { Agent } from '@/types/Agent';
 import { convertUserToAgent } from '@/utils/agentUtils';
 import { sampleAgents } from '@/data/sampleAgents';
-import { User } from '@/hooks/users/useUserFetch';
-import AgentListCard from '@/components/agent/AgentListCard';
-import { Agent } from '@/types/Agent';
+import AgentsHeroBanner from '@/components/agents/AgentsHeroBanner';
+import AgentFilterBar from '@/components/agents/AgentFilterBar';
+import AuthAlert from '@/components/agents/AuthAlert';
+import AgentDetailsDialog from '@/components/agents/AgentDetailsDialog';
+import AgentsGrid from '@/components/agents/AgentsGrid';
+import AgentListPagination from '@/components/agents/AgentListPagination';
+import { useAgentsPage } from '@/hooks/agents/useAgentsPage';
 
 const Agents = () => {
-  const { user, userRole } = useUserContext();
-  const { users: apiUsers, loading, error, expandedUser, playingAudio, fetchAllUsers, toggleUserExpand, handleAudioPlay, toggleAvailability } = useUsersData(user);
-  const [page, setPage] = useState(1);
+  const { user } = useUserContext();
+  const { users: apiUsers, loading, error, expandedUser, playingAudio, fetchAllUsers } = useUsersData(user);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
-  const isMobile = useIsMobile();
-
-  // Team state: store IDs of users added to team
-  const [team, setTeam] = useState<string[]>([]);
   
-  // Audio playback state
-  const [playingAgent, setPlayingAgent] = useState<{
-    id: string;
-    url: string;
-  } | null>(null);
-  
-  // Process users to remove any contact information and replace full_name with agent ID
-  const processedApiUsers = useMemo(() => {
-    if (!apiUsers) return [];
-    
-    return apiUsers.map(user => ({
-      ...user,
-      email: '', // Remove email
-      full_name: `Agent ID: ${user.id.substring(0, 8)}`, // Replace name with agent ID
-      // Remove any other potential contact information
-      phone: undefined, 
-      whatsapp: undefined
-    }));
-  }, [apiUsers]);
-  
-  // Use sample agents if not logged in, or processed API users if logged in
-  const users = user ? processedApiUsers : sampleAgents;
-  
-  // Filter states
-  const [filters, setFilters] = useState({
-    searchQuery: '',
-    country: '',
-    city: '',
-    availableOnly: false,
-    experiencedOnly: false
-  });
-
-  const toggleTeamMember = (id: string) => {
-    setTeam(prev =>
-      prev.includes(id) ? prev.filter(uid => uid !== id) : [...prev, id]
-    );
-  };
-  
-  // Get unique countries and cities from the data
-  const countries = useMemo(() => {
-    return Array.from(new Set(users.map(user => user.country).filter(Boolean) as string[])).sort();
-  }, [users]);
-
-  const cities = useMemo(() => {
-    // If country filter is applied, only show cities from that country
-    const filteredUsers = filters.country 
-      ? users.filter(user => user.country === filters.country)
-      : users;
-      
-    return Array.from(new Set(filteredUsers.map(user => user.city).filter(Boolean) as string[])).sort();
-  }, [users, filters.country]);
-  
-  // Filter users based on filters
-  const filteredUsers = useMemo(() => {
-    return users.filter(user => {
-      // Text search filter
-      if (filters.searchQuery) {
-        const query = filters.searchQuery.toLowerCase();
-        const idMatch = user.id?.toLowerCase().includes(query) || false;
-        const locationMatch = 
-          (user.country?.toLowerCase().includes(query) || false) || 
-          (user.city?.toLowerCase().includes(query) || false);
-          
-        if (!idMatch && !locationMatch) return false;
-      }
-      
-      // Country filter
-      if (filters.country && user.country !== filters.country) {
-        return false;
-      }
-      
-      // City filter
-      if (filters.city && user.city !== filters.city) {
-        return false;
-      }
-      
-      // Availability filter
-      if (filters.availableOnly && !user.is_available) {
-        return false;
-      }
-      
-      // Experience filter (3+ years)
-      if (filters.experiencedOnly) {
-        const years = parseInt(user.years_experience || '0');
-        if (years < 3) return false;
-      }
-      
-      return true;
-    });
-  }, [users, filters]);
-
-  // Calculate pagination
-  const PAGE_SIZE = 9;
-  const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE);
-  const startIndex = (page - 1) * PAGE_SIZE;
-  const currentPageUsers = filteredUsers.slice(startIndex, startIndex + PAGE_SIZE);
-  
-  // Reset page when filter changes
-  useEffect(() => {
-    setPage(1);
-  }, [filters]);
+  // Use our new hook for most of the page logic
+  const {
+    processedUsers,
+    currentPageUsers,
+    filteredUsers,
+    playingAgent,
+    team,
+    page,
+    totalPages,
+    filters,
+    countries,
+    cities,
+    handleFilterChange,
+    handlePlaySample,
+    toggleTeamMember,
+    setPage
+  } = useAgentsPage({ apiUsers, user, sampleAgents });
   
   const viewAgentDetails = (userId: string) => {
     setSelectedAgentId(userId);
-  };
-
-  const handleFilterChange = (newFilters: typeof filters) => {
-    setFilters(newFilters);
-  };
-
-  // New function to handle playing audio samples
-  const handlePlaySample = (agent: Agent) => {
-    // If this agent is already playing, stop it
-    if (playingAgent?.id === agent.id) {
-      setPlayingAgent(null);
-      return;
-    }
-    
-    // Otherwise, play the first available audio from this agent
-    const firstClip = agent.audioUrls?.[0]?.url;
-    if (firstClip) {
-      setPlayingAgent({ id: agent.id, url: firstClip });
-    }
   };
 
   return (
@@ -180,37 +72,14 @@ const Agents = () => {
         />
         
         {/* Agent Grid with audio playback */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-          {currentPageUsers.map(user => {
-            const agent = convertUserToAgent(user as User);
-            return (
-              <div key={agent.id} className="flex flex-col">
-                <AgentListCard 
-                  agent={agent}
-                  onViewDetails={() => viewAgentDetails(agent.id)}
-                  onAddToTeam={() => toggleTeamMember(agent.id)}
-                  onPlaySample={() => handlePlaySample(agent)}
-                />
-                
-                {/* Show audio player only for the currently playing agent */}
-                {playingAgent?.id === agent.id && (
-                  <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                    <audio 
-                      controls 
-                      autoPlay 
-                      className="w-full"
-                      onEnded={() => setPlayingAgent(null)}
-                    >
-                      <source src={playingAgent.url} type="audio/mpeg" />
-                      <source src={playingAgent.url} type="audio/webm" />
-                      Your browser doesn't support audio playback.
-                    </audio>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <AgentsGrid
+          loading={loading}
+          currentPageUsers={currentPageUsers}
+          viewAgentDetails={viewAgentDetails}
+          toggleTeamMember={toggleTeamMember}
+          convertToAgent={(user: User) => convertUserToAgent(user)}
+          handlePlaySample={handlePlaySample}
+        />
         
         {/* Pagination */}
         <AgentListPagination 
