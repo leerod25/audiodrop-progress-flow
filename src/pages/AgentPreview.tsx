@@ -5,7 +5,7 @@ import { useUsersData } from '@/hooks/useUsersData';
 import AgentDetailCard from '@/components/agent/AgentDetailCard';
 import AgentDetailsDialog from '@/components/agents/AgentDetailsDialog';
 import { Button } from "@/components/ui/button";
-import { FileAudio } from 'lucide-react';
+import { FileAudio, Info } from 'lucide-react';
 
 const AgentPreview: React.FC = () => {
   const { user, userRole } = useUserContext();
@@ -53,14 +53,26 @@ const AgentPreview: React.FC = () => {
             formatUserId={(id) => id.substring(0, 8) + '...'}
             toggleFavorite={handleToggleFavorite}
           />
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => openAgentDetails(a.id)}
-          >
-            <FileAudio className="mr-1" />
-            Listen to Audio & View Details
-          </Button>
+          <div className="flex space-x-2 mt-2">
+            <Button 
+              variant="default" 
+              className="bg-green-500 hover:bg-green-600"
+              size="sm"
+              onClick={() => openAgentDetails(a.id)}
+            >
+              <FileAudio className="mr-1" />
+              Listen to Audio
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => openAgentDetails(a.id)}
+            >
+              <Info className="mr-1" />
+              View Agent Details
+            </Button>
+          </div>
         </div>
       ))}
       
