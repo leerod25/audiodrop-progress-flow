@@ -1,87 +1,46 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
+import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { ProfessionalDetails } from './types';
 import LanguagesSection from './readonly/LanguagesSection';
 import ExperienceSection from './readonly/ExperienceSection';
 import SkillsSection from './readonly/SkillsSection';
 import ComputerSkillsSection from './readonly/ComputerSkillsSection';
 import AvailabilitySection from './readonly/AvailabilitySection';
-import { ProfessionalDetailsData } from './types';
 
 interface ProfessionalDetailsFormReadOnlyProps {
-  userId: string;
+  professionalDetails: ProfessionalDetails | null;
 }
 
-const ProfessionalDetailsFormReadOnly = ({ userId }: ProfessionalDetailsFormReadOnlyProps) => {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<ProfessionalDetailsData>({
-    languages: [],
-    specialized_skills: [],
-    additional_skills: [],
-    years_experience: '',
-    availability: [],
-    computer_skill_level: '',
-  });
-
-  useEffect(() => {
-    const fetchProfessionalDetails = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('professional_details')
-          .select('*')
-          .eq('user_id', userId)
-          .single();
-
-        if (error && error.code !== 'PGRST116') {
-          console.error("Error fetching professional details:", error);
-        }
-
-        if (data) {
-          const formattedData = {
-            languages: data.languages || [],
-            specialized_skills: data.specialized_skills || [],
-            additional_skills: data.additional_skills || [],
-            years_experience: data.years_experience || '',
-            availability: data.availability || [],
-            computer_skill_level: data.computer_skill_level || '',
-          };
-          
-          setData(formattedData);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (userId) {
-      fetchProfessionalDetails();
-    }
-  }, [userId]);
-
-  if (loading) {
+const ProfessionalDetailsFormReadOnly: React.FC<ProfessionalDetailsFormReadOnlyProps> = ({ 
+  professionalDetails 
+}) => {
+  if (!professionalDetails) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-12 w-full" />
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <p className="text-center text-gray-500">No professional details available</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="space-y-6 p-2">
-      <LanguagesSection languages={data.languages} />
-      <ExperienceSection experience={data.years_experience} />
-      <SkillsSection 
-        specializedSkills={data.specialized_skills}
-        additionalSkills={data.additional_skills}
+    <div className="space-y-4">
+      <ExperienceSection yearsExperience={professionalDetails.years_experience || ''} />
+      
+      <LanguagesSection languages={professionalDetails.languages || []} />
+      
+      <SkillsSection skills={professionalDetails.skills || []} />
+      
+      <ComputerSkillsSection computerSkills={professionalDetails.computer_skills || []} />
+      
+      <AvailabilitySection 
+        availableWeekends={professionalDetails.available_weekends}
+        availableNights={professionalDetails.available_nights}
+        availableFullTime={professionalDetails.available_full_time}
+        preferredSchedule={professionalDetails.preferred_schedule || ''}
       />
-      <ComputerSkillsSection skillLevel={data.computer_skill_level} />
-      <AvailabilitySection availability={data.availability} />
     </div>
   );
 };

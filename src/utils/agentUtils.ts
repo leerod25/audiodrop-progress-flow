@@ -1,34 +1,59 @@
+import { User } from './../hooks/useUserFetch';
 
-import { User } from '@/hooks/users/useUserFetch';
-import { Agent } from '@/types/Agent';
+export interface UserProfile {
+  id: string;
+  displayName: string;
+  email: string;
+  location: string;
+  bio: string;
+  skills: string[];
+  joinDate: string;
+  lastActive: string;
+}
 
-/**
- * Converts a User object to an Agent object
- */
-export const convertUserToAgent = (user: User, teamIds: string[] = []): Agent => {
-  // Get audio files if they exist
-  const audioUrls = user.audio_files ? 
-    user.audio_files.map(file => ({
-      id: file.id,
-      title: file.title,
-      url: file.audio_url,
-      updated_at: file.created_at
-    })) : 
-    undefined;
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
+export const formatUserProfile = (user: User): UserProfile => {
+  // Check if user exists
+  if (!user) {
+    return {
+      id: '',
+      displayName: '',
+      email: '',
+      location: '',
+      bio: '',
+      skills: [],
+      joinDate: '',
+      lastActive: ''
+    };
+  }
+
+  // Extract the profile info from the user
+  const displayName = user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Anonymous';
+  const location = user.city && user.country ? `${user.city}, ${user.country}` : user.city || user.country || 'Not specified';
+  // Remove properties that don't exist on the User type
+  const bio = user.user_metadata?.biography || 'No biography provided';
+  const skills = user.user_metadata?.computer_skills || [];
+  
+  // Format the dates
+  const joinDate = user.created_at ? formatDate(user.created_at) : 'Unknown';
+  const lastActive = user.last_sign_in_at ? formatDate(user.last_sign_in_at) : 'Never';
   
   return {
     id: user.id,
-    has_audio: user.audio_files && user.audio_files.length > 0,
-    audioUrls: audioUrls,
-    country: user.country || null,
-    city: user.city || null,
-    gender: user.gender || null,
-    is_favorite: teamIds.includes(user.id),
-    // Add private fields as well (they'll only be shown to admins)
-    full_name: user.full_name || null,
-    email: user.email || null,
-    phone: user.phone_number || null, // Updated from phone to phone_number
-    bio: user.biography || null, // Updated from bio to biography
-    computer_skill_level: user.computer_skills || null // Updated from computer_skill_level to computer_skills
+    displayName,
+    email: user.email || '',
+    location,
+    bio,
+    skills,
+    joinDate,
+    lastActive
   };
 };
