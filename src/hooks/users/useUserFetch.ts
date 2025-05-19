@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
@@ -46,7 +47,7 @@ export const useUserFetch = (currentUser: any) => {
       
       // Call our edge function to get all users
       const { data, error } = await supabase.functions.invoke('list-users', {
-        body: { businessOnly: false }  // Set to false to get agent profiles
+        body: { businessOnly: false, adminMode: true }  // Set adminMode to true to get all profiles
       });
       
       if (error) {
