@@ -10,6 +10,8 @@ import { FileAudio, Info } from 'lucide-react';
 const AgentPreview: React.FC = () => {
   const { user, userRole } = useUserContext();
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  // Flag to indicate if audio tab should be shown by default
+  const [showAudioTab, setShowAudioTab] = useState(false);
   
   // pull *all* non-business users + their audio via your Edge Function
   const {
@@ -24,8 +26,9 @@ const AgentPreview: React.FC = () => {
     // You would implement actual favorite toggling logic here
   }
 
-  // Open agent details dialog
-  const openAgentDetails = (agentId: string) => {
+  // Open agent details dialog with option to show audio tab directly
+  const openAgentDetails = (agentId: string, showAudio: boolean = false) => {
+    setShowAudioTab(showAudio);
     setSelectedAgentId(agentId);
   };
 
@@ -39,8 +42,8 @@ const AgentPreview: React.FC = () => {
         <div key={a.id} className="mb-8">
           <AgentDetailCard
             agent={{
-              ...a,                               // include audio_files or audioUrls
-              has_audio: a.audio_files?.length > 0 || false, // Add the missing has_audio property
+              ...a,
+              has_audio: a.audio_files?.length > 0 || false,
               audioUrls: a.audio_files?.map((file, idx) => ({
                 id: file.id || String(idx),
                 title: file.title || `Recording ${idx + 1}`,
@@ -56,9 +59,9 @@ const AgentPreview: React.FC = () => {
           <div className="flex space-x-2 mt-2">
             <Button 
               variant="default" 
-              className="bg-green-500 hover:bg-green-600"
+              className="bg-green-600 hover:bg-green-700 text-white"
               size="sm"
-              onClick={() => openAgentDetails(a.id)}
+              onClick={() => openAgentDetails(a.id, true)}
             >
               <FileAudio className="mr-1" />
               Listen to Audio
@@ -67,19 +70,20 @@ const AgentPreview: React.FC = () => {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => openAgentDetails(a.id)}
+              onClick={() => openAgentDetails(a.id, false)}
             >
               <Info className="mr-1" />
-              View Agent Details
+              View Details
             </Button>
           </div>
         </div>
       ))}
       
-      {/* Agent Details Dialog */}
+      {/* Agent Details Dialog with audio tab selection */}
       <AgentDetailsDialog
         selectedAgentId={selectedAgentId}
         onClose={() => setSelectedAgentId(null)}
+        defaultTab={showAudioTab ? "recordings" : "professional"}
       />
     </div>
   );

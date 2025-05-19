@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { 
   Dialog,
@@ -19,11 +18,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 interface AgentDetailsDialogProps {
   selectedAgentId: string | null;
   onClose: () => void;
+  defaultTab?: "recordings" | "professional";
 }
 
 const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({ 
   selectedAgentId, 
-  onClose 
+  onClose,
+  defaultTab = "recordings" 
 }) => {
   const { userRole, user } = useUserContext();
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -153,7 +154,7 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
           <div className="p-8 text-center">Loading agent details...</div>
         ) : agent ? (
           <div className="space-y-6">
-            <Tabs defaultValue="recordings">
+            <Tabs defaultValue={defaultTab}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="recordings">Audio Recordings</TabsTrigger>
                 <TabsTrigger value="professional">Professional Details</TabsTrigger>
