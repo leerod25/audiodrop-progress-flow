@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { InfoIcon, ShieldAlert, ShieldCheck } from "lucide-react";
 import { Navigate } from 'react-router-dom';
 import { useUsersData } from '@/hooks/useUsersData';
 import UsersList from '@/components/agents/UsersList';
+import { toast } from "sonner";
 
 interface AudioFile {
   id: string;
@@ -62,6 +63,15 @@ const Agents: React.FC = () => {
   const startIndex = (page - 1) * PAGE_SIZE;
   const currentPageUsers = users.slice(startIndex, startIndex + PAGE_SIZE);
   
+  // Force refresh on initial load
+  useEffect(() => {
+    console.log("Agents component mounted, userRole:", userRole);
+    fetchAllUsers().catch(err => {
+      console.error("Failed to fetch users on initial load:", err);
+      toast.error("Failed to load agent profiles");
+    });
+  }, []);
+
   // Redirect if forbidden
   if (forbidden) {
     return <Navigate to="/" replace />;
@@ -122,6 +132,7 @@ const Agents: React.FC = () => {
   }
 
   // Regular non-admin view (cards)
+  console.log("Rendering regular view with userRole:", userRole, "and users:", users.length);
   return (
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-6">Agent Profiles ({users.length})</h1>
@@ -131,6 +142,11 @@ const Agents: React.FC = () => {
       
       {/* Show auth alert for non-authenticated users */}
       {!user && <AuthAlert />}
+      
+      {/* Debug info */}
+      <div className="text-sm text-gray-500 mb-4">
+        Role: {userRole || 'Unknown'} | User ID: {user?.id?.substring(0, 8) || 'Not logged in'}
+      </div>
       
       {/* Error state */}
       {error ? (
@@ -154,6 +170,19 @@ const Agents: React.FC = () => {
           <AlertDescription>
             You need a business account to view all agents. You can only see your own profile.
           </AlertDescription>
+        </Alert>
+      ) : users.length === 0 ? (
+        <Alert className="my-4">
+          <InfoIcon className="h-5 w-5" />
+          <AlertDescription>
+            No agent profiles found. Please try refreshing or check back later.
+          </AlertDescription>
+          <Button 
+            onClick={() => fetchAllUsers()} 
+            className="mt-4"
+          >
+            Refresh
+          </Button>
         </Alert>
       ) : (
         <>

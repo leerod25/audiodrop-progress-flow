@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 
@@ -68,6 +69,8 @@ serve(async (req) => {
     let currentUserRole = 'anonymous';
     let currentUserId = null;
     
+    console.log("Request received with auth header:", authHeader ? "provided" : "not provided");
+    
     // If auth header exists, validate the user
     if (authHeader && authHeader.startsWith('Bearer ')) {
       try {
@@ -76,6 +79,7 @@ serve(async (req) => {
         
         if (!authError && user) {
           currentUserId = user.id;
+          console.log("Authenticated user ID:", currentUserId);
           
           // Check user role
           const { data: roleData } = await supabaseAdmin
@@ -84,7 +88,22 @@ serve(async (req) => {
             .eq('user_id', user.id)
             .single();
           
-          currentUserRole = roleData?.role || 'agent';
+          if (roleData && roleData.role) {
+            currentUserRole = roleData.role;
+          } else {
+            // Check profiles table as fallback
+            const { data: profileData } = await supabaseAdmin
+              .from('profiles')
+              .select('role')
+              .eq('id', user.id)
+              .single();
+              
+            currentUserRole = profileData?.role || 'agent';
+          }
+          
+          console.log("User role determined as:", currentUserRole);
+        } else {
+          console.log("Auth error:", authError);
         }
       } catch (authError) {
         console.error('Auth verification error:', authError);
@@ -94,7 +113,10 @@ serve(async (req) => {
     
     // For security, only allow admin mode if user is admin
     const isAdmin = currentUserRole === 'admin';
-    if ((businessOnly || adminMode) && !isAdmin) {
+    const isBusiness = currentUserRole === 'business';
+    
+    // If businessOnly requested but user isn't admin
+    if (businessOnly && !isAdmin) {
       // Just return empty list instead of error for non-admins
       return new Response(JSON.stringify({ users: [] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -112,6 +134,8 @@ serve(async (req) => {
         status: 500,
       });
     }
+    
+    console.log("Total users found:", usersData.users.length);
     
     // Get user roles to filter profiles
     const { data: userRoles, error: rolesError } = await supabaseAdmin
@@ -132,6 +156,22 @@ serve(async (req) => {
       roleMap.set(userRole.user_id, userRole.role);
     });
     
+    // Also check profiles table for roles
+    const { data: profileRoles, error: profileRolesError } = await supabaseAdmin
+      .from('profiles')
+      .select('id, role');
+    
+    if (!profileRolesError && profileRoles) {
+      profileRoles.forEach(profile => {
+        // Only set from profile if not already in role map
+        if (!roleMap.has(profile.id) && profile.role) {
+          roleMap.set(profile.id, profile.role);
+        }
+      });
+    }
+    
+    console.log("User roles map built with", roleMap.size, "entries");
+    
     // Filter users based on role and current user's permissions
     let filteredUsers = usersData.users;
     
@@ -144,17 +184,23 @@ serve(async (req) => {
       console.log(`Filtered to show only business profiles: ${filteredUsers.length} found`);
     } else if (!adminMode) {
       // Default behavior - remove business users
+      const beforeLength = filteredUsers.length;
       filteredUsers = filteredUsers.filter(user => {
         const role = roleMap.get(user.id);
         return role !== 'business';
       });
+      console.log(`Filtered out business profiles: ${beforeLength - filteredUsers.length} removed`);
       
       // If not admin or business, can only see their own profile
       if (currentUserRole !== 'business' && currentUserRole !== 'admin') {
+        console.log("Non-business, non-admin user - restricting to only their own profile");
         filteredUsers = filteredUsers.filter(u => u.id === currentUserId);
+        console.log(`After restricting to own profile: ${filteredUsers.length} profiles`);
       }
     }
     // If adminMode is true and user is admin, we don't filter and show all users
+    
+    console.log(`Final filtered users: ${filteredUsers.length}, User role: ${currentUserRole}`);
     
     // For each user, fetch their audio files directly from storage
     if (filteredUsers && filteredUsers.length > 0) {
