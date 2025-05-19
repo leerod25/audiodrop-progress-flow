@@ -16,6 +16,7 @@ import BusinessSignup from "./pages/BusinessSignup";
 import Agents from "./pages/Agents";
 import BusinessApprovals from "./pages/admin/BusinessApprovals";
 import AppLayout from "./layouts/AppLayout";
+import Services from "./pages/Services";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/profile" element={<AppLayout><Profile /></AppLayout>} />
             <Route path="/agents" element={<AppLayout><Agents /></AppLayout>} />
             <Route path="/agent-preview" element={<AppLayout><AgentPreview /></AppLayout>} />
+            <Route path="/services" element={<AppLayout><Services /></AppLayout>} />
             <Route path="/admin/business-approvals" element={<AppLayout><BusinessApprovals /></AppLayout>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<AppLayout><NotFound /></AppLayout>} />

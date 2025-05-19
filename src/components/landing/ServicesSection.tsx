@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 const ServicesSection: React.FC = () => {
   const services = [
@@ -38,9 +40,15 @@ const ServicesSection: React.FC = () => {
                 />
               </div>
               <h3 className="text-2xl font-semibold mb-2">{service.title}</h3>
-              <p className="text-gray-600">{service.desc}</p>
+              <p className="text-gray-600 mb-4">{service.desc}</p>
             </div>
           ))}
+        </div>
+        
+        <div className="text-center mt-12">
+          <Button asChild className="mt-4">
+            <Link to="/services">View Detailed Services</Link>
+          </Button>
         </div>
       </div>
     </section>
