@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,6 @@ import AuthAlert from '@/components/agents/AuthAlert';
 import AgentsLoading from '@/components/agents/AgentsLoading';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InfoIcon, ShieldAlert, ShieldCheck } from "lucide-react";
-import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
 import { useUsersData } from '@/hooks/useUsersData';
 import UsersList from '@/components/agents/UsersList';
@@ -100,7 +99,7 @@ const Agents: React.FC = () => {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
             <Button 
-              onClick={() => window.location.reload()} 
+              onClick={() => fetchAllUsers()} 
               className="mt-4"
             >
               Try Again
