@@ -54,7 +54,9 @@ const AgentListCard: React.FC<AgentListCardProps> = ({
                 size="sm"
                 className="bg-green-500 hover:bg-green-600 border-green-500 text-white"
                 onClick={() => {
-                  audioRef.current?.play();
+                  if (audioRef.current) {
+                    audioRef.current.play();
+                  }
                 }}
               >
                 ▶︎ Play Sample

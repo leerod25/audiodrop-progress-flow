@@ -44,6 +44,11 @@ export const convertUserToAgent = (user: User) => {
     isAvailable: user.is_available || false,
     avatar: user.avatar_url || '',
     gender: user.gender || 'Not specified',
-    has_audio: user.audio_files && user.audio_files.length > 0
+    has_audio: user.audio_files && user.audio_files.length > 0,
+    audioUrls: user.audio_files?.map(file => ({
+      id: file.id,
+      title: file.title,
+      url: file.audio_url
+    })) || []
   };
 };

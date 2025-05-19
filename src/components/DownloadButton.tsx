@@ -3,6 +3,7 @@ import React from 'react';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 interface DownloadButtonProps {
   url: string;
@@ -15,23 +16,43 @@ const DownloadButton = ({
 }: DownloadButtonProps) => {
   const handleDownload = () => {
     try {
-      // Create a temporary anchor element
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      // This is important to make it work on more browsers
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      // Trigger the download
-      a.click();
-      // Clean up
-      setTimeout(() => {
-        document.body.removeChild(a);
-      }, 100);
+      console.log(`Starting download from URL: ${url}, filename: ${filename}`);
       
-      console.log(`Downloading file: ${filename} from URL: ${url}`);
+      // Create a blob link for the audio
+      fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.blob();
+        })
+        .then(blob => {
+          // Create a link element
+          const link = document.createElement('a');
+          link.href = window.URL.createObjectURL(blob);
+          link.download = filename;
+          
+          // Append to the document
+          document.body.appendChild(link);
+          
+          // Trigger download
+          link.click();
+          
+          // Cleanup
+          setTimeout(() => {
+            window.URL.revokeObjectURL(link.href);
+            document.body.removeChild(link);
+          }, 100);
+          
+          toast.success(`Downloading ${filename}`);
+        })
+        .catch(error => {
+          console.error('Download error:', error);
+          toast.error('Failed to download file. Please try again.');
+        });
     } catch (error) {
       console.error('Download error:', error);
+      toast.error('Failed to download file. Please try again.');
     }
   };
 
