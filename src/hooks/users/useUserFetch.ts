@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
@@ -76,7 +75,7 @@ export const useUserFetch = (currentUser: any) => {
           // Try to get years experience and languages from professional_details
           const { data: professionalData } = await supabase
             .from('professional_details')
-            .select('years_experience, languages')
+            .select('years_experience, languages, salary_expectation')
             .eq('user_id', user.id)
             .single();
           
@@ -101,7 +100,7 @@ export const useUserFetch = (currentUser: any) => {
             city: profileData?.city || null,
             gender: profileData?.gender || null,
             role: profileData?.role || 'agent',
-            salary_expectation: profileData?.salary_expectation || null,
+            salary_expectation: professionalData?.salary_expectation?.toString() || null,
             is_available: !!availabilityData, // Available if they have professional details
             years_experience: professionalData?.years_experience || null,
             languages: professionalData?.languages || null,
@@ -142,14 +141,13 @@ export const useUserFetch = (currentUser: any) => {
         }
       } else {
         // If currently unavailable, add a professional_details entry
-        // Note: Converting salary_expectation to string since we're now storing it as string
         const { error } = await supabase
           .from('professional_details')
           .insert({ 
             user_id: userId,
             years_experience: '1', // Default value
             languages: ['English'], // Default value
-            salary_expectation: '500' // String value
+            salary_expectation: '500'  // String value
           });
         
         if (error) {

@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { useUsersData } from '@/hooks/useUsersData';
-import UsersList from '@/components/agents/UsersList';
 import { Container } from '@/components/ui/container';
 import AuthAlert from '@/components/agents/AuthAlert';
 import AgentFilters from '@/components/agents/AgentFilters';
@@ -12,10 +11,91 @@ import { FilterIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import AgentsList from '@/components/agents/AgentsList';
 import { useNavigate } from 'react-router-dom';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { User } from '@/hooks/users/useUserFetch';
+
+// Sample agent data for demo purposes
+const sampleAgents: User[] = [
+  {
+    id: '550e8400-e29b-41d4-a716-446655440000',
+    email: 'agent1@example.com',
+    full_name: 'Alex Smith',
+    created_at: '2024-01-15',
+    audio_files: [],
+    country: 'United States',
+    city: 'New York',
+    gender: 'Male',
+    years_experience: '5',
+    languages: ['English', 'Spanish'],
+    is_available: true,
+    role: 'agent',
+    salary_expectation: '3500'
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440001',
+    email: 'agent2@example.com',
+    full_name: 'Maria Garcia',
+    created_at: '2024-02-10',
+    audio_files: [],
+    country: 'Spain',
+    city: 'Madrid',
+    gender: 'Female',
+    years_experience: '7',
+    languages: ['Spanish', 'English', 'Portuguese'],
+    is_available: true,
+    role: 'agent',
+    salary_expectation: '4000'
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440002',
+    email: 'agent3@example.com',
+    full_name: 'John Lee',
+    created_at: '2024-03-05',
+    audio_files: [],
+    country: 'Canada',
+    city: 'Toronto',
+    gender: 'Male',
+    years_experience: '3',
+    languages: ['English', 'French'],
+    is_available: false,
+    role: 'agent',
+    salary_expectation: '3200'
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440003',
+    email: 'agent4@example.com',
+    full_name: 'Sophia Chen',
+    created_at: '2024-01-25',
+    audio_files: [],
+    country: 'Singapore',
+    city: 'Singapore',
+    gender: 'Female',
+    years_experience: '4',
+    languages: ['English', 'Mandarin', 'Malay'],
+    is_available: true,
+    role: 'agent',
+    salary_expectation: '3800'
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440004',
+    email: 'agent5@example.com',
+    full_name: 'James Wilson',
+    created_at: '2024-02-20',
+    audio_files: [],
+    country: 'United Kingdom',
+    city: 'London',
+    gender: 'Male',
+    years_experience: '6',
+    languages: ['English'],
+    is_available: true,
+    role: 'agent',
+    salary_expectation: '4200'
+  }
+];
 
 const Agents = () => {
   const { user, userRole } = useUserContext();
-  const { users, loading, error, expandedUser, playingAudio, fetchAllUsers, toggleUserExpand, handleAudioPlay, toggleAvailability } = useUsersData(user);
+  const { users: apiUsers, loading, error, expandedUser, playingAudio, fetchAllUsers, toggleUserExpand, handleAudioPlay, toggleAvailability } = useUsersData(user);
   const [currentFilter, setCurrentFilter] = useState('all');
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -25,6 +105,9 @@ const Agents = () => {
 
   // Team state: store IDs of users added to team
   const [team, setTeam] = useState<string[]>([]);
+  
+  // Use sample agents if not logged in, or API users if logged in
+  const users = user ? apiUsers : sampleAgents;
 
   const toggleTeamMember = (id: string) => {
     setTeam(prev =>
@@ -65,22 +148,44 @@ const Agents = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Hero Banner */}
+      <section className="w-full relative">
+        <AspectRatio ratio={3/1} className="bg-gradient-to-r from-gray-700 to-gray-900">
+          <img 
+            src="/lovable-uploads/2e644405-88f8-49aa-8ff8-2c0429dc7cb9.png" 
+            alt="Headset on laptop keyboard" 
+            className="w-full h-full object-cover opacity-70"
+          />
+          <div className="absolute inset-0 flex flex-col justify-center px-6 lg:px-20 text-white">
+            <h1 className="text-5xl lg:text-6xl font-extrabold leading-tight">
+              Agent Profiles
+            </h1>
+            <p className="mt-4 text-xl lg:text-2xl max-w-2xl">
+              Browse our skilled agents and choose the perfect team for your business needs.
+            </p>
+            <p className="mt-3 text-lg">
+              <strong>You're in control</strong> - handpick your team for guaranteed success.
+            </p>
+          </div>
+        </AspectRatio>
+      </section>
+      
       <Container className="py-8">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold">Agent Profiles</h1>
+            <h2 className="text-2xl font-bold">Available Agents</h2>
             <p className="text-muted-foreground">
               {filteredUsers.length} agents found • {team.length} in team
             </p>
           </div>
           
           <div className="flex gap-2">
-            {/* Return to dashboard button */}
+            {/* Return to home button */}
             <Button
               variant="outline"
               onClick={() => navigate('/')}
             >
-              Return to Dashboard
+              Return to Home
             </Button>
             
             {isMobile && (
@@ -94,6 +199,9 @@ const Agents = () => {
             )}
           </div>
         </div>
+        
+        {/* Authentication alert */}
+        {!user && <AuthAlert />}
         
         {/* Main content with filters */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -125,11 +233,9 @@ const Agents = () => {
           
           {/* Agent list */}
           <div className="lg:col-span-3">
-            {!user && <AuthAlert />}
-            
             <AgentsList
               users={filteredUsers}
-              loading={loading}
+              loading={loading && user !== null} // Only show loading if trying to fetch actual users
               error={error}
               userRole={userRole || 'agent'}
               canSeeAudio={!!user && (userRole === 'admin' || userRole === 'business')}
