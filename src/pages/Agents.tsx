@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -147,7 +148,7 @@ const Agents: React.FC = () => {
         </div>
       ) : loading ? (
         <AgentsLoading />
-      ) : (userRole !== 'business' && userRole !== 'admin') && users.length === 0 ? (
+      ) : ((userRole !== 'business' && userRole !== 'admin') && users.length === 0) ? (
         <Alert className="my-4">
           <ShieldAlert className="h-5 w-5" />
           <AlertDescription>
