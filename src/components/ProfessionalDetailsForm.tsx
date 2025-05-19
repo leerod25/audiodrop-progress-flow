@@ -85,19 +85,56 @@ const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
   const onSubmit = async (formData: ProfessionalDetailsData) => {
     setLoading(true);
     try {
-      const { error } = await supabase
+      // First check if the user already has a professional details record
+      const { data: existingData, error: checkError } = await supabase
         .from('professional_details')
-        .upsert({
-          user_id: userId,
-          languages: formData.languages,
-          specialized_skills: formData.specialized_skills,
-          additional_skills: formData.additional_skills,
-          years_experience: formData.years_experience,
-          availability: formData.availability,
-          salary_expectation: formData.salary_expectation,
-          computer_skill_level: formData.computer_skill_level,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id' });
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (checkError) {
+        console.error("Error checking existing professional details:", checkError);
+        toast.error("Failed to update professional details.");
+        return;
+      }
+      
+      let error;
+      
+      if (existingData) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('professional_details')
+          .update({
+            languages: formData.languages,
+            specialized_skills: formData.specialized_skills,
+            additional_skills: formData.additional_skills,
+            years_experience: formData.years_experience,
+            availability: formData.availability,
+            salary_expectation: formData.salary_expectation,
+            computer_skill_level: formData.computer_skill_level,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', userId);
+        
+        error = updateError;
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from('professional_details')
+          .insert({
+            user_id: userId,
+            languages: formData.languages,
+            specialized_skills: formData.specialized_skills,
+            additional_skills: formData.additional_skills,
+            years_experience: formData.years_experience,
+            availability: formData.availability,
+            salary_expectation: formData.salary_expectation,
+            computer_skill_level: formData.computer_skill_level,
+            updated_at: new Date().toISOString(),
+          });
+        
+        error = insertError;
+      }
 
       if (error) {
         console.error("Error updating professional details:", error);
