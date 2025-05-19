@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Mic } from 'lucide-react';
 
-interface UserProfileHeaderProps {
+export interface UserProfileHeaderProps {
   profileCompleted: boolean;
-  profile?: any; // Added profile prop to match usage in Profile.tsx
+  profile?: any; // Object with profile data
 }
 
 const UserProfileHeader = ({ profileCompleted, profile }: UserProfileHeaderProps) => {

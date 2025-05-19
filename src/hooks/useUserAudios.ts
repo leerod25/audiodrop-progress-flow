@@ -11,7 +11,7 @@ export interface Audio {
   created_at: string;
 }
 
-export function useUserAudios(user: User | null) {
+export function useUserAudios(user: User | null | { id: string }) {
   const [audios, setAudios] = useState<Audio[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,21 +21,25 @@ export function useUserAudios(user: User | null) {
       return;
     }
 
+    const userId = 'id' in user ? user.id : user.id;
+    
     const fetchAudios = async () => {
       try {
         const { data, error } = await supabase
           .from('audio_metadata')
           .select('id, title, audio_url, created_at')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .order('created_at', { ascending: false });
           
         if (error) {
           console.error('Error fetching audio list:', error);
+          toast.error('Failed to load audio recordings');
         } else if (data) {
           setAudios(data);
         }
       } catch (err) {
         console.error('Unexpected error in useUserAudios:', err);
+        toast.error('An error occurred while loading recordings');
       } finally {
         setLoading(false);
       }
@@ -52,7 +56,7 @@ export function useUserAudios(user: User | null) {
         .from('audio_metadata')
         .delete()
         .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('user_id', 'id' in user ? user.id : user.id);
       
       if (error) {
         toast.error('Failed to delete recording');
@@ -79,7 +83,7 @@ export function useUserAudios(user: User | null) {
         .from('audio_metadata')
         .update({ title: newTitle.trim() })
         .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('user_id', 'id' in user ? user.id : user.id);
       
       if (error) {
         toast.error('Failed to rename recording');

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,15 +8,10 @@ import AudioRecordingItem from '@/components/AudioRecordingItem';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Audio, useUserAudios } from '@/hooks/useUserAudios';
+import { useUserContext } from '@/contexts/UserContext';
 
-interface Audio {
-  id: string;
-  title: string;
-  audio_url: string;
-  created_at: string;
-}
-
-interface ProfileAudioListProps {
+export interface ProfileAudioListProps {
   userId?: string;
   audios?: Audio[];
   loading?: boolean;
@@ -25,117 +19,25 @@ interface ProfileAudioListProps {
   renameAudio?: (id: string, newTitle: string) => Promise<boolean>;
 }
 
-const ProfileAudioList = ({ userId, audios: propAudios, loading: propLoading, deleteAudio: propDeleteAudio, renameAudio: propRenameAudio }: ProfileAudioListProps) => {
-  const [audios, setAudios] = useState<Audio[]>(propAudios || []);
-  const [loading, setLoading] = useState<boolean>(propLoading !== undefined ? propLoading : true);
-
-  useEffect(() => {
-    if (propAudios) {
-      setAudios(propAudios);
-      return;
-    }
-    
-    if (!userId) return;
-    
-    const fetchAudios = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('audio_recordings')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
-          
-        if (error) throw error;
-        setAudios(data || []);
-      } catch (err) {
-        console.error('Error fetching audio recordings:', err);
-        toast.error('Failed to load audio recordings');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchAudios();
-  }, [userId, propAudios]);
+const ProfileAudioList = ({ 
+  userId: propUserId, 
+  audios: propAudios, 
+  loading: propLoading, 
+  deleteAudio: propDeleteAudio, 
+  renameAudio: propRenameAudio 
+}: ProfileAudioListProps) => {
+  const { user } = useUserContext();
+  const userId = propUserId || user?.id;
   
-  const deleteAudio = async (id: string) => {
-    if (propDeleteAudio) {
-      return propDeleteAudio(id);
-    }
-    
-    try {
-      // First, get the audio URL
-      const { data: audioData } = await supabase
-        .from('audio_recordings')
-        .select('audio_url')
-        .eq('id', id)
-        .single();
-        
-      if (!audioData?.audio_url) {
-        throw new Error('Audio file not found');
-      }
-      
-      // Extract the path from the URL
-      const urlParts = audioData.audio_url.split('/');
-      const filePath = `${urlParts[urlParts.length - 2]}/${urlParts[urlParts.length - 1]}`;
-      
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from('audio')
-        .remove([filePath]);
-        
-      if (storageError) {
-        console.error('Error deleting audio file:', storageError);
-      }
-      
-      // Delete the record
-      const { error } = await supabase
-        .from('audio_recordings')
-        .delete()
-        .eq('id', id);
-        
-      if (error) throw error;
-      
-      // Update the UI
-      setAudios(current => current.filter(audio => audio.id !== id));
-      toast.success('Audio deleted successfully');
-      return true;
-    } catch (err) {
-      console.error('Error deleting audio:', err);
-      toast.error('Failed to delete audio');
-      return false;
-    }
-  };
+  // If props are provided, use them directly
+  // Otherwise use the hook to fetch audios
+  const { audios: hookAudios, loading: hookLoading, deleteAudio: hookDeleteAudio, renameAudio: hookRenameAudio } = 
+    useUserAudios(userId ? { id: userId } : null);
   
-  const renameAudio = async (id: string, newTitle: string) => {
-    if (propRenameAudio) {
-      return propRenameAudio(id, newTitle);
-    }
-    
-    try {
-      const { error } = await supabase
-        .from('audio_recordings')
-        .update({ title: newTitle })
-        .eq('id', id);
-        
-      if (error) throw error;
-      
-      // Update the UI
-      setAudios(current => 
-        current.map(audio => 
-          audio.id === id ? {...audio, title: newTitle} : audio
-        )
-      );
-      
-      toast.success('Audio renamed successfully');
-      return true;
-    } catch (err) {
-      console.error('Error renaming audio:', err);
-      toast.error('Failed to rename audio');
-      return false;
-    }
-  };
+  const audios = propAudios || hookAudios;
+  const loading = propLoading !== undefined ? propLoading : hookLoading;
+  const deleteAudio = propDeleteAudio || hookDeleteAudio;
+  const renameAudio = propRenameAudio || hookRenameAudio;
 
   return (
     <Card className="bg-white shadow-md">

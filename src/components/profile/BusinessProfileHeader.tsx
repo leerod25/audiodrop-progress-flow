@@ -5,9 +5,9 @@ import TeamInviteDialog from '../auth/TeamInviteDialog';
 import { Button } from "@/components/ui/button";
 import { UserPlus } from 'lucide-react';
 
-interface BusinessProfileHeaderProps {
+export interface BusinessProfileHeaderProps {
   profileCompleted: boolean;
-  profile?: any; // Added profile prop to match usage in Profile.tsx
+  profile?: any; // Object with profile data
 }
 
 const BusinessProfileHeader = ({ profileCompleted, profile }: BusinessProfileHeaderProps) => {
