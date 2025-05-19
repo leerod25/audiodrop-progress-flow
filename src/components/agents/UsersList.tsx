@@ -20,6 +20,7 @@ interface User {
   years_experience?: string | null;
   languages?: string[] | null;
   is_available?: boolean;
+  salary_expectation?: string | null;
 }
 
 interface AudioFile {
@@ -63,7 +64,8 @@ const UsersList: React.FC<UsersListProps> = ({
     city: u.city,
     years_experience: u.years_experience,
     languages: u.languages,
-    is_available: u.is_available
+    is_available: u.is_available,
+    salary_expectation: u.salary_expectation
   })), null, 2));
 
   return (
@@ -86,7 +88,7 @@ const UsersList: React.FC<UsersListProps> = ({
               toggleExpand={() => toggleUserExpand(user.id)}
               onAudioPlay={handleAudioPlay}
               showLoginPrompt={showLoginPrompt}
-              toggleAvailability={toggleAvailability}
+              onToggleAvailability={toggleAvailability ? () => toggleAvailability(user.id, user.is_available || false) : undefined}
             />
           </Card>
         ))

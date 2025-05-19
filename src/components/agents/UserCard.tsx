@@ -7,10 +7,10 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface UserCardProps {
   user: User;
-  userRole: string;
-  canSeeAudio: boolean;
-  onViewDetails: () => void;
-  onToggleAvailability: () => void;
+  userRole?: string;
+  canSeeAudio?: boolean;
+  onViewDetails?: () => void;
+  onToggleAvailability?: () => void;
   inTeam?: boolean;
   onToggleTeam?: () => void;
   isExpanded?: boolean;
@@ -22,9 +22,9 @@ interface UserCardProps {
 
 const UserCard: React.FC<UserCardProps> = ({
   user,
-  userRole,
-  canSeeAudio,
-  onViewDetails,
+  userRole = 'agent',
+  canSeeAudio = false,
+  onViewDetails = () => {},
   onToggleAvailability,
   inTeam = false,
   onToggleTeam,
@@ -128,7 +128,7 @@ const UserCard: React.FC<UserCardProps> = ({
               <Info className="h-4 w-4 mr-1" /> Details
             </Button>
             
-            {isAdmin && (
+            {isAdmin && onToggleAvailability && (
               <Button 
                 variant="outline" 
                 size="sm"

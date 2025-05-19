@@ -9,7 +9,7 @@ import AgentFilters from '@/components/agents/AgentFilters';
 import AgentDetailsDialog from '@/components/agents/AgentDetailsDialog';
 import { Button } from '@/components/ui/button';
 import { FilterIcon } from 'lucide-react';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import AgentsList from '@/components/agents/AgentsList';
 import { useNavigate } from 'react-router-dom';
 
@@ -20,7 +20,7 @@ const Agents = () => {
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
 
   // Team state: store IDs of users added to team
@@ -55,6 +55,13 @@ const Agents = () => {
   const viewAgentDetails = (userId: string) => {
     setSelectedAgentId(userId);
   };
+
+  // Create empty props for AgentFilters since we're still using the old component
+  const emailFilter = "";
+  const setEmailFilter = () => {};
+  const dateRange = { from: null, to: null };
+  const setDateRange = () => {};
+  const resetFilters = () => {};
 
   return (
     <div className="min-h-screen bg-background">
@@ -94,12 +101,11 @@ const Agents = () => {
           {!isMobile && (
             <div className="lg:col-span-1">
               <AgentFilters
-                currentFilter={currentFilter}
-                onFilterChange={setCurrentFilter}
-                totalAgents={users.length}
-                agentsWithAudio={users.filter(u => u.audio_files?.length > 0).length}
-                availableAgents={users.filter(u => u.is_available).length}
-                favoriteAgents={team.length}
+                emailFilter={emailFilter}
+                setEmailFilter={setEmailFilter}
+                dateRange={dateRange}
+                setDateRange={setDateRange}
+                resetFilters={resetFilters}
               />
             </div>
           )}
@@ -107,17 +113,13 @@ const Agents = () => {
           {/* Mobile filter drawer */}
           {isMobile && (
             <AgentFilters
-              currentFilter={currentFilter}
-              onFilterChange={(filter) => {
-                setCurrentFilter(filter);
-                setFilterMenuOpen(false);
-              }}
-              isOpen={filterMenuOpen}
-              onClose={() => setFilterMenuOpen(false)}
-              totalAgents={users.length}
-              agentsWithAudio={users.filter(u => u.audio_files?.length > 0).length}
-              availableAgents={users.filter(u => u.is_available).length}
-              favoriteAgents={team.length}
+              emailFilter={emailFilter}
+              setEmailFilter={setEmailFilter}
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+              resetFilters={resetFilters}
+              isCalendarOpen={filterMenuOpen}
+              setIsCalendarOpen={setFilterMenuOpen}
             />
           )}
           
