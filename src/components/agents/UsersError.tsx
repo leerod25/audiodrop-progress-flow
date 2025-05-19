@@ -1,19 +1,24 @@
 
 import React from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle } from 'lucide-react';
 
 interface UsersErrorProps {
   error: string;
-  isLoggedIn: boolean;
+  onRetry: () => Promise<void>;
 }
 
-const UsersError: React.FC<UsersErrorProps> = ({ error, isLoggedIn }) => {
+const UsersError: React.FC<UsersErrorProps> = ({ error, onRetry }) => {
   return (
-    <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md mb-6">
-      <p>{error}</p>
-      {!isLoggedIn && (
-        <p className="mt-2">You need to be logged in to view all users.</p>
-      )}
-    </div>
+    <Card className="p-6 text-center">
+      <div className="flex flex-col items-center justify-center space-y-4">
+        <AlertTriangle className="h-12 w-12 text-red-500" />
+        <h3 className="text-lg font-medium">Error Loading Agent Profiles</h3>
+        <p className="text-gray-500">{error}</p>
+        <Button onClick={onRetry}>Retry Loading</Button>
+      </div>
+    </Card>
   );
 };
 

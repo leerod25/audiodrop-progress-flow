@@ -2,7 +2,7 @@
 import React from 'react';
 import { User } from '@/hooks/users/useUserFetch';
 import { Button } from "@/components/ui/button";
-import { Info, Star, StarOff } from "lucide-react";
+import { Info, Star, StarOff, ChevronDown, ChevronUp, Play, Pause } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface UserCardProps {
@@ -13,6 +13,11 @@ interface UserCardProps {
   onToggleAvailability: () => void;
   inTeam?: boolean;
   onToggleTeam?: () => void;
+  isExpanded?: boolean;
+  playingAudio?: string;
+  toggleExpand?: () => void;
+  onAudioPlay?: (audioId: string) => void;
+  showLoginPrompt?: boolean;
 }
 
 const UserCard: React.FC<UserCardProps> = ({
@@ -22,7 +27,12 @@ const UserCard: React.FC<UserCardProps> = ({
   onViewDetails,
   onToggleAvailability,
   inTeam = false,
-  onToggleTeam
+  onToggleTeam,
+  isExpanded = false,
+  playingAudio = "",
+  toggleExpand = () => {},
+  onAudioPlay = () => {},
+  showLoginPrompt = false
 }) => {
   const isAdmin = userRole === 'admin';
   
@@ -65,6 +75,18 @@ const UserCard: React.FC<UserCardProps> = ({
                 {inTeam ? <Star className="h-5 w-5" /> : <StarOff className="h-5 w-5" />}
               </Button>
             )}
+
+            {/* Expand/Collapse button for UsersList */}
+            {toggleExpand && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleExpand}
+                title={isExpanded ? "Collapse details" : "Expand details"}
+              >
+                {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </Button>
+            )}
           </div>
         </div>
         
@@ -85,6 +107,12 @@ const UserCard: React.FC<UserCardProps> = ({
               <p className="text-sm">
                 <span className="font-medium">Languages:</span>{" "}
                 {user.languages.join(", ")}
+              </p>
+            )}
+            {user.salary_expectation && (
+              <p className="text-sm">
+                <span className="font-medium">Salary Expectation:</span>{" "}
+                ${user.salary_expectation}/month
               </p>
             )}
           </div>

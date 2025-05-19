@@ -47,7 +47,7 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
     country: initialData?.country || '',
     gender: initialData?.gender || '',
     computer_skill_level: initialData?.computer_skill_level || '',
-    salary_expectation: initialData?.salary_expectation || '',
+    salary_expectation: initialData?.salary_expectation || '500',
   });
   const [loading, setLoading] = useState(!initialData);
   const [initialLoad, setInitialLoad] = useState(!initialData);
@@ -87,7 +87,7 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
           country: initialData.country || '',
           gender: initialData.gender || '',
           computer_skill_level: initialData.computer_skill_level || '',
-          salary_expectation: initialData.salary_expectation || '',
+          salary_expectation: initialData.salary_expectation || '500',
         });
         setLoading(false);
         setInitialLoad(false);
@@ -120,7 +120,7 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
             country: data.country || '',
             gender: data.gender || '',
             computer_skill_level: data.computer_skill_level || '',
-            salary_expectation: data.salary_expectation || '',
+            salary_expectation: data.salary_expectation || '500',
           });
         } else {
           // Profile doesn't exist or is empty, create initial entry
@@ -215,6 +215,20 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
       setLoading(false);
     }
   };
+
+  // Define salary options
+  const salaryOptions = [
+    { value: "500", label: "$500 per month" },
+    { value: "750", label: "$750 per month" },
+    { value: "1000", label: "$1,000 per month" },
+    { value: "1500", label: "$1,500 per month" },
+    { value: "2000", label: "$2,000 per month" },
+    { value: "2500", label: "$2,500 per month" },
+    { value: "3000", label: "$3,000 per month" },
+    { value: "4000", label: "$4,000 per month" },
+    { value: "5000", label: "$5,000 per month" },
+    { value: "custom", label: "Custom amount" }
+  ];
 
   if (loading) {
     return (
@@ -354,23 +368,46 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
         </div>
       </div>
 
-      {/* Salary Expectation - Moved from ProfessionalDetails */}
+      {/* Salary Expectation */}
       <div className="grid gap-2">
-        <Label htmlFor="salary_expectation">Salary Expectation (USD) <span className="text-muted-foreground font-normal">(Confidential)</span></Label>
-        <div className="flex items-center space-x-2">
-          <span className="text-lg">$</span>
-          <Input
-            id="salary_expectation"
-            name="salary_expectation"
-            type="text"
-            value={profileData.salary_expectation || ''}
-            onChange={handleChange}
-            placeholder="e.g. 45,000"
-            className="flex-1"
-          />
+        <Label htmlFor="salary_expectation">Salary Expectation (per month) <span className="text-muted-foreground font-normal">(Confidential)</span></Label>
+        <div className="flex flex-col space-y-4">
+          <Select 
+            value={profileData.salary_expectation || '500'} 
+            onValueChange={(value) => {
+              handleSelectChange('salary_expectation', value);
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select monthly salary expectation" />
+            </SelectTrigger>
+            <SelectContent>
+              {salaryOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {profileData.salary_expectation === 'custom' && (
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">$</span>
+              <Input
+                id="custom_salary"
+                name="salary_expectation"
+                type="text"
+                value={profileData.salary_expectation === 'custom' ? '' : profileData.salary_expectation || ''}
+                onChange={handleChange}
+                placeholder="Enter custom amount"
+                className="flex-1"
+              />
+              <span className="text-sm text-muted-foreground">per month</span>
+            </div>
+          )}
         </div>
         <p className="text-sm text-muted-foreground">
-          You can enter a specific amount or a range (e.g. "45,000-55,000")
+          This information is confidential and will only be shared with businesses when matching you to opportunities.
         </p>
       </div>
       

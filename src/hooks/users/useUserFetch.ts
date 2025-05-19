@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
@@ -148,8 +147,7 @@ export const useUserFetch = (currentUser: any) => {
             user_id: userId,
             years_experience: '1', // Default value
             languages: ['English'] // Default value
-          })
-          .select();
+          });
         
         if (error) {
           console.error('Error updating availability:', error);

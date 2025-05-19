@@ -14,6 +14,7 @@ export interface SalarySectionProps {
   onSalaryExpectationChange: (salary: string) => void;
 }
 
+// This component has been deprecated as salary information is now handled in the ProfileForm
 const SalarySection: React.FC<SalarySectionProps> = ({
   salaryExpectation,
   onSalaryExpectationChange
@@ -25,21 +26,7 @@ const SalarySection: React.FC<SalarySectionProps> = ({
         <FormItem className="space-y-1">
           <FormLabel>Salary Expectation</FormLabel>
           <FormDescription>
-            What is your expected annual salary (USD)?
-          </FormDescription>
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="salary" className="text-lg">$</Label>
-            <Input
-              id="salary"
-              type="text"
-              placeholder="e.g. 45,000"
-              value={salaryExpectation}
-              onChange={(e) => onSalaryExpectationChange(e.target.value)}
-              className="flex-1"
-            />
-          </div>
-          <FormDescription>
-            You can enter a specific amount or a range (e.g. "45,000-55,000")
+            This field has been moved to the main profile section
           </FormDescription>
         </FormItem>
       )}
