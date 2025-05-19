@@ -77,8 +77,9 @@ const Agents = () => {
           currentPageUsers={currentPageUsers}
           viewAgentDetails={viewAgentDetails}
           toggleTeamMember={toggleTeamMember}
-          convertToAgent={(user: User) => convertUserToAgent(user)}
+          convertToAgent={convertUserToAgent}
           handlePlaySample={handlePlaySample}
+          playingAgent={playingAgent}
         />
         
         {/* Pagination */}

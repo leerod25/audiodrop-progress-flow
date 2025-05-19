@@ -13,6 +13,7 @@ interface AgentsGridProps {
   toggleTeamMember: (id: string) => void;
   convertToAgent: (user: User) => Agent;
   handlePlaySample?: (agent: Agent) => void;
+  playingAgent?: {id: string; url: string} | null;
 }
 
 const AgentsGrid: React.FC<AgentsGridProps> = ({
@@ -21,7 +22,8 @@ const AgentsGrid: React.FC<AgentsGridProps> = ({
   viewAgentDetails,
   toggleTeamMember,
   convertToAgent,
-  handlePlaySample
+  handlePlaySample,
+  playingAgent
 }) => {
   const { userRole } = useUserContext();
   
@@ -53,13 +55,25 @@ const AgentsGrid: React.FC<AgentsGridProps> = ({
         {currentPageUsers.map((user) => {
           const agent = convertToAgent(user);
           return (
-            <AgentListCard 
-              key={user.id}
-              agent={agent}
-              onViewDetails={() => viewAgentDetails(user.id)}
-              onAddToTeam={() => toggleTeamMember(user.id)}
-              onPlaySample={(agent) => handlePlaySample ? handlePlaySample(agent) : {}}
-            />
+            <div key={user.id} className="space-y-2">
+              <AgentListCard 
+                key={user.id}
+                agent={agent}
+                onViewDetails={() => viewAgentDetails(user.id)}
+                onAddToTeam={() => toggleTeamMember(user.id)}
+                onPlaySample={() => handlePlaySample && handlePlaySample(agent)}
+              />
+              
+              {/* Audio player for currently playing agent */}
+              {playingAgent && playingAgent.id === agent.id && (
+                <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                  <audio controls autoPlay className="w-full">
+                    <source src={playingAgent.url} type="audio/mpeg" />
+                    Your browser doesn't support audio playback.
+                  </audio>
+                </div>
+              )}
+            </div>
           );
         })}
       </div>

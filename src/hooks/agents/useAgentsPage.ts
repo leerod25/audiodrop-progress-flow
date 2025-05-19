@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useEffect } from 'react';
 import { User } from '@/hooks/users/useUserFetch';
 import { Agent } from '@/types/Agent';
@@ -92,14 +93,17 @@ export const useAgentsPage = ({ apiUsers, user, sampleAgents }: UseAgentsPagePro
       }
       
       // Availability filter
-      if (filters.availableOnly && !user.is_available) {
-        return false;
+      if (filters.availableOnly) {
+        const userIsAvailable = 'is_available' in user ? user.is_available : false;
+        if (!userIsAvailable) return false;
       }
       
       // Experience filter (3+ years)
       if (filters.experiencedOnly) {
-        const years = parseInt(user.years_experience || '0');
-        if (years < 3) return false;
+        const yearsExp = 'years_experience' in user 
+          ? parseInt(user.years_experience || '0') 
+          : 0;
+        if (yearsExp < 3) return false;
       }
       
       return true;

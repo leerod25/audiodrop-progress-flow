@@ -21,4 +21,9 @@ export interface Agent {
   email?: string | null;
   phone?: string | null;
   bio?: string | null;
+  
+  // Add fields to fix type errors
+  is_available?: boolean;
+  years_experience?: string | null;
+  languages?: string[] | null;
 }
