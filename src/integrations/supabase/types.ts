@@ -152,7 +152,9 @@ export type Database = {
           full_name: string | null
           gender: string | null
           id: string
+          is_verified: boolean
           phone: string | null
+          role: string
           updated_at: string | null
           whatsapp: string | null
         }
@@ -166,7 +168,9 @@ export type Database = {
           full_name?: string | null
           gender?: string | null
           id: string
+          is_verified?: boolean
           phone?: string | null
+          role?: string
           updated_at?: string | null
           whatsapp?: string | null
         }
@@ -180,7 +184,9 @@ export type Database = {
           full_name?: string | null
           gender?: string | null
           id?: string
+          is_verified?: boolean
           phone?: string | null
+          role?: string
           updated_at?: string | null
           whatsapp?: string | null
         }
@@ -226,7 +232,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "agent" | "business"
+      app_role: "agent" | "business" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -342,7 +348,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["agent", "business"],
+      app_role: ["agent", "business", "admin"],
     },
   },
 } as const

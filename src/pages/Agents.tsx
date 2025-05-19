@@ -8,7 +8,7 @@ import AgentsPagination from '@/components/agents/AgentsPagination';
 import AuthAlert from '@/components/agents/AuthAlert';
 import AgentsLoading from '@/components/agents/AgentsLoading';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InfoIcon, ShieldAlert } from "lucide-react";
+import { InfoIcon, ShieldAlert, ShieldCheck } from "lucide-react";
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
 
@@ -32,6 +32,8 @@ interface User {
   years_experience?: string | null;
   languages?: string[] | null;
   is_available?: boolean;
+  role?: string;
+  is_verified?: boolean;
 }
 
 const Agents: React.FC = () => {
@@ -79,7 +81,7 @@ const Agents: React.FC = () => {
         // Get profile data
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('country, city, gender')
+          .select('country, city, gender, role, is_verified')
           .eq('id', user.id)
           .single();
         
@@ -95,6 +97,8 @@ const Agents: React.FC = () => {
           country: profileData?.country || null,
           city: profileData?.city || null,
           gender: profileData?.gender || null,
+          role: profileData?.role || 'agent',
+          is_verified: profileData?.is_verified || false,
           audio_files: audioData || []
         };
       }));
@@ -142,9 +146,29 @@ const Agents: React.FC = () => {
     return <Navigate to="/" replace />;
   }
 
+  // Admin Navigation to Business Approvals
+  const renderAdminActions = () => {
+    if (userRole === 'admin') {
+      return (
+        <div className="mb-4 flex justify-end">
+          <Button asChild variant="outline" className="flex items-center gap-2">
+            <a href="/admin/business-approvals">
+              <ShieldCheck className="h-4 w-4" />
+              Business Approvals
+            </a>
+          </Button>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-6">Agent Profiles ({users.length})</h1>
+      
+      {/* Admin actions */}
+      {renderAdminActions()}
       
       {/* Show auth alert for non-authenticated users */}
       {!user && <AuthAlert />}

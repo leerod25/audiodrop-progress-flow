@@ -8,6 +8,7 @@ type UserContextType = {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   userRole: "agent" | "business" | "admin" | null;
+  isVerified: boolean;
 };
 
 // Create the context with a default value
@@ -15,6 +16,7 @@ const UserContext = createContext<UserContextType>({
   user: null,
   setUser: () => null,
   userRole: null,
+  isVerified: false,
 });
 
 // Create a provider component
@@ -25,48 +27,60 @@ interface UserProviderProps {
 export const UserProvider = ({ children }: UserProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<"agent" | "business" | "admin" | null>(null);
+  const [isVerified, setIsVerified] = useState<boolean>(false);
 
   // Fetch user role when user changes
   useEffect(() => {
     const fetchUserRole = async () => {
       if (!user) {
         setUserRole(null);
+        setIsVerified(false);
         return;
       }
 
       try {
-        // First try to get from user_roles table
-        const { data, error } = await supabase
+        // First try to get from user_roles table for auth role
+        const { data: roleData, error: roleError } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id)
           .single();
 
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching user role:', error);
+        // Then get profile data for business verification status
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('role, is_verified')
+          .eq('id', user.id)
+          .single();
+
+        if (roleError && roleError.code !== 'PGRST116') {
+          console.error('Error fetching user role:', roleError);
         }
 
-        if (data) {
-          setUserRole(data.role as "agent" | "business" | "admin");
-          return;
+        if (profileError && profileError.code !== 'PGRST116') {
+          console.error('Error fetching profile:', profileError);
         }
 
-        // If not in table, try to get from user metadata
-        const metadata = user.user_metadata;
-        if (metadata && metadata.role && 
-            (metadata.role === 'agent' || metadata.role === 'business' || metadata.role === 'admin')) {
-          setUserRole(metadata.role);
-          // Also save to database for future use
-          await supabase
-            .from('user_roles')
-            .upsert({ user_id: user.id, role: metadata.role }, { onConflict: 'user_id' });
+        // Set user role with priority to auth role table
+        if (roleData && (roleData.role === 'agent' || roleData.role === 'business' || roleData.role === 'admin')) {
+          setUserRole(roleData.role);
+        } else if (profileData && profileData.role) {
+          setUserRole(profileData.role as "agent" | "business" | "admin");
+        } else if (user.user_metadata?.role && 
+            (user.user_metadata.role === 'agent' || user.user_metadata.role === 'business' || user.user_metadata.role === 'admin')) {
+          setUserRole(user.user_metadata.role);
         } else {
           // Default to agent if not specified
           setUserRole("agent");
         }
+
+        // Set verification status from profile
+        setIsVerified(profileData?.is_verified || false);
+
       } catch (err) {
         console.error('Error in role handling:', err);
         setUserRole("agent"); // Default fallback
+        setIsVerified(false);
       }
     };
 
@@ -74,7 +88,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   }, [user]);
 
   return (
-    <UserContext.Provider value={{ user, setUser, userRole }}>
+    <UserContext.Provider value={{ user, setUser, userRole, isVerified }}>
       {children}
     </UserContext.Provider>
   );
