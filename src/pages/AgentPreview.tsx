@@ -34,6 +34,7 @@ const AgentPreview: React.FC = () => {
 
   if (loading) return <p>Loading agents…</p>;
   if (error)   return <p style={{color:'red'}}>Error: {error}</p>;
+  if (!agents || agents.length === 0) return <p>No agents found.</p>;
 
   return (
     <div className="container mx-auto py-8">
@@ -44,12 +45,12 @@ const AgentPreview: React.FC = () => {
             agent={{
               ...a,
               has_audio: a.audio_files?.length > 0 || false,
-              audioUrls: a.audio_files?.map((file, idx) => ({
+              audioUrls: Array.isArray(a.audio_files) ? a.audio_files.map((file, idx) => ({
                 id: file.id || String(idx),
                 title: file.title || `Recording ${idx + 1}`,
                 url: file.audio_url,
                 updated_at: file.created_at || ''
-              })) || [],     
+              })) : [],     
               computer_skill_level: a.years_experience?.toString() || null
             }}
             isBusinessAccount={userRole === 'business'}

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { 
   Dialog,
@@ -81,7 +82,7 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
           }
         }
         
-        // Create the agent object
+        // Create the agent object with proper null checks for arrays
         setAgent({
           id: selectedAgentId,
           has_audio: (audioFiles?.length || 0) > 0,
@@ -89,12 +90,12 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
           city: profileData?.city || null,
           computer_skill_level: professionalData?.computer_skill_level || profileData?.computer_skill_level || null,
           is_favorite: isFavorite,
-          audioUrls: audioFiles?.map(file => ({
-            id: file.id,
+          audioUrls: Array.isArray(audioFiles) ? audioFiles.map(file => ({
+            id: file.id || '',
             title: file.title || `Recording`,
-            url: file.audio_url,
+            url: file.audio_url || '',
             updated_at: file.created_at || ''
-          })) || []
+          })) : []
         });
       } catch (err) {
         console.error('Error fetching agent data:', err);

@@ -53,19 +53,23 @@ export function useAgentProfiles() {
         
         // Create a map of user_id to role for quick lookup
         const roleMap = new Map<string, string>();
-        userRoles?.forEach(userRole => {
-          roleMap.set(userRole.user_id, userRole.role);
-        });
+        if (Array.isArray(userRoles)) {
+          userRoles.forEach(userRole => {
+            roleMap.set(userRole.user_id, userRole.role);
+          });
+        }
 
         console.log('Fetched profiles:', profiles?.length, profiles);
         console.log('User roles map created with entries:', roleMap.size);
         
         // Add mock audio data for testing
         const audioMap = new Map<string, string>();
-        profiles?.forEach(profile => {
-          // Add mock audio URL for all profiles for testing
-          audioMap.set(profile.id, "path/to/your/audio-file.mp3");
-        });
+        if (Array.isArray(profiles)) {
+          profiles.forEach(profile => {
+            // Add mock audio URL for all profiles for testing
+            audioMap.set(profile.id, "path/to/your/audio-file.mp3");
+          });
+        }
 
         // Get favorites if user is business
         let favorites: string[] = [];
@@ -76,12 +80,12 @@ export function useAgentProfiles() {
           if (error) {
             console.error('Error fetching favorites:', error);
           } else if (data) {
-            favorites = data as unknown as string[];
+            favorites = Array.isArray(data) ? data : [];
           }
         }
         
         // Filter out profiles where role is 'business'
-        const filteredProfiles = profiles?.filter(profile => {
+        const filteredProfiles = Array.isArray(profiles) ? profiles.filter(profile => {
           const role = roleMap.get(profile.id);
           const keepProfile = role !== 'business';
           
@@ -90,7 +94,7 @@ export function useAgentProfiles() {
           }
           
           return keepProfile;
-        }) || [];
+        }) : [];
         
         console.log('Filtered out business profiles, remaining:', filteredProfiles.length);
         console.log('Filtered profiles:', filteredProfiles);
@@ -103,14 +107,14 @@ export function useAgentProfiles() {
           country: profile.country,
           city: profile.city,
           computer_skill_level: profile.computer_skill_level,
-          is_favorite: favorites.includes(profile.id)
-        })) || [];
+          is_favorite: Array.isArray(favorites) && favorites.includes(profile.id)
+        }));
         
         console.log('Processed agents:', agentsWithAudioInfo.length, agentsWithAudioInfo);
         setAgents(agentsWithAudioInfo);
         agentsState = agentsWithAudioInfo;
 
-        // Extract unique values for filter dropdowns
+        // Extract unique values for filter dropdowns ensuring we have valid arrays
         const uniqueCountries = Array.from(
           new Set(
             agentsWithAudioInfo
