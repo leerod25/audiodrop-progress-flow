@@ -9,31 +9,43 @@ import AudioPlayer from '@/components/AudioPlayer';
 import { toast } from "sonner";
 
 export default function PublicSamplesPage() {
-  const [playing, setPlaying] = useState<{ id: string; url: string } | null>(null);
+  const [playing, setPlaying] = useState<{ id: string; url: string; title: string } | null>(null);
   const [audioError, setAudioError] = useState<string | null>(null);
 
   const handlePlay = (agent: Agent) => {
-    // Always grab first clip
-    const clip = agent.audioUrls?.[0]?.url;
+    // Check if agent has audio samples
+    if (!agent.audioUrls || agent.audioUrls.length === 0) {
+      toast.error("No audio samples available for this agent");
+      return;
+    }
     
-    if (clip) {
+    // Always grab first clip
+    const clip = agent.audioUrls[0];
+    
+    if (clip && clip.url) {
       // If already playing this clip, stop it
       if (playing?.id === agent.id) {
         setPlaying(null);
       } else {
         // Play the new clip
         setAudioError(null); // Reset any previous errors
-        setPlaying({ id: agent.id, url: clip });
+        setPlaying({ 
+          id: agent.id, 
+          url: clip.url,
+          title: clip.title || "Audio sample" 
+        });
+        console.log(`Playing audio ${clip.title} from ${clip.url}`);
       }
     } else {
       // No clip available
-      toast.error("No audio sample available for this agent");
+      toast.error("Audio sample URL is invalid");
     }
   };
 
   const handleAudioError = (error: string) => {
     setAudioError(error);
     toast.error(error || "Failed to play audio");
+    console.error("Audio playback error:", error);
   };
 
   return (
@@ -51,18 +63,20 @@ export default function PublicSamplesPage() {
               <AgentListCard
                 agent={{
                   ...agent,
-                  has_audio: agent.audioUrls.length > 0,
+                  has_audio: (agent.audioUrls?.length || 0) > 0,
                 }}
                 onViewDetails={() => {}}
                 onAddToTeam={() => {}}
                 onPlaySample={() => handlePlay({
                   ...agent,
-                  has_audio: agent.audioUrls.length > 0,
+                  has_audio: (agent.audioUrls?.length || 0) > 0,
                 })}
               />
 
               {playing?.id === agent.id && (
                 <div className="mt-2 p-4 bg-gray-100 rounded">
+                  <h4 className="text-sm font-medium mb-2">{playing.title}</h4>
+                  
                   {audioError ? (
                     <div className="p-3 bg-red-50 text-red-600 rounded text-sm">
                       {audioError}
