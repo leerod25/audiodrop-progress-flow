@@ -1,41 +1,51 @@
 
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Calendar } from "lucide-react";
+import React from 'react';
+import { 
+  FormField, 
+  FormItem, 
+  FormLabel,
+  FormDescription
+} from '@/components/ui/form';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
-interface ExperienceSectionProps {
+export interface ExperienceSectionProps {
   experience: string;
-  onChange: (experience: string) => void;
+  onExperienceChange: (years: string) => void;
 }
 
-const ExperienceSection = ({ experience, onChange }: ExperienceSectionProps) => {
-  const experienceOptions = [
-    { id: 'less_than_1_year', label: 'Less than 1 year' },
-    { id: '1_3_years', label: '1-3 years' },
-    { id: '3_5_years', label: '3-5 years' },
-    { id: '5_10_years', label: '5-10 years' },
-    { id: 'more_than_10_years', label: 'More than 10 years' }
-  ];
-
+const ExperienceSection: React.FC<ExperienceSectionProps> = ({
+  experience,
+  onExperienceChange
+}) => {
   return (
-    <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <Calendar className="h-4 w-4 text-muted-foreground" />
-        <Label className="text-lg font-medium">Years of Experience</Label>
-      </div>
-      <RadioGroup 
-        value={experience} 
-        onValueChange={onChange}
-        className="grid grid-cols-2 gap-4"
-      >
-        {experienceOptions.map(option => (
-          <div key={option.id} className="flex items-center space-x-2">
-            <RadioGroupItem value={option.id} id={option.id} />
-            <Label htmlFor={option.id}>{option.label}</Label>
-          </div>
-        ))}
-      </RadioGroup>
-    </div>
+    <FormField
+      name="yearsExperience"
+      render={() => (
+        <FormItem className="space-y-1">
+          <FormLabel>Years of Experience</FormLabel>
+          <FormDescription>
+            Select the range that best describes your professional experience in this field
+          </FormDescription>
+          <RadioGroup 
+            value={experience} 
+            onValueChange={onExperienceChange}
+            className="flex flex-col space-y-1"
+          >
+            {["<1", "1-2", "3-5", "6-10", "10+"].map((years) => (
+              <div key={years} className="flex items-center space-x-2">
+                <RadioGroupItem value={years} id={`years-${years}`} />
+                <Label htmlFor={`years-${years}`}>
+                  {years === "<1" ? "Less than 1 year" : 
+                   years === "10+" ? "10+ years" : 
+                   `${years} years`}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </FormItem>
+      )}
+    />
   );
 };
 

@@ -1,44 +1,77 @@
 
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Languages } from "lucide-react";
+import React from 'react';
+import { FormField, FormItem, FormLabel, FormDescription } from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { X } from 'lucide-react';
 
-interface LanguagesSectionProps {
+export interface LanguagesSectionProps {
   languages: string[];
-  onChange: (languages: string[]) => void;
+  onLanguagesChange: (languages: string[]) => void;
 }
 
-const LanguagesSection = ({ languages, onChange }: LanguagesSectionProps) => {
-  const handleCheckboxChange = (language: string, checked: boolean) => {
-    const newLanguages = checked 
-      ? [...languages, language] 
-      : languages.filter(lang => lang !== language);
-    onChange(newLanguages);
+const LanguagesSection: React.FC<LanguagesSectionProps> = ({ 
+  languages, 
+  onLanguagesChange 
+}) => {
+  const [newLanguage, setNewLanguage] = React.useState('');
+
+  const addLanguage = () => {
+    if (newLanguage.trim() && !languages.includes(newLanguage.trim())) {
+      onLanguagesChange([...languages, newLanguage.trim()]);
+      setNewLanguage('');
+    }
   };
 
-  const languageOptions = [
-    'English', 'Spanish', 'French', 'Mandarin', 'German', 'Portuguese'
-  ];
+  const removeLanguage = (language: string) => {
+    onLanguagesChange(languages.filter(lang => lang !== language));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addLanguage();
+    }
+  };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <Languages className="h-4 w-4 text-muted-foreground" />
-        <Label className="text-lg font-medium">Languages</Label>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {languageOptions.map(language => (
-          <div key={language} className="flex items-center space-x-2">
-            <Checkbox 
-              id={language.toLowerCase()} 
-              checked={languages.includes(language)} 
-              onCheckedChange={(checked) => handleCheckboxChange(language, !!checked)}
+    <FormField
+      name="languages"
+      render={() => (
+        <FormItem className="space-y-1">
+          <FormLabel>Languages</FormLabel>
+          <div className="flex gap-2">
+            <Input
+              value={newLanguage}
+              onChange={(e) => setNewLanguage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Add a language"
+              className="flex-1"
             />
-            <Label htmlFor={language.toLowerCase()}>{language}</Label>
+            <Button type="button" onClick={addLanguage} size="sm">Add</Button>
           </div>
-        ))}
-      </div>
-    </div>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {languages.length === 0 && (
+              <FormDescription>Add languages you speak fluently</FormDescription>
+            )}
+            {languages.map((language) => (
+              <Badge 
+                key={language} 
+                variant="secondary"
+                className="flex items-center gap-1 px-3 py-1.5"
+              >
+                {language}
+                <X 
+                  className="h-3 w-3 cursor-pointer" 
+                  onClick={() => removeLanguage(language)} 
+                />
+              </Badge>
+            ))}
+          </div>
+        </FormItem>
+      )}
+    />
   );
 };
 

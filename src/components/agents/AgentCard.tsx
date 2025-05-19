@@ -71,7 +71,7 @@ const AgentCard: React.FC<AgentCardProps> = ({
               </Avatar>
               <div>
                 <h3 className="font-medium">ID: {user.id.substring(0, 8)}...</h3>
-                <p className="text-sm text-gray-600">{user.email}</p>
+                {/* Removed email display */}
                 
                 {/* Location info if available */}
                 {(user.country || user.city) && (

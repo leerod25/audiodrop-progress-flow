@@ -1,170 +1,227 @@
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { ProfessionalDetailsData, ProfessionalDetailsFormProps } from './types';
+import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { useUserContext } from '@/contexts/UserContext';
+import { Form } from '@/components/ui/form';
+import ExperienceSection from './ExperienceSection';
 import LanguagesSection from './LanguagesSection';
 import SkillsSection from './SkillsSection';
-import ExperienceSection from './ExperienceSection';
 import ComputerSkillsSection from './ComputerSkillsSection';
 import AvailabilitySection from './AvailabilitySection';
+import SalarySection from './SalarySection';
 
-const ProfessionalDetailsForm = ({ userId }: ProfessionalDetailsFormProps) => {
-  const [formData, setFormData] = useState<ProfessionalDetailsData>({
-    languages: [],
-    specialized_skills: [],
-    additional_skills: [],
-    years_experience: '',
-    availability: [],
-    computer_skill_level: '',
-  });
+interface ProfessionalDetailsForm {
+  yearsExperience: string;
+  languages: string[];
+  skills: string[];
+  additionalSkills: string[];
+  availability: string[];
+  computerSkillLevel: string;
+  salaryExpectation: string;
+}
+
+export interface ProfessionalDetails {
+  id?: string;
+  user_id: string;
+  years_experience: string;
+  languages: string[];
+  specialized_skills?: string[];
+  additional_skills?: string[];
+  availability?: string[];
+  computer_skill_level?: string;
+  salary_expectation?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+const ProfessionalDetailsForm = () => {
+  const { user } = useUserContext();
   const [loading, setLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [formChanged, setFormChanged] = useState(false);
+  const [yearsExperience, setYearsExperience] = useState('');
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [specializedSkills, setSpecializedSkills] = useState<string[]>([]);
+  const [additionalSkills, setAdditionalSkills] = useState<string[]>([]);
+  const [availability, setAvailability] = useState<string[]>([]);
+  const [computerSkillLevel, setComputerSkillLevel] = useState('');
+  const [salaryExpectation, setSalaryExpectation] = useState('');
+  const [detailsId, setDetailsId] = useState<string | null>(null);
+  
+  const form = useForm<ProfessionalDetailsForm>({
+    defaultValues: {
+      yearsExperience: '',
+      languages: [],
+      skills: [],
+      additionalSkills: [],
+      availability: [],
+      computerSkillLevel: '',
+      salaryExpectation: ''
+    },
+  });
 
-  // Fetch existing professional details
+  // Fetch existing professional details on mount
   useEffect(() => {
-    const fetchProfessionalDetails = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('professional_details')
-          .select('*')
-          .eq('user_id', userId)
-          .single();
-
-        if (error && error.code !== 'PGRST116') {
-          console.error("Error fetching professional details:", error);
-          toast.error("Failed to load professional details");
-        }
-
-        if (data) {
-          setFormData({
-            languages: data.languages || [],
-            specialized_skills: data.specialized_skills || [],
-            additional_skills: data.additional_skills || [],
-            years_experience: data.years_experience || '',
-            availability: data.availability || [],
-            computer_skill_level: data.computer_skill_level || '',
-          });
-        }
-      } catch (error) {
-        console.error("Error in fetching professional details:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (userId) {
-      fetchProfessionalDetails();
+    if (user?.id) {
+      fetchProfessionalDetails(user.id);
     }
-  }, [userId]);
+  }, [user?.id]);
 
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-
+  // Function to fetch professional details
+  const fetchProfessionalDetails = async (userId: string) => {
     try {
-      const { error } = await supabase
+      setLoading(true);
+      
+      const { data, error } = await supabase
         .from('professional_details')
-        .upsert({
-          user_id: userId,
-          languages: formData.languages,
-          specialized_skills: formData.specialized_skills,
-          additional_skills: formData.additional_skills,
-          years_experience: formData.years_experience,
-          availability: formData.availability,
-          computer_skill_level: formData.computer_skill_level,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (error) {
-        console.error("Error saving professional details:", error);
-        toast.error("Failed to save professional details");
-      } else {
-        toast.success("Professional details saved successfully");
-        setFormChanged(false);
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching professional details:', error);
+        toast.error('Failed to load professional details');
+        return;
       }
-    } catch (error) {
-      console.error("Error in saving professional details:", error);
-      toast.error("An error occurred while saving");
+      
+      if (data) {
+        // Populate state with fetched data
+        setDetailsId(data.id);
+        setYearsExperience(data.years_experience || '');
+        setLanguages(data.languages || []);
+        setSpecializedSkills(data.specialized_skills || []);
+        setAdditionalSkills(data.additional_skills || []);
+        setAvailability(data.availability || []);
+        setComputerSkillLevel(data.computer_skill_level || '');
+        setSalaryExpectation(data.salary_expectation || '');
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      toast.error('An unexpected error occurred');
     } finally {
-      setIsSaving(false);
+      setLoading(false);
     }
   };
 
-  // Update form data
-  const updateFormData = (key: keyof ProfessionalDetailsData, value: any) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
-    setFormChanged(true);
+  // Function to save professional details
+  const onSubmit = async () => {
+    if (!user?.id) {
+      toast.error('You must be logged in to save professional details');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      
+      const professionalDetails: ProfessionalDetails = {
+        user_id: user.id,
+        years_experience: yearsExperience,
+        languages,
+        specialized_skills: specializedSkills,
+        additional_skills: additionalSkills,
+        availability,
+        computer_skill_level: computerSkillLevel,
+        salary_expectation: salaryExpectation,
+      };
+      
+      let result;
+      
+      if (detailsId) {
+        // Update existing record
+        result = await supabase
+          .from('professional_details')
+          .update(professionalDetails)
+          .eq('id', detailsId);
+      } else {
+        // Insert new record
+        result = await supabase
+          .from('professional_details')
+          .insert(professionalDetails)
+          .select();
+      }
+      
+      if (result.error) {
+        console.error('Error saving professional details:', result.error);
+        toast.error('Failed to save professional details');
+        return;
+      }
+      
+      // If this was a new insert, store the ID
+      if (result.data && result.data[0]?.id) {
+        setDetailsId(result.data[0].id);
+      }
+      
+      toast.success('Professional details saved successfully');
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      toast.error('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
-
-  if (loading) {
-    return <div>Loading professional details...</div>;
-  }
+  
+  // Update functions
+  const updateLanguages = (newLanguages: string[]) => setLanguages(newLanguages);
+  const updateSpecializedSkills = (newSkills: string[]) => setSpecializedSkills(newSkills);
+  const updateAdditionalSkills = (newSkills: string[]) => setAdditionalSkills(newSkills);
+  const updateYearsExperience = (years: string) => setYearsExperience(years);
+  const updateComputerSkillLevel = (level: string) => setComputerSkillLevel(level);
+  const updateAvailability = (newAvailability: string[]) => setAvailability(newAvailability);
+  const updateSalaryExpectation = (salary: string) => setSalaryExpectation(salary);
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="pt-6">
-            <LanguagesSection 
-              languages={formData.languages} 
-              updateLanguages={(languages) => updateFormData('languages', languages)} 
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <SkillsSection 
-              specializedSkills={formData.specialized_skills}
-              additionalSkills={formData.additional_skills}
-              updateSpecializedSkills={(skills) => updateFormData('specialized_skills', skills)}
-              updateAdditionalSkills={(skills) => updateFormData('additional_skills', skills)}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <ExperienceSection 
-              yearsExperience={formData.years_experience} 
-              updateYearsExperience={(years) => updateFormData('years_experience', years)} 
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <ComputerSkillsSection 
-              computerSkillLevel={formData.computer_skill_level} 
-              updateComputerSkillLevel={(level) => updateFormData('computer_skill_level', level)} 
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <AvailabilitySection 
-              availability={formData.availability} 
-              updateAvailability={(availability) => updateFormData('availability', availability)} 
-            />
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isSaving || !formChanged}>
-            {isSaving ? "Saving..." : "Save Professional Details"}
-          </Button>
-        </div>
-      </div>
-    </form>
+    <Form {...form}>
+      <form className="space-y-6">
+        {/* Languages Section */}
+        <LanguagesSection
+          languages={languages}
+          onLanguagesChange={updateLanguages}
+        />
+        
+        {/* Skills Section */}
+        <SkillsSection
+          specializedSkills={specializedSkills}
+          additionalSkills={additionalSkills}
+          onSpecializedSkillsChange={updateSpecializedSkills}
+          onAdditionalSkillsChange={updateAdditionalSkills}
+        />
+        
+        {/* Experience Section */}
+        <ExperienceSection
+          experience={yearsExperience}
+          onExperienceChange={updateYearsExperience}
+        />
+        
+        {/* Computer Skills Section */}
+        <ComputerSkillsSection
+          skillLevel={computerSkillLevel}
+          onSkillLevelChange={updateComputerSkillLevel}
+        />
+        
+        {/* Availability Section */}
+        <AvailabilitySection
+          availability={availability}
+          onAvailabilityChange={updateAvailability}
+        />
+        
+        {/* Salary Expectation Section */}
+        <SalarySection
+          salaryExpectation={salaryExpectation}
+          onSalaryExpectationChange={updateSalaryExpectation}
+        />
+        
+        {/* Submit Button */}
+        <Button 
+          type="button"
+          onClick={onSubmit}
+          className="w-full"
+          disabled={loading}
+        >
+          {loading ? 'Saving...' : 'Save Professional Details'}
+        </Button>
+      </form>
+    </Form>
   );
 };
 

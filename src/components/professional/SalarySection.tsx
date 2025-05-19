@@ -1,34 +1,49 @@
 
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { DollarSign } from "lucide-react";
+import React from 'react';
+import { 
+  FormField, 
+  FormItem, 
+  FormLabel,
+  FormDescription
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
-interface SalarySectionProps {
-  salary: number | null;
-  onChange: (value: number | null) => void;
+export interface SalarySectionProps {
+  salaryExpectation: string;
+  onSalaryExpectationChange: (salary: string) => void;
 }
 
-const SalarySection = ({ salary, onChange }: SalarySectionProps) => {
+const SalarySection: React.FC<SalarySectionProps> = ({
+  salaryExpectation,
+  onSalaryExpectationChange
+}) => {
   return (
-    <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <DollarSign className="h-4 w-4 text-muted-foreground" />
-        <Label className="text-lg font-medium">Desired Monthly Salary (USD)</Label>
-      </div>
-      <div className="max-w-xs">
-        <Input
-          type="number"
-          id="salary_expectation"
-          placeholder="e.g., 3000"
-          value={salary || 500}
-          onChange={(e) => {
-            const value = e.target.value ? Number(e.target.value) : 500; // Default to 500 if empty
-            onChange(value);
-          }}
-          className="w-full"
-        />
-      </div>
-    </div>
+    <FormField
+      name="salaryExpectation"
+      render={() => (
+        <FormItem className="space-y-1">
+          <FormLabel>Salary Expectation</FormLabel>
+          <FormDescription>
+            What is your expected annual salary (USD)?
+          </FormDescription>
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="salary" className="text-lg">$</Label>
+            <Input
+              id="salary"
+              type="text"
+              placeholder="e.g. 45,000"
+              value={salaryExpectation}
+              onChange={(e) => onSalaryExpectationChange(e.target.value)}
+              className="flex-1"
+            />
+          </div>
+          <FormDescription>
+            You can enter a specific amount or a range (e.g. "45,000-55,000")
+          </FormDescription>
+        </FormItem>
+      )}
+    />
   );
 };
 

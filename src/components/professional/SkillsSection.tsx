@@ -1,42 +1,136 @@
 
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Briefcase } from "lucide-react";
+import React from 'react';
+import { FormField, FormItem, FormLabel, FormDescription } from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { X } from 'lucide-react';
 
-interface SkillsSectionProps {
-  title: string;
-  skills: string[];
-  options: { id: string, label: string }[];
-  onChange: (skills: string[]) => void;
+export interface SkillsSectionProps {
+  specializedSkills: string[];
+  additionalSkills: string[];
+  onSpecializedSkillsChange: (skills: string[]) => void;
+  onAdditionalSkillsChange: (skills: string[]) => void;
 }
 
-const SkillsSection = ({ title, skills, options, onChange }: SkillsSectionProps) => {
-  const handleCheckboxChange = (skill: string, checked: boolean) => {
-    const newSkills = checked 
-      ? [...skills, skill] 
-      : skills.filter(s => s !== skill);
-    onChange(newSkills);
+const SkillsSection: React.FC<SkillsSectionProps> = ({
+  specializedSkills,
+  additionalSkills,
+  onSpecializedSkillsChange,
+  onAdditionalSkillsChange
+}) => {
+  const [newSpecializedSkill, setNewSpecializedSkill] = React.useState('');
+  const [newAdditionalSkill, setNewAdditionalSkill] = React.useState('');
+
+  const addSpecializedSkill = () => {
+    if (newSpecializedSkill.trim() && !specializedSkills.includes(newSpecializedSkill.trim())) {
+      onSpecializedSkillsChange([...specializedSkills, newSpecializedSkill.trim()]);
+      setNewSpecializedSkill('');
+    }
+  };
+
+  const addAdditionalSkill = () => {
+    if (newAdditionalSkill.trim() && !additionalSkills.includes(newAdditionalSkill.trim())) {
+      onAdditionalSkillsChange([...additionalSkills, newAdditionalSkill.trim()]);
+      setNewAdditionalSkill('');
+    }
+  };
+
+  const removeSpecializedSkill = (skill: string) => {
+    onSpecializedSkillsChange(specializedSkills.filter(s => s !== skill));
+  };
+
+  const removeAdditionalSkill = (skill: string) => {
+    onAdditionalSkillsChange(additionalSkills.filter(s => s !== skill));
+  };
+
+  const handleSpecializedKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addSpecializedSkill();
+    }
+  };
+
+  const handleAdditionalKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addAdditionalSkill();
+    }
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <Briefcase className="h-4 w-4 text-muted-foreground" />
-        <Label className="text-lg font-medium">{title}</Label>
-      </div>
-      <div className={`grid ${title === "Additional Skills" ? "grid-cols-2 md:grid-cols-3" : "grid-cols-1 md:grid-cols-2"} gap-4`}>
-        {options.map(option => (
-          <div key={option.id} className="flex items-center space-x-2">
-            <Checkbox 
-              id={option.id} 
-              checked={skills.includes(option.label)} 
-              onCheckedChange={(checked) => handleCheckboxChange(option.label, !!checked)}
-            />
-            <Label htmlFor={option.id}>{option.label}</Label>
+    <FormField
+      name="skills"
+      render={() => (
+        <FormItem className="space-y-4">
+          <div>
+            <FormLabel>Specialized Skills</FormLabel>
+            <div className="flex gap-2 mt-1">
+              <Input
+                value={newSpecializedSkill}
+                onChange={(e) => setNewSpecializedSkill(e.target.value)}
+                onKeyDown={handleSpecializedKeyDown}
+                placeholder="Add a specialized skill"
+                className="flex-1"
+              />
+              <Button type="button" onClick={addSpecializedSkill} size="sm">Add</Button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {specializedSkills.length === 0 && (
+                <FormDescription>Add your core professional skills</FormDescription>
+              )}
+              {specializedSkills.map((skill) => (
+                <Badge 
+                  key={skill} 
+                  className="flex items-center gap-1 px-3 py-1.5"
+                >
+                  {skill}
+                  <X 
+                    className="h-3 w-3 cursor-pointer" 
+                    onClick={() => removeSpecializedSkill(skill)} 
+                  />
+                </Badge>
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
-    </div>
+
+          <Separator />
+
+          <div>
+            <FormLabel>Additional Skills</FormLabel>
+            <div className="flex gap-2 mt-1">
+              <Input
+                value={newAdditionalSkill}
+                onChange={(e) => setNewAdditionalSkill(e.target.value)}
+                onKeyDown={handleAdditionalKeyDown}
+                placeholder="Add additional skill"
+                className="flex-1"
+              />
+              <Button type="button" onClick={addAdditionalSkill} size="sm">Add</Button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {additionalSkills.length === 0 && (
+                <FormDescription>Add supplementary skills</FormDescription>
+              )}
+              {additionalSkills.map((skill) => (
+                <Badge 
+                  key={skill} 
+                  variant="outline"
+                  className="flex items-center gap-1 px-3 py-1.5"
+                >
+                  {skill}
+                  <X 
+                    className="h-3 w-3 cursor-pointer" 
+                    onClick={() => removeAdditionalSkill(skill)} 
+                  />
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </FormItem>
+      )}
+    />
   );
 };
 

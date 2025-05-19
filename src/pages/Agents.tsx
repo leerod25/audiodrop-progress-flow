@@ -113,7 +113,7 @@ const Agents: React.FC = () => {
       {/* Show auth alert for non-authenticated users */}
       {!user && <AuthAlert />}
       
-      {/* Debug info */}
+      {/* Debug info - REMOVED THE EMAIL DISPLAY HERE */}
       <div className="text-sm text-gray-500 mb-4">
         Role: {userRole || 'Unknown'} | User ID: {user?.id?.substring(0, 8) || 'Not logged in'}
       </div>
@@ -123,7 +123,7 @@ const Agents: React.FC = () => {
         users={users}
         loading={loading}
         error={error}
-        userRole={userRole}
+        userRole={userRole || ''}
         canSeeAudio={userRole === 'business' || userRole === 'admin' || false}
         currentPageUsers={currentPageUsers}
         page={page}
