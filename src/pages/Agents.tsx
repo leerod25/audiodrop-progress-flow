@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserContext } from '@/contexts/UserContext';
@@ -39,7 +38,7 @@ interface AudioFile {
 }
 
 const Agents: React.FC = () => {
-  const { user } = useUserContext();
+  const { user, userRole } = useUserContext();
   const [emailFilter, setEmailFilter] = useState('');
   const [dateRange, setDateRange] = useState<{ from: Date | null; to: Date | null }>({
     from: null,
@@ -132,7 +131,15 @@ const Agents: React.FC = () => {
             </div>
           ) : filteredUsers.length > 0 ? (
             <UsersList 
-              users={filteredUsers}
+              users={filteredUsers.map(u => {
+                // If user is a business or viewing their own profile, show audio
+                // Otherwise hide the audio files
+                const canSeeAudio = userRole === 'business' || u.id === user?.id;
+                return {
+                  ...u,
+                  audio_files: canSeeAudio ? u.audio_files : []
+                };
+              })}
               loading={loading}
               expandedUser={expandedUser}
               playingAudio={playingAudio}

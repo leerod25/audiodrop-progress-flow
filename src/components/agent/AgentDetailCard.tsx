@@ -9,18 +9,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface AgentDetailCardProps {
   agent: Agent;
-  isBusinessAccount: boolean;
-  formatUserId: (id: string) => string;
+  isBusinessAccount?: boolean;
+  formatUserId?: (id: string) => string;
   toggleFavorite: (agentId: string, currentStatus: boolean) => void;
 }
 
 const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
   agent,
-  isBusinessAccount,
-  formatUserId,
+  isBusinessAccount = false,
+  formatUserId = (id) => id.substring(0, 8) + '...',
   toggleFavorite
 }) => {
-  const { audioList, loading, error } = useAgentAudio(agent.id);
+  // Only use the hook if audioUrls isn't provided
+  const { audioList, loading, error } = !agent.audioUrls ? useAgentAudio(agent.id) : { audioList: [], loading: false, error: null };
+  
+  // Use provided audioUrls or the ones from the hook
+  const displayAudioList = agent.audioUrls || audioList;
   
   return (
     <Card className="mb-6">
@@ -64,13 +68,13 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
                 Retry
               </button>
             </div>
-          ) : audioList.length === 0 ? (
+          ) : displayAudioList.length === 0 ? (
             <div className="text-center text-gray-500 py-8">
               <p>No recordings available.</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {audioList.map((audio) => (
+              {displayAudioList.map((audio) => (
                 <div key={audio.id} className="p-3 border rounded-lg">
                   <div className="flex flex-col space-y-2">
                     <div>

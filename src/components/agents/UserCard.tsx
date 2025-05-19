@@ -66,7 +66,7 @@ const UserCard: React.FC<UserCardProps> = ({
               <h3 className="text-lg font-medium">{formatUserId(user.id)}</h3>
               {toggleAvailability && (
                 <Badge 
-                  variant={user.is_available ? "success" : "destructive"}
+                  variant={user.is_available ? "default" : "destructive"}
                   className="ml-2"
                 >
                   {user.is_available ? 'Available' : 'On Project'}
