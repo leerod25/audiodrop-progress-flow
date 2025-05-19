@@ -31,17 +31,13 @@ const ProfessionalDetailsFormReadOnly: React.FC<ProfessionalDetailsFormReadOnlyP
       
       <LanguagesSection languages={professionalDetails.languages || []} />
       
-      <SkillsSection skills={professionalDetails.skills || []} />
+      <SkillsSection specializedSkills={professionalDetails.specialized_skills || []} />
       
-      <ComputerSkillsSection skills={professionalDetails.computer_skills || []} />
+      <ComputerSkillsSection computerSkillLevel={professionalDetails.computer_skill_level || ''} />
       
       <AvailabilitySection 
-        available={{
-          weekends: professionalDetails.available_weekends,
-          nights: professionalDetails.available_nights,
-          fullTime: professionalDetails.available_full_time
-        }}
-        preferredSchedule={professionalDetails.preferred_schedule || ''}
+        availability={professionalDetails.availability || []} 
+        preferredSchedule={professionalDetails.availability?.join(', ') || ''}
       />
     </div>
   );
