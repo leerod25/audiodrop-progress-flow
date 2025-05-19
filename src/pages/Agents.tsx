@@ -1,108 +1,20 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { useUsersData } from '@/hooks/useUsersData';
 import { Container } from '@/components/ui/container';
 import AuthAlert from '@/components/agents/AuthAlert';
 import AgentDetailsDialog from '@/components/agents/AgentDetailsDialog';
-import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useNavigate } from 'react-router-dom';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { User } from '@/hooks/users/useUserFetch';
-import AgentFilterBar from '@/components/agents/AgentFilterBar';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
-import AgentListCard from '@/components/agent/AgentListCard';
-import { Agent } from '@/types/Agent';
-import { useAgentAudio } from '@/hooks/useAgentAudio';
-
-// Sample agent data for North America (6 profiles) - REMOVED EMAIL fields
-const sampleAgents: User[] = [
-  {
-    id: '550e8400-e29b-41d4-a716-446655440000',
-    email: '', // Removed email
-    full_name: 'Agent ID: 550e8400',
-    created_at: '2024-01-15',
-    audio_files: [],
-    country: 'United States',
-    city: 'New York',
-    gender: 'Male',
-    years_experience: '5',
-    languages: ['English', 'Spanish'],
-    is_available: true,
-    role: 'agent'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440001',
-    email: '', // Removed email
-    full_name: 'Agent ID: 550e8401',
-    created_at: '2024-02-10',
-    audio_files: [],
-    country: 'Mexico',
-    city: 'Mexico City',
-    gender: 'Female',
-    years_experience: '7',
-    languages: ['Spanish', 'English'],
-    is_available: true,
-    role: 'agent'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440002',
-    email: '', // Removed email
-    full_name: 'Agent ID: 550e8402',
-    created_at: '2024-03-05',
-    audio_files: [],
-    country: 'Canada',
-    city: 'Toronto',
-    gender: 'Male',
-    years_experience: '3',
-    languages: ['English', 'French'],
-    is_available: false,
-    role: 'agent'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440003',
-    email: '', // Removed email
-    full_name: 'Agent ID: 550e8403',
-    created_at: '2024-01-25',
-    audio_files: [],
-    country: 'El Salvador',
-    city: 'San Salvador',
-    gender: 'Female',
-    years_experience: '4',
-    languages: ['Spanish', 'English'],
-    is_available: true,
-    role: 'agent'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440004',
-    email: '', // Removed email
-    full_name: 'Agent ID: 550e8404',
-    created_at: '2024-02-20',
-    audio_files: [],
-    country: 'United States',
-    city: 'Los Angeles',
-    gender: 'Male',
-    years_experience: '6',
-    languages: ['English'],
-    is_available: true,
-    role: 'agent'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440005',
-    email: '', // Removed email
-    full_name: 'Agent ID: 550e8405',
-    created_at: '2024-03-15',
-    audio_files: [],
-    country: 'Mexico',
-    city: 'Guadalajara',
-    gender: 'Male',
-    years_experience: '8',
-    languages: ['Spanish', 'English', 'Portuguese'],
-    is_available: true,
-    role: 'agent'
-  }
-];
+import AgentFilterBar from '@/components/agents/AgentFilterBar';
+import AgentsHeroBanner from '@/components/agents/AgentsHeroBanner';
+import AgentsGrid from '@/components/agents/AgentsGrid';
+import AgentListPagination from '@/components/agents/AgentListPagination';
+import { convertUserToAgent } from '@/utils/agentUtils';
+import { sampleAgents } from '@/data/sampleAgents';
+import { User } from '@/hooks/users/useUserFetch';
 
 const Agents = () => {
   const { user, userRole } = useUserContext();
@@ -110,7 +22,6 @@ const Agents = () => {
   const [page, setPage] = useState(1);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
 
   // Team state: store IDs of users added to team
   const [team, setTeam] = useState<string[]>([]);
@@ -219,72 +130,12 @@ const Agents = () => {
     setFilters(newFilters);
   };
 
-  // Convert User to Agent type for AgentListCard
-  const convertToAgent = (user: User): Agent => {
-    // Get audio files if they exist
-    const audioUrls = user.audio_files ? 
-      user.audio_files.map(file => ({
-        id: file.id,
-        title: file.title,
-        url: file.audio_url,
-        updated_at: file.created_at
-      })) : 
-      undefined;
-    
-    return {
-      id: user.id,
-      has_audio: user.audio_files && user.audio_files.length > 0,
-      audioUrls: audioUrls,
-      country: user.country || null,
-      city: user.city || null,
-      gender: user.gender || null,
-      is_favorite: team.includes(user.id)
-    };
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
       {/* Hero Banner */}
-      <section className="w-full relative">
-        <AspectRatio ratio={3/1} className="bg-gradient-to-r from-gray-700 to-gray-900">
-          <img 
-            src="/lovable-uploads/2e644405-88f8-49aa-8ff8-2c0429dc7cb9.png" 
-            alt="Headset on laptop keyboard" 
-            className="w-full h-full object-cover opacity-70"
-          />
-          <div className="absolute inset-0 flex flex-col justify-center px-6 lg:px-20 text-white">
-            <h1 className="text-5xl lg:text-6xl font-extrabold leading-tight">
-              Agent Profiles
-            </h1>
-            <p className="mt-4 text-xl lg:text-2xl max-w-2xl">
-              Browse our skilled agents and choose the perfect team for your business needs.
-            </p>
-            <p className="mt-3 text-lg">
-              <strong>You're in control</strong> - handpick your team for guaranteed success.
-            </p>
-            <div className="flex gap-4 mt-6">
-              <Button 
-                size="lg" 
-                variant="default" 
-                onClick={() => navigate('/services')}
-              >
-                Our Services
-              </Button>
-              {!user && (
-                <Button 
-                  size="lg" 
-                  variant="secondary"
-                  onClick={() => navigate('/auth')}
-                >
-                  Login / Sign Up
-                </Button>
-              )}
-            </div>
-          </div>
-        </AspectRatio>
-      </section>
+      <AgentsHeroBanner isLoggedIn={!!user} />
       
       <Container className="py-8">
         <div className="flex justify-between items-center mb-6">
@@ -306,59 +157,21 @@ const Agents = () => {
           onFilterChange={handleFilterChange}
         />
         
-        {/* Agent list - updated to use AgentListCard with inline audio */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, index) => (
-              <div key={index} className="h-48 bg-gray-100 rounded-lg animate-pulse"></div>
-            ))}
-          </div>
-        ) : error ? (
-          <div className="p-4 text-red-500 bg-red-50 rounded-lg">Error loading agents: {error}</div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-              {currentPageUsers.map((user) => {
-                console.log(user.id, 'has audio?', user.audio_files && user.audio_files.length > 0);
-                if (user.audio_files && user.audio_files.length > 0) {
-                  console.log('Audio URLs:', user.audio_files.map(f => f.audio_url));
-                }
-                const agent = convertToAgent(user);
-                return (
-                  <AgentListCard 
-                    key={user.id}
-                    agent={agent}
-                    onViewDetails={() => viewAgentDetails(user.id)}
-                    onAddToTeam={() => toggleTeamMember(user.id)}
-                  />
-                );
-              })}
-            </div>
-            
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center mt-6 gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setPage(p => Math.max(1, p - 1))} 
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <div className="flex items-center px-4">
-                  Page {page} of {totalPages}
-                </div>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
-                  disabled={page === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
-          </>
-        )}
+        {/* Agent Grid */}
+        <AgentsGrid 
+          loading={loading}
+          currentPageUsers={currentPageUsers}
+          viewAgentDetails={viewAgentDetails}
+          toggleTeamMember={toggleTeamMember}
+          convertToAgent={(user: User) => convertUserToAgent(user, team)}
+        />
+        
+        {/* Pagination */}
+        <AgentListPagination 
+          page={page}
+          totalPages={totalPages}
+          setPage={setPage}
+        />
       </Container>
 
       {/* Agent details dialog */}
