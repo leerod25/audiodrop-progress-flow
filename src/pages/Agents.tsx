@@ -124,7 +124,7 @@ const Agents: React.FC = () => {
         loading={loading}
         error={error}
         userRole={userRole || ''}
-        canSeeAudio={userRole === 'business' || userRole === 'admin' || false}
+        canSeeAudio={userRole === 'business' || userRole === 'admin'}
         currentPageUsers={currentPageUsers}
         page={page}
         totalPages={totalPages}

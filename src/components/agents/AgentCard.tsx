@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { MapPin, PlayCircle } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 
 interface AudioFile {
   id: string;
@@ -71,8 +72,6 @@ const AgentCard: React.FC<AgentCardProps> = ({
               </Avatar>
               <div>
                 <h3 className="font-medium">ID: {user.id.substring(0, 8)}...</h3>
-                {/* Removed email display */}
-                
                 {/* Location info if available */}
                 {(user.country || user.city) && (
                   <p className="text-sm text-gray-500 mt-1">
@@ -83,20 +82,30 @@ const AgentCard: React.FC<AgentCardProps> = ({
               </div>
             </div>
             
-            {/* Show availability toggle for admin view */}
-            {isAdminView && toggleAvailability && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">
-                  {user.is_available ? 'Available' : 'On Project'}
-                </span>
-                <Switch
-                  checked={!!user.is_available}
-                  onCheckedChange={handleAvailabilityToggle}
-                  className="data-[state=checked]:bg-green-500"
-                />
-              </div>
-            )}
+            {/* Show availability status for all users */}
+            <div className="flex items-center">
+              <Badge 
+                variant={user.is_available ? "default" : "destructive"}
+                className="ml-2"
+              >
+                {user.is_available ? 'Available' : 'On Project'}
+              </Badge>
+            </div>
           </div>
+          
+          {/* Show availability toggle for admin view */}
+          {isAdminView && toggleAvailability && (
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-xs text-gray-500">
+                Toggle availability:
+              </span>
+              <Switch
+                checked={!!user.is_available}
+                onCheckedChange={handleAvailabilityToggle}
+                className="data-[state=checked]:bg-green-500"
+              />
+            </div>
+          )}
           
           {/* Audio preview section */}
           <div className="mt-4 pt-4 border-t">
