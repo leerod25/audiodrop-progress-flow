@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileAudio, Upload, UserCircle, Users, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 export default function Index() {
   const { user, setUser } = useUserContext();
@@ -48,10 +49,25 @@ export default function Index() {
   };
 
   return (
-    <div className="container mx-auto py-12 px-4">
+    <div className="container mx-auto py-6 px-4">
+      {/* Banner */}
+      <div className="mb-8">
+        <AspectRatio ratio={3/1} className="bg-gradient-to-r from-gray-700 to-gray-900 rounded-lg overflow-hidden">
+          <img 
+            src="/lovable-uploads/37aa98f0-a023-48e6-84d4-c255f9eec315.png" 
+            alt="Call center agents with headsets" 
+            className="w-full h-full object-cover opacity-90"
+          />
+          <div className="absolute inset-0 flex flex-col justify-center px-6 lg:px-20 text-white">
+            <h1 className="text-4xl font-bold mb-2">Welcome to Out-Fons Dashboard</h1>
+            <p className="text-xl">Let's get started with your professional call center solution</p>
+          </div>
+        </AspectRatio>
+      </div>
+
       <div className="mb-8 text-center">
-        <h1 className="text-4xl font-extrabold mb-2">Welcome to Out-Fons</h1>
-        <p className="text-gray-600">Your professional call center solution</p>
+        <h2 className="text-2xl font-bold mb-2">Manage Your Call Center Resources</h2>
+        <p className="text-gray-600">Access your tools and resources below</p>
       </div>
 
       {user ? (
