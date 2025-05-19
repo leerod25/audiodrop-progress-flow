@@ -27,8 +27,8 @@ export const convertUserToAgent = (user: User, teamIds: string[] = []): Agent =>
     // Add private fields as well (they'll only be shown to admins)
     full_name: user.full_name || null,
     email: user.email || null,
-    phone: user.phone as string | null || null,
-    bio: user.bio as string | null || null,
-    computer_skill_level: user.computer_skill_level as string | null || null
+    phone: user.phone || null,
+    bio: user.bio || null,
+    computer_skill_level: user.computer_skill_level || null
   };
 };
