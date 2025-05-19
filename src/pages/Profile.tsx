@@ -15,6 +15,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
 import ProfileForm from '@/components/profile/ProfileForm';
+import ProfessionalDetailsForm from '@/components/professional/ProfessionalDetailsForm';
 import SubscriptionInfo from '@/components/profile/SubscriptionInfo';
 import SecuritySettings from '@/components/profile/SecuritySettings';
 import NotificationSettings from '@/components/profile/NotificationSettings';
@@ -34,7 +35,10 @@ const Profile = () => {
     setProfile,
     updateProfile,
     changePassword,
-    updateNotificationSettings
+    updateNotificationSettings,
+    professionalDetails,
+    updateProfessionalDetails,
+    loadingProfessional
   } = useProfile();
 
   useEffect(() => {
@@ -65,9 +69,9 @@ const Profile = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="professional">Professional</TabsTrigger>
             <TabsTrigger value="subscription">Subscription</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
           
           <TabsContent value="profile" className="space-y-4">
@@ -78,6 +82,23 @@ const Profile = () => {
               updateProfile={updateProfile}
               userRole={userRole}
             />
+          </TabsContent>
+          
+          <TabsContent value="professional" className="space-y-4">
+            {user && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Professional Information</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ProfessionalDetailsForm
+                    userId={user.id}
+                    initialData={professionalDetails}
+                    onDetailsUpdate={updateProfessionalDetails}
+                  />
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
           
           <TabsContent value="subscription" className="space-y-4">
