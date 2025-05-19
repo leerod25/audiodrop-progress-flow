@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Languages, Briefcase, Calendar, DollarSign, Clock, Computer } from "lucide-react";
+import { Languages, Briefcase, Calendar, Clock, Computer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -12,7 +12,6 @@ type ProfessionalDetailsData = {
   additional_skills: string[];
   years_experience: string;
   availability: string[];
-  salary_expectation: number | null;
   computer_skill_level: string;
 };
 
@@ -28,7 +27,6 @@ const ProfessionalDetailsFormReadOnly = ({ userId }: ProfessionalDetailsFormRead
     additional_skills: [],
     years_experience: '',
     availability: [],
-    salary_expectation: null,
     computer_skill_level: '',
   });
 
@@ -53,7 +51,6 @@ const ProfessionalDetailsFormReadOnly = ({ userId }: ProfessionalDetailsFormRead
             additional_skills: data.additional_skills || [],
             years_experience: data.years_experience || '',
             availability: data.availability || [],
-            salary_expectation: data.salary_expectation || null,
             computer_skill_level: data.computer_skill_level || '',
           };
           
@@ -211,23 +208,6 @@ const ProfessionalDetailsFormReadOnly = ({ userId }: ProfessionalDetailsFormRead
             </div>
           ) : (
             <p className="text-sm text-gray-500">No availability specified</p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Salary Expectation Section */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
-            Salary Expectation
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {data.salary_expectation ? (
-            <p className="font-medium">${data.salary_expectation} USD per month</p>
-          ) : (
-            <p className="text-sm text-gray-500">Not specified</p>
           )}
         </CardContent>
       </Card>

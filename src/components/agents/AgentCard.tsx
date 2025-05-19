@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin, PlayCircle } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
 
 interface AudioFile {
   id: string;
@@ -33,6 +34,8 @@ interface AgentCardProps {
   avatarImage: string | null;
   getAvatarFallback: (email: string, gender: string | null | undefined) => string;
   onViewProfile: () => void;
+  toggleAvailability?: (userId: string, currentStatus: boolean) => Promise<void>;
+  isAdminView?: boolean;
 }
 
 const AgentCard: React.FC<AgentCardProps> = ({ 
@@ -40,9 +43,17 @@ const AgentCard: React.FC<AgentCardProps> = ({
   canSeeAudio,
   avatarImage,
   getAvatarFallback,
-  onViewProfile
+  onViewProfile,
+  toggleAvailability,
+  isAdminView = false
 }) => {
   const audioFiles = canSeeAudio ? user.audio_files : [];
+  
+  const handleAvailabilityToggle = async () => {
+    if (toggleAvailability) {
+      await toggleAvailability(user.id, !!user.is_available);
+    }
+  };
   
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
@@ -71,6 +82,20 @@ const AgentCard: React.FC<AgentCardProps> = ({
                 )}
               </div>
             </div>
+            
+            {/* Show availability toggle for admin view */}
+            {isAdminView && toggleAvailability && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">
+                  {user.is_available ? 'Available' : 'On Project'}
+                </span>
+                <Switch
+                  checked={!!user.is_available}
+                  onCheckedChange={handleAvailabilityToggle}
+                  className="data-[state=checked]:bg-green-500"
+                />
+              </div>
+            )}
           </div>
           
           {/* Audio preview section */}

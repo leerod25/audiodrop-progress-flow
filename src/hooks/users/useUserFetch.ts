@@ -29,7 +29,6 @@ export interface User {
   languages?: string[] | null;
   is_available?: boolean;
   role?: string;
-  salary_expectation?: number | null;
 }
 
 interface UsersResponse {
@@ -75,7 +74,7 @@ export const useUserFetch = (currentUser: any) => {
           // Try to get years experience and languages from professional_details
           const { data: professionalData } = await supabase
             .from('professional_details')
-            .select('years_experience, languages, salary_expectation')
+            .select('years_experience, languages')
             .eq('user_id', user.id)
             .single();
           
@@ -103,7 +102,6 @@ export const useUserFetch = (currentUser: any) => {
             is_available: !!availabilityData, // Available if they have professional details
             years_experience: professionalData?.years_experience || null,
             languages: professionalData?.languages || null,
-            salary_expectation: professionalData?.salary_expectation || null,
             audio_files: validAudioFiles
           };
         }));

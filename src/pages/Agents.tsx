@@ -175,6 +175,7 @@ const Agents: React.FC = () => {
               // Everyone can see basic agent data
               const canSeeAudio = userRole === 'business' || userRole === 'admin' || u.id === user?.id;
               const avatarImage = getAvatarImage(u.gender);
+              const isAdmin = userRole === 'admin';
               
               return (
                 <AgentCard 
@@ -184,6 +185,8 @@ const Agents: React.FC = () => {
                   avatarImage={avatarImage}
                   getAvatarFallback={getAvatarFallback}
                   onViewProfile={() => viewAgentDetails(u.id)}
+                  toggleAvailability={toggleAvailability}
+                  isAdminView={isAdmin}
                 />
               );
             })}
