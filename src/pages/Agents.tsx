@@ -38,7 +38,11 @@ const Agents = () => {
     handlePlaySample,
     toggleTeamMember,
     setPage
-  } = useAgentsPage({ apiUsers, user, sampleAgents });
+  } = useAgentsPage({ 
+    apiUsers: apiUsers as User[], // Add type assertion here
+    user, 
+    sampleAgents 
+  });
   
   const viewAgentDetails = (userId: string) => {
     setSelectedAgentId(userId);
