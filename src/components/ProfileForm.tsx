@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { supabase } from "@/integrations/supabase/client";
@@ -25,24 +24,28 @@ type ProfileData = {
 };
 
 interface ProfileFormProps {
-  userId: string;
+  userId?: string;
+  initialData?: any; // Added initialData prop to match usage in Profile.tsx
   onProfileUpdate?: () => void;
 }
 
-const ProfileForm = ({ userId, onProfileUpdate }: ProfileFormProps) => {
+const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps) => {
+  const { user } = useUserContext();
+  const actualUserId = userId || user?.id;
+  
   const [profileData, setProfileData] = useState<ProfileData>({
-    full_name: '',
-    email: '',
-    phone: '',
-    whatsapp: '',
-    description: '',
-    city: '',
-    country: '',
-    gender: '',
-    computer_skill_level: '',
+    full_name: initialData?.full_name || '',
+    email: initialData?.email || '',
+    phone: initialData?.phone || '',
+    whatsapp: initialData?.whatsapp || '',
+    description: initialData?.description || '',
+    city: initialData?.city || '',
+    country: initialData?.country || '',
+    gender: initialData?.gender || '',
+    computer_skill_level: initialData?.computer_skill_level || '',
   });
-  const [loading, setLoading] = useState(true);
-  const [initialLoad, setInitialLoad] = useState(true);
+  const [loading, setLoading] = useState(!initialData);
+  const [initialLoad, setInitialLoad] = useState(!initialData);
   const { setUser } = useUserContext();
   
   // Initialize profile with user's auth email
@@ -61,20 +64,37 @@ const ProfileForm = ({ userId, onProfileUpdate }: ProfileFormProps) => {
       }
     };
     
-    if (initialLoad) {
+    if (initialLoad && !initialData) {
       initializeWithAuthData();
     }
-  }, [initialLoad]);
+  }, [initialLoad, initialData]);
 
   useEffect(() => {
     const fetchProfile = async () => {
+      if (initialData) {
+        setProfileData({
+          full_name: initialData.full_name || '',
+          email: initialData.email || '',
+          phone: initialData.phone || '',
+          whatsapp: initialData.whatsapp || '',
+          description: initialData.description || '',
+          city: initialData.city || '',
+          country: initialData.country || '',
+          gender: initialData.gender || '',
+          computer_skill_level: initialData.computer_skill_level || '',
+        });
+        setLoading(false);
+        setInitialLoad(false);
+        return;
+      }
+      
       setLoading(true);
       try {
         // First check if profile exists
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', userId)
+          .eq('id', actualUserId)
           .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
@@ -100,7 +120,7 @@ const ProfileForm = ({ userId, onProfileUpdate }: ProfileFormProps) => {
           const { error: insertError } = await supabase
             .from('profiles')
             .upsert({
-              id: userId,
+              id: actualUserId,
               email: (await supabase.auth.getUser()).data.user?.email,
               updated_at: new Date().toISOString(),
             }, { onConflict: 'id' });
@@ -126,10 +146,10 @@ const ProfileForm = ({ userId, onProfileUpdate }: ProfileFormProps) => {
       }
     };
 
-    if (userId) {
+    if (actualUserId) {
       fetchProfile();
     }
-  }, [userId]);
+  }, [actualUserId, initialData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

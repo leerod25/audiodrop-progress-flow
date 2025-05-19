@@ -62,13 +62,18 @@ const Profile = () => {
 
   const isAgent = userRole === "agent";
   const isBusiness = userRole === "business";
+  
+  // Determine profile completion status
+  const isProfileComplete = isAgent 
+    ? Boolean(profile?.full_name && profile?.email && profile?.phone)
+    : Boolean(profile?.company_name || profile?.business_name);
 
   return (
     <div className="container mx-auto py-8 px-4">
       {isBusiness ? (
-        <BusinessProfileHeader profile={profile} />
+        <BusinessProfileHeader profileCompleted={isProfileComplete} profile={profile} />
       ) : (
-        <UserProfileHeader profile={profile} />
+        <UserProfileHeader profileCompleted={isProfileComplete} profile={profile} />
       )}
 
       <div className="mt-4">
@@ -76,14 +81,14 @@ const Profile = () => {
       </div>
 
       <div className="mt-8 grid gap-8 grid-cols-1">
-        {isAgent && !profile?.full_name && <ProfileIncompleteAlert />}
-        {isBusiness && !profile?.company_name && <BusinessProfileIncompleteAlert />}
+        {isAgent && !profile?.full_name && <ProfileIncompleteAlert isVisible={true} />}
+        {isBusiness && !profile?.company_name && !profile?.business_name && <BusinessProfileIncompleteAlert isVisible={true} />}
 
         <Card className="p-6 shadow-sm">
           {isBusiness ? (
-            <BusinessProfileForm initialData={profile} />
+            <BusinessProfileForm userId={user?.id} initialData={profile} />
           ) : (
-            <ProfileForm initialData={profile} />
+            <ProfileForm userId={user?.id} initialData={profile} />
           )}
         </Card>
 

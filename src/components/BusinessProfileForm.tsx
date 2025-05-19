@@ -22,23 +22,27 @@ type BusinessProfileData = {
 };
 
 interface BusinessProfileFormProps {
-  userId: string;
+  userId?: string;
+  initialData?: any; // Added initialData prop to match usage in Profile.tsx
   onProfileUpdate?: () => void;
 }
 
-const BusinessProfileForm = ({ userId, onProfileUpdate }: BusinessProfileFormProps) => {
+const BusinessProfileForm = ({ userId, initialData, onProfileUpdate }: BusinessProfileFormProps) => {
+  const { user } = useUserContext();
+  const actualUserId = userId || user?.id;
+  
   const [profileData, setProfileData] = useState<BusinessProfileData>({
-    business_name: '',
-    email: '',
-    phone: '',
-    website: '',
-    description: '',
-    industry: '',
-    city: '',
-    country: ''
+    business_name: initialData?.business_name || '',
+    email: initialData?.email || '',
+    phone: initialData?.phone || '',
+    website: initialData?.website || '',
+    description: initialData?.description || '',
+    industry: initialData?.industry || '',
+    city: initialData?.city || '',
+    country: initialData?.country || ''
   });
-  const [loading, setLoading] = useState(true);
-  const [initialLoad, setInitialLoad] = useState(true);
+  const [loading, setLoading] = useState(!initialData);
+  const [initialLoad, setInitialLoad] = useState(!initialData);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const { setUser } = useUserContext();
   
@@ -58,20 +62,36 @@ const BusinessProfileForm = ({ userId, onProfileUpdate }: BusinessProfileFormPro
       }
     };
     
-    if (initialLoad) {
+    if (initialLoad && !initialData) {
       initializeWithAuthData();
     }
-  }, [initialLoad]);
+  }, [initialLoad, initialData]);
 
   useEffect(() => {
     const fetchBusinessProfile = async () => {
+      if (initialData) {
+        setProfileData({
+          business_name: initialData.business_name || '',
+          email: initialData.email || '',
+          phone: initialData.phone || '',
+          website: initialData.website || '',
+          description: initialData.description || '',
+          industry: initialData.industry || '',
+          city: initialData.city || '',
+          country: initialData.country || '',
+        });
+        setLoading(false);
+        setInitialLoad(false);
+        return;
+      }
+      
       setLoading(true);
       try {
         // First check if business profile exists
         const { data, error } = await supabase
           .from('business_profiles')
           .select('*')
-          .eq('id', userId)
+          .eq('id', actualUserId)
           .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
@@ -97,7 +117,7 @@ const BusinessProfileForm = ({ userId, onProfileUpdate }: BusinessProfileFormPro
           const { error: insertError } = await supabase
             .from('business_profiles')
             .upsert({
-              id: userId,
+              id: actualUserId,
               email: (await supabase.auth.getUser()).data.user?.email,
               updated_at: new Date().toISOString(),
             });
@@ -123,10 +143,10 @@ const BusinessProfileForm = ({ userId, onProfileUpdate }: BusinessProfileFormPro
       }
     };
 
-    if (userId) {
+    if (actualUserId) {
       fetchBusinessProfile();
     }
-  }, [userId]);
+  }, [actualUserId, initialData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -143,7 +163,7 @@ const BusinessProfileForm = ({ userId, onProfileUpdate }: BusinessProfileFormPro
       const { error } = await supabase
         .from('business_profiles')
         .upsert({
-          id: userId,
+          id: actualUserId,
           business_name: profileData.business_name,
           email: profileData.email,
           phone: profileData.phone,

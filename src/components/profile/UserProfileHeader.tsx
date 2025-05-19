@@ -7,9 +7,10 @@ import { Mic } from 'lucide-react';
 
 interface UserProfileHeaderProps {
   profileCompleted: boolean;
+  profile?: any; // Added profile prop to match usage in Profile.tsx
 }
 
-const UserProfileHeader = ({ profileCompleted }: UserProfileHeaderProps) => {
+const UserProfileHeader = ({ profileCompleted, profile }: UserProfileHeaderProps) => {
   return (
     <CardHeader className="flex flex-row items-center justify-between">
       <CardTitle className="text-2xl font-bold">Create Profile</CardTitle>

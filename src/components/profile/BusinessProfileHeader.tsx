@@ -7,9 +7,10 @@ import { UserPlus } from 'lucide-react';
 
 interface BusinessProfileHeaderProps {
   profileCompleted: boolean;
+  profile?: any; // Added profile prop to match usage in Profile.tsx
 }
 
-const BusinessProfileHeader = ({ profileCompleted }: BusinessProfileHeaderProps) => {
+const BusinessProfileHeader = ({ profileCompleted, profile }: BusinessProfileHeaderProps) => {
   const [isInviteDialogOpen, setIsInviteDialogOpen] = React.useState(false);
   
   return (
