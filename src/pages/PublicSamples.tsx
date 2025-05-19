@@ -6,18 +6,34 @@ import { Agent } from "@/types/Agent";
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import AudioPlayer from '@/components/AudioPlayer';
+import { toast } from "sonner";
 
 export default function PublicSamplesPage() {
   const [playing, setPlaying] = useState<{ id: string; url: string } | null>(null);
+  const [audioError, setAudioError] = useState<string | null>(null);
 
   const handlePlay = (agent: Agent) => {
     // Always grab first clip
     const clip = agent.audioUrls?.[0]?.url;
-    if (clip) setPlaying({ id: agent.id, url: clip });
-    else if (playing?.id === agent.id) {
-      // Toggle off if already playing
-      setPlaying(null);
+    
+    if (clip) {
+      // If already playing this clip, stop it
+      if (playing?.id === agent.id) {
+        setPlaying(null);
+      } else {
+        // Play the new clip
+        setAudioError(null); // Reset any previous errors
+        setPlaying({ id: agent.id, url: clip });
+      }
+    } else {
+      // No clip available
+      toast.error("No audio sample available for this agent");
     }
+  };
+
+  const handleAudioError = (error: string) => {
+    setAudioError(error);
+    toast.error(error || "Failed to play audio");
   };
 
   return (
@@ -47,10 +63,23 @@ export default function PublicSamplesPage() {
 
               {playing?.id === agent.id && (
                 <div className="mt-2 p-4 bg-gray-100 rounded">
-                  <AudioPlayer 
-                    audioUrl={playing.url} 
-                    autoPlay={true}
-                  />
+                  {audioError ? (
+                    <div className="p-3 bg-red-50 text-red-600 rounded text-sm">
+                      {audioError}
+                      <button 
+                        className="ml-2 text-red-700 underline" 
+                        onClick={() => setAudioError(null)}
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  ) : (
+                    <AudioPlayer 
+                      audioUrl={playing.url} 
+                      autoPlay={true}
+                      onError={handleAudioError}
+                    />
+                  )}
                 </div>
               )}
             </div>

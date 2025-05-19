@@ -16,9 +16,9 @@ export interface Agent {
   gender?: string | null;
   audio_files?: any[]; // Add this to match the structure from useUsersData
   
-  // Add private fields that only admins should access
+  // Fields required for User compatibility
+  email?: string;
   full_name?: string | null;
-  email?: string | null;
   phone?: string | null;
   bio?: string | null;
   
@@ -26,5 +26,5 @@ export interface Agent {
   is_available?: boolean;
   years_experience?: string | null;
   languages?: string[] | null;
-  created_at?: string; // Add this to fix the type error
+  created_at?: string;
 }

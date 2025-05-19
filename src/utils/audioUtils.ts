@@ -47,18 +47,35 @@ export function isBrowserAudioSupported(): boolean {
       const canPlayMp3 = audio.canPlayType('audio/mpeg') !== '';
       const canPlayWebm = audio.canPlayType('audio/webm') !== '';
       const canPlayWav = audio.canPlayType('audio/wav') !== '';
+      const canPlayOgg = audio.canPlayType('audio/ogg') !== '';
       
       console.log('Browser audio support:', {
         mp3: audio.canPlayType('audio/mpeg'),
         webm: audio.canPlayType('audio/webm'),
-        wav: audio.canPlayType('audio/wav')
+        wav: audio.canPlayType('audio/wav'),
+        ogg: audio.canPlayType('audio/ogg')
       });
       
-      return canPlayMp3 || canPlayWebm || canPlayWav;
+      return canPlayMp3 || canPlayWebm || canPlayWav || canPlayOgg;
     }
     return false;
   } catch (e) {
     console.error('Error checking audio support:', e);
+    return false;
+  }
+}
+
+/**
+ * Check if a specific audio format is supported by the browser
+ * @param mimeType The MIME type to check (e.g., 'audio/mpeg', 'audio/wav')
+ * @returns boolean indicating if the format is supported
+ */
+export function isAudioFormatSupported(mimeType: string): boolean {
+  try {
+    const audio = new Audio();
+    return audio.canPlayType(mimeType) !== '';
+  } catch (e) {
+    console.error('Error checking audio format support:', e);
     return false;
   }
 }

@@ -4,11 +4,11 @@ export interface SampleAgent {
   country: string;
   city: string;
   audioUrls: { id: string; title: string; url: string; updated_at: string }[];
-  created_at: string; // Add this field to fix type issues
+  created_at: string; 
 }
 
-// Use a public sample audio URL
-const sampleAudioUrl = "https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav";
+// Use a browser-compatible sample audio URL (MP3 format is more widely supported)
+const sampleAudioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
 
 // Your "real" profile data
 const me: SampleAgent = {

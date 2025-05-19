@@ -6,10 +6,11 @@ import { isValidUrl } from '@/utils/audioUtils';
 interface AudioPlayerOptions {
   suppressErrors?: boolean;
   autoPlay?: boolean;
+  onError?: (error: string) => void;
 }
 
 export const useAudioPlayerState = (audioUrl: string, options: AudioPlayerOptions = {}) => {
-  const { suppressErrors = false, autoPlay = false } = options;
+  const { suppressErrors = false, autoPlay = false, onError } = options;
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -29,6 +30,9 @@ export const useAudioPlayerState = (audioUrl: string, options: AudioPlayerOption
       setError(errorMessage);
       if (!suppressErrors) {
         console.error(errorMessage);
+      }
+      if (onError) {
+        onError(errorMessage);
       }
       return;
     }
@@ -82,14 +86,21 @@ export const useAudioPlayerState = (audioUrl: string, options: AudioPlayerOption
         switch (audioElement.error.code) {
           case 1: errorMessage = 'Audio fetching aborted'; break;
           case 2: errorMessage = 'Network error while loading audio'; break;
-          case 3: errorMessage = 'Audio decoding failed'; break;
-          case 4: errorMessage = 'Audio format not supported'; break;
+          case 3: errorMessage = 'Audio decoding failed - format may not be supported'; break;
+          case 4: errorMessage = 'Audio format not supported by your browser'; break;
         }
       }
       
+      setError(errorMessage);
+      
       if (!suppressErrors) {
-        setError(errorMessage);
+        console.error(errorMessage);
       }
+      
+      if (onError) {
+        onError(errorMessage);
+      }
+      
       setIsLoading(false);
       setIsPlaying(false);
     };
@@ -126,7 +137,7 @@ export const useAudioPlayerState = (audioUrl: string, options: AudioPlayerOption
       audio.src = '';
       setIsReady(false);
     };
-  }, [audioUrl, suppressErrors, autoPlay]);
+  }, [audioUrl, suppressErrors, autoPlay, onError]);
 
   // Play/pause control
   const togglePlay = () => {
@@ -144,8 +155,14 @@ export const useAudioPlayerState = (audioUrl: string, options: AudioPlayerOption
         })
         .catch(err => {
           console.error('Error playing audio:', err);
+          const errorMessage = 'Could not play audio. Try again or use a different browser.';
+          
           if (!suppressErrors) {
-            toast.error('Could not play audio. Try again or use a different browser.');
+            toast.error(errorMessage);
+          }
+          
+          if (onError) {
+            onError(errorMessage);
           }
         })
         .finally(() => {
@@ -166,8 +183,14 @@ export const useAudioPlayerState = (audioUrl: string, options: AudioPlayerOption
       })
       .catch(err => {
         console.error('Error playing audio:', err);
+        const errorMessage = 'Could not play audio. Try again or use a different browser.';
+        
         if (!suppressErrors) {
-          toast.error('Could not play audio. Try again or use a different browser.');
+          toast.error(errorMessage);
+        }
+        
+        if (onError) {
+          onError(errorMessage);
         }
       })
       .finally(() => {

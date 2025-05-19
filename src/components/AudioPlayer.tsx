@@ -12,6 +12,7 @@ interface AudioPlayerProps {
   suppressErrors?: boolean;
   autoPlay?: boolean;
   className?: string;
+  onError?: (error: string) => void;
 }
 
 const AudioPlayer: React.FC<AudioPlayerProps> = ({
@@ -19,7 +20,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   requiresPermission = false,
   suppressErrors = false,
   autoPlay = false,
-  className
+  className,
+  onError
 }) => {
   const {
     isPlaying,
@@ -33,7 +35,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     togglePlay,
     toggleMute,
     seek
-  } = useAudioPlayerState(audioUrl, { suppressErrors, autoPlay });
+  } = useAudioPlayerState(audioUrl, { 
+    suppressErrors, 
+    autoPlay,
+    onError 
+  });
 
   if (error && !suppressErrors) {
     return (
