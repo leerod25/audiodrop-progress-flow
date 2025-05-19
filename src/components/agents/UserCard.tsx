@@ -4,6 +4,7 @@ import { User } from '@/hooks/users/useUserFetch';
 import { Button } from "@/components/ui/button";
 import { Info, Star, StarOff, ChevronDown, ChevronUp, Play, Pause } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import UserExpandedDetails from './UserExpandedDetails';
 
 interface UserCardProps {
   user: User;
@@ -148,6 +149,20 @@ const UserCard: React.FC<UserCardProps> = ({
             )}
           </div>
         </CardContent>
+        
+        {/* Expanded section with audio files */}
+        {isExpanded && (
+          <UserExpandedDetails
+            isAdmin={isAdmin}
+            userId={user.id}
+            email={user.email}
+            languages={user.languages}
+            audioFiles={user.audio_files || []}
+            playingAudio={playingAudio || null}
+            onAudioPlay={onAudioPlay}
+            showLoginPrompt={showLoginPrompt}
+          />
+        )}
       </div>
     </Card>
   );

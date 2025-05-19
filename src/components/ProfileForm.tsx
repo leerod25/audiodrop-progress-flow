@@ -1,499 +1,313 @@
-
-import { useState, useEffect } from 'react';
-import { useUserContext } from '@/contexts/UserContext';
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
-import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Flag, Computer } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormDescription } from "@/components/ui/form";
+import { useUserContext } from '@/contexts/UserContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
+import { MultiSelect } from '@/components/ui/multi-select';
 
-type ProfileData = {
-  full_name: string | null;
-  email: string | null;
-  phone: string | null;
-  whatsapp: string | null;
-  description: string | null;
-  city: string | null;
-  country: string | null;
-  gender: string | null;
-  computer_skill_level: string | null;
-  salary_expectation: string | null;
-};
+// Define the form schema with Zod
+const profileFormSchema = z.object({
+  full_name: z.string().min(2, 'Name must be at least 2 characters').max(50),
+  bio: z.string().max(500, 'Bio must be less than 500 characters').optional(),
+  country: z.string().min(1, 'Please select a country'),
+  city: z.string().optional(),
+  gender: z.string().optional(),
+  years_experience: z.string().optional(),
+  languages: z.array(z.string()).optional(),
+});
 
-interface ProfileFormProps {
-  userId?: string;
-  initialData?: any;
-  onProfileUpdate?: () => void;
-}
+type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps) => {
-  const { user } = useUserContext();
-  const actualUserId = userId || user?.id;
-  
-  const [profileData, setProfileData] = useState<ProfileData>({
-    full_name: initialData?.full_name || '',
-    email: initialData?.email || '',
-    phone: initialData?.phone || '',
-    whatsapp: initialData?.whatsapp || '',
-    description: initialData?.description || '',
-    city: initialData?.city || '',
-    country: initialData?.country || '',
-    gender: initialData?.gender || '',
-    computer_skill_level: initialData?.computer_skill_level || '',
-    salary_expectation: initialData?.salary_expectation || '500',
+// List of languages for the multi-select
+const languageOptions = [
+  { label: 'English', value: 'English' },
+  { label: 'Spanish', value: 'Spanish' },
+  { label: 'French', value: 'French' },
+  { label: 'German', value: 'German' },
+  { label: 'Italian', value: 'Italian' },
+  { label: 'Portuguese', value: 'Portuguese' },
+  { label: 'Russian', value: 'Russian' },
+  { label: 'Mandarin', value: 'Mandarin' },
+  { label: 'Japanese', value: 'Japanese' },
+  { label: 'Arabic', value: 'Arabic' },
+  { label: 'Hindi', value: 'Hindi' },
+];
+
+// List of countries for the select
+const countries = [
+  'United States', 'Canada', 'Mexico', 'Brazil', 'Argentina', 'Colombia', 
+  'United Kingdom', 'France', 'Germany', 'Spain', 'Italy', 'Netherlands',
+  'India', 'China', 'Japan', 'South Korea', 'Australia', 'New Zealand',
+  'South Africa', 'Nigeria', 'Egypt', 'Saudi Arabia', 'United Arab Emirates',
+  'El Salvador', 'Guatemala', 'Honduras', 'Nicaragua', 'Costa Rica', 'Panama'
+];
+
+export default function ProfileForm() {
+  const { user, userProfile, refreshUserProfile } = useUserContext();
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Initialize the form with react-hook-form
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      full_name: '',
+      bio: '',
+      country: '',
+      city: '',
+      gender: '',
+      years_experience: '',
+      languages: [],
+    },
   });
-  const [loading, setLoading] = useState(!initialData);
-  const [initialLoad, setInitialLoad] = useState(!initialData);
-  const { setUser } = useUserContext();
-  
-  // Initialize profile with user's auth email
+
+  // Update form values when userProfile changes
   useEffect(() => {
-    const initializeWithAuthData = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.email && initialLoad) {
-          setProfileData(prev => ({
-            ...prev,
-            email: user.email
-          }));
-        }
-      } catch (error) {
-        console.error("Error getting auth user data:", error);
-      }
-    };
-    
-    if (initialLoad && !initialData) {
-      initializeWithAuthData();
+    if (userProfile) {
+      form.reset({
+        full_name: userProfile.full_name || '',
+        bio: userProfile.bio || '',
+        country: userProfile.country || '',
+        city: userProfile.city || '',
+        gender: userProfile.gender || '',
+        years_experience: userProfile.years_experience || '',
+        languages: userProfile.languages || [],
+      });
     }
-  }, [initialLoad, initialData]);
+  }, [userProfile, form]);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (initialData) {
-        setProfileData({
-          full_name: initialData.full_name || '',
-          email: initialData.email || '',
-          phone: initialData.phone || '',
-          whatsapp: initialData.whatsapp || '',
-          description: initialData.description || '',
-          city: initialData.city || '',
-          country: initialData.country || '',
-          gender: initialData.gender || '',
-          computer_skill_level: initialData.computer_skill_level || '',
-          salary_expectation: initialData.salary_expectation || '500',
-        });
-        setLoading(false);
-        setInitialLoad(false);
-        return;
-      }
-      
-      setLoading(true);
-      try {
-        // First check if profile exists
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', actualUserId)
-          .maybeSingle();
-
-        if (error && error.code !== 'PGRST116') {
-          console.error("Error fetching profile:", error);
-          toast.error("Failed to load profile data.");
-        }
-
-        if (data) {
-          // Profile exists, set data
-          setProfileData({
-            full_name: data.full_name || '',
-            email: data.email || '',
-            phone: data.phone || '',
-            whatsapp: data.whatsapp || '',
-            description: data.description || '',
-            city: data.city || '',
-            country: data.country || '',
-            gender: data.gender || '',
-            computer_skill_level: data.computer_skill_level || '',
-            salary_expectation: data.salary_expectation || '500',
-          });
-        } else {
-          // Profile doesn't exist or is empty, create initial entry
-          const { error: insertError } = await supabase
-            .from('profiles')
-            .upsert({
-              id: actualUserId,
-              email: (await supabase.auth.getUser()).data.user?.email,
-              updated_at: new Date().toISOString(),
-            }, { onConflict: 'id' });
-          
-          if (insertError) {
-            console.error("Error creating initial profile:", insertError);
-          }
-          
-          // Set email from auth if available
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user?.email) {
-            setProfileData(prev => ({
-              ...prev,
-              email: user.email
-            }));
-          }
-        }
-      } catch (error) {
-        console.error("Error in profile fetch/creation:", error);
-      } finally {
-        setLoading(false);
-        setInitialLoad(false);
-      }
-    };
-
-    if (actualUserId) {
-      fetchProfile();
+  // Handle form submission
+  async function onSubmit(data: ProfileFormValues) {
+    if (!user) {
+      toast.error('You must be logged in to update your profile');
+      return;
     }
-  }, [actualUserId, initialData]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setProfileData(prevData => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setProfileData(prevData => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    setIsLoading(true);
     try {
       const { error } = await supabase
         .from('profiles')
-        .upsert({
-          id: actualUserId,
-          full_name: profileData.full_name,
-          email: profileData.email,
-          phone: profileData.phone,
-          whatsapp: profileData.whatsapp,
-          description: profileData.description,
-          city: profileData.city,
-          country: profileData.country,
-          gender: profileData.gender,
-          computer_skill_level: profileData.computer_skill_level,
-          salary_expectation: profileData.salary_expectation,
+        .update({
+          full_name: data.full_name,
+          bio: data.bio,
+          country: data.country,
+          city: data.city,
+          gender: data.gender,
+          years_experience: data.years_experience,
+          languages: data.languages,
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'id' });
+        })
+        .eq('id', user.id);
 
-      if (error) {
-        console.error("Error updating profile:", error);
-        toast.error("Failed to update profile.");
-      } else {
-        toast.success("Profile updated successfully!");
-        // Optimistically update the user context
-        setUser(prevUser => ({
-          ...prevUser,
-          full_name: profileData.full_name,
-          email: profileData.email,
-        }));
-        
-        // Call the onProfileUpdate callback if provided
-        if (onProfileUpdate) {
-          onProfileUpdate();
-        }
-      }
+      if (error) throw error;
+      
+      toast.success('Profile updated successfully');
+      refreshUserProfile();
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      toast.error(error.message || 'Failed to update profile');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
-
-  // Define salary options
-  const salaryOptions = [
-    { value: "500", label: "$500 per month" },
-    { value: "750", label: "$750 per month" },
-    { value: "1000", label: "$1,000 per month" },
-    { value: "1500", label: "$1,500 per month" },
-    { value: "2000", label: "$2,000 per month" },
-    { value: "2500", label: "$2,500 per month" },
-    { value: "3000", label: "$3,000 per month" },
-    { value: "4000", label: "$4,000 per month" },
-    { value: "5000", label: "$5,000 per month" },
-    { value: "custom", label: "Custom amount" }
-  ];
-
-  if (loading) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="space-y-4"
-      >
-        <div>
-          <Label htmlFor="full_name">Full Name</Label>
-          <Skeleton className="h-9 w-[300px]" />
-        </div>
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Skeleton className="h-9 w-[300px]" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="phone">Phone</Label>
-            <Skeleton className="h-9 w-full" />
-          </div>
-          <div>
-            <Label htmlFor="whatsapp">WhatsApp</Label>
-            <Skeleton className="h-9 w-full" />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="city">City</Label>
-            <Skeleton className="h-9 w-full" />
-          </div>
-          <div>
-            <Label htmlFor="country">Country</Label>
-            <Skeleton className="h-9 w-full" />
-          </div>
-        </div>
-        <div>
-          <Label htmlFor="computer_skill_level">Computer Skills</Label>
-          <Skeleton className="h-9 w-[300px]" />
-        </div>
-        <div>
-          <Label htmlFor="description">Description</Label>
-          <Skeleton className="h-[60px] w-[300px]" />
-        </div>
-        <Skeleton className="h-10 w-[100px]" />
-      </motion.div>
-    );
   }
 
   return (
-    <motion.form
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      onSubmit={handleSubmit}
-      className="space-y-4"
-    >
-      {/* Name (first) */}
-      <div className="grid gap-2">
-        <Label htmlFor="full_name">Full Name <span className="text-red-500">*</span></Label>
-        <Input
-          type="text"
-          id="full_name"
-          name="full_name"
-          value={profileData.full_name || ''}
-          onChange={handleChange}
-          placeholder="Your full name"
-          required
-        />
-      </div>
-      
-      {/* Email (second) */}
-      <div className="grid gap-2">
-        <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
-        <Input
-          type="email"
-          id="email"
-          name="email"
-          value={profileData.email || ''}
-          onChange={handleChange}
-          placeholder="Your email"
-          required
-        />
-      </div>
-      
-      {/* Phone and WhatsApp on same line */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="phone">Phone <span className="text-red-500">*</span></Label>
-          <Input
-            type="tel"
-            id="phone"
-            name="phone"
-            value={profileData.phone || ''}
-            onChange={handleChange}
-            placeholder="Your phone number"
-            required
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="whatsapp">WhatsApp</Label>
-          <Input
-            type="tel"
-            id="whatsapp"
-            name="whatsapp"
-            value={profileData.whatsapp || ''}
-            onChange={handleChange}
-            placeholder="Your WhatsApp number"
-          />
-        </div>
-      </div>
-      
-      {/* Country and City on same line */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="country">Country <span className="text-red-500">*</span></Label>
-          <Input
-            id="country"
-            name="country"
-            value={profileData.country || ''}
-            onChange={handleChange}
-            placeholder="Your country"
-            required
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="city">City <span className="text-red-500">*</span></Label>
-          <Input
-            id="city"
-            name="city"
-            value={profileData.city || ''}
-            onChange={handleChange}
-            placeholder="Your city"
-            required
-          />
-        </div>
-      </div>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Profile Information</CardTitle>
+        <CardDescription>
+          Update your personal information and preferences
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="full_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Your name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-      {/* Salary Expectation */}
-      <div className="grid gap-2">
-        <Label htmlFor="salary_expectation">Salary Expectation (per month) <span className="text-muted-foreground font-normal">(Confidential)</span></Label>
-        <div className="flex flex-col space-y-4">
-          <Select 
-            value={profileData.salary_expectation || '500'} 
-            onValueChange={(value) => {
-              handleSelectChange('salary_expectation', value);
-            }}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select monthly salary expectation" />
-            </SelectTrigger>
-            <SelectContent>
-              {salaryOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          {profileData.salary_expectation === 'custom' && (
-            <div className="flex items-center space-x-2">
-              <span className="text-lg">$</span>
-              <Input
-                id="custom_salary"
-                name="salary_expectation"
-                type="text"
-                value={profileData.salary_expectation === 'custom' ? '' : profileData.salary_expectation || ''}
-                onChange={handleChange}
-                placeholder="Enter custom amount"
-                className="flex-1"
+            <FormField
+              control={form.control}
+              name="bio"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Bio</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Tell us a bit about yourself" 
+                      className="resize-none" 
+                      {...field} 
+                      value={field.value || ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Country</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a country" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {countries.map((country) => (
+                          <SelectItem key={country} value={country}>
+                            {country}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <span className="text-sm text-muted-foreground">per month</span>
-            </div>
-          )}
-        </div>
-        <p className="text-sm text-muted-foreground">
-          This information is confidential and will only be shared with businesses when matching you to opportunities.
-        </p>
-      </div>
-      
-      {/* Gender selection */}
-      <div className="grid gap-2">
-        <Label htmlFor="gender">Gender <span className="text-red-500">*</span></Label>
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <input 
-              type="radio" 
-              id="male" 
-              name="gender" 
-              value="male"
-              checked={profileData.gender === 'male'}
-              onChange={(e) => handleSelectChange('gender', e.target.value)}
-              className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-              required
-            />
-            <Label htmlFor="male" className="cursor-pointer">Male</Label>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <input 
-              type="radio" 
-              id="female" 
-              name="gender" 
-              value="female"
-              checked={profileData.gender === 'female'}
-              onChange={(e) => handleSelectChange('gender', e.target.value)}
-              className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-            />
-            <Label htmlFor="female" className="cursor-pointer">Female</Label>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <input 
-              type="radio" 
-              id="other" 
-              name="gender" 
-              value="other"
-              checked={profileData.gender === 'other'}
-              onChange={(e) => handleSelectChange('gender', e.target.value)}
-              className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-            />
-            <Label htmlFor="other" className="cursor-pointer">Other</Label>
-          </div>
-        </div>
-      </div>
-      
-      {/* Computer Skills as mandatory field */}
-      <div className="grid gap-2">
-        <Label htmlFor="computer_skill_level">Computer Skills <span className="text-red-500">*</span></Label>
-        <Select 
-          value={profileData.computer_skill_level || ''} 
-          onValueChange={(value) => handleSelectChange('computer_skill_level', value)}
-          required
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select your computer skill level" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="beginner">Beginner</SelectItem>
-            <SelectItem value="intermediate">Intermediate</SelectItem>
-            <SelectItem value="advanced">Advanced</SelectItem>
-            <SelectItem value="expert">Expert</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      {/* Description */}
-      <div className="grid gap-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          name="description"
-          value={profileData.description || ''}
-          onChange={handleChange}
-          placeholder="A brief description about yourself"
-        />
-      </div>
-      
-      <Button type="submit" disabled={loading}>
-        {loading ? "Saving..." : "Update Profile"}
-      </Button>
-    </motion.form>
-  );
-};
 
-export default ProfileForm;
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>City</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your city" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gender</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                      value={field.value || ''}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                        <SelectItem value="Non-binary">Non-binary</SelectItem>
+                        <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="years_experience"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Years of Experience</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                      value={field.value || ''}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select experience" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="0-1">Less than 1 year</SelectItem>
+                        <SelectItem value="1-3">1-3 years</SelectItem>
+                        <SelectItem value="3-5">3-5 years</SelectItem>
+                        <SelectItem value="5-10">5-10 years</SelectItem>
+                        <SelectItem value="10+">10+ years</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="languages"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Languages Spoken</FormLabel>
+                  <FormControl>
+                    <MultiSelect
+                      options={languageOptions}
+                      selected={field.value || []}
+                      onChange={field.onChange}
+                      placeholder="Select languages"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <CardFooter className="px-0 pt-4">
+              <Button type="submit" disabled={isLoading} className="ml-auto">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </Button>
+            </CardFooter>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
+}
