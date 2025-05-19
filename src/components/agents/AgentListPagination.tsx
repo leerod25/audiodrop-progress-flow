@@ -17,11 +17,19 @@ const AgentListPagination: React.FC<AgentListPaginationProps> = ({
     return null;
   }
 
+  const handlePrevious = () => {
+    setPage(Math.max(1, page - 1));
+  };
+
+  const handleNext = () => {
+    setPage(Math.min(totalPages, page + 1));
+  };
+
   return (
     <div className="flex justify-center mt-6 gap-2">
       <Button 
         variant="outline" 
-        onClick={() => setPage(p => Math.max(1, p - 1))} 
+        onClick={handlePrevious} 
         disabled={page === 1}
       >
         Previous
@@ -31,7 +39,7 @@ const AgentListPagination: React.FC<AgentListPaginationProps> = ({
       </div>
       <Button 
         variant="outline" 
-        onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+        onClick={handleNext}
         disabled={page === totalPages}
       >
         Next
