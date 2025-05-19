@@ -19,10 +19,6 @@ export function isValidUrl(url: string): boolean {
     if (url.startsWith('data:audio/')) {
       return true;
     }
-    // For Supabase storage URLs
-    if (url.includes('supabase.co/storage/v1/object/public/')) {
-      return true;
-    }
     // For relative paths, we'll consider them valid if they match certain patterns
     if (url.startsWith('path/') || url.startsWith('/') || /^[a-zA-Z0-9]/.test(url)) {
       return true;
@@ -47,35 +43,18 @@ export function isBrowserAudioSupported(): boolean {
       const canPlayMp3 = audio.canPlayType('audio/mpeg') !== '';
       const canPlayWebm = audio.canPlayType('audio/webm') !== '';
       const canPlayWav = audio.canPlayType('audio/wav') !== '';
-      const canPlayOgg = audio.canPlayType('audio/ogg') !== '';
       
       console.log('Browser audio support:', {
         mp3: audio.canPlayType('audio/mpeg'),
         webm: audio.canPlayType('audio/webm'),
-        wav: audio.canPlayType('audio/wav'),
-        ogg: audio.canPlayType('audio/ogg')
+        wav: audio.canPlayType('audio/wav')
       });
       
-      return canPlayMp3 || canPlayWebm || canPlayWav || canPlayOgg;
+      return canPlayMp3 || canPlayWebm || canPlayWav;
     }
     return false;
   } catch (e) {
     console.error('Error checking audio support:', e);
-    return false;
-  }
-}
-
-/**
- * Check if a specific audio format is supported by the browser
- * @param mimeType The MIME type to check (e.g., 'audio/mpeg', 'audio/wav')
- * @returns boolean indicating if the format is supported
- */
-export function isAudioFormatSupported(mimeType: string): boolean {
-  try {
-    const audio = new Audio();
-    return audio.canPlayType(mimeType) !== '';
-  } catch (e) {
-    console.error('Error checking audio format support:', e);
     return false;
   }
 }

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Agent } from '@/types/Agent';
@@ -8,15 +8,17 @@ interface AgentListCardProps {
   agent: Agent;
   onViewDetails: (agent: Agent) => void;
   onAddToTeam: (agent: Agent) => void;
-  onPlaySample: (agent: Agent) => void;
 }
 
 const AgentListCard: React.FC<AgentListCardProps> = ({
   agent,
   onViewDetails,
   onAddToTeam,
-  onPlaySample,
 }) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  // Pick the very first URL from audioUrls
+  const sampleUrl = agent.audioUrls && agent.audioUrls[0]?.url;
+
   return (
     <Card className="relative">
       <CardHeader>
@@ -29,7 +31,7 @@ const AgentListCard: React.FC<AgentListCardProps> = ({
           {agent.country}
         </p>
 
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
           <Button
             variant="outline"
             size="sm"
@@ -46,14 +48,24 @@ const AgentListCard: React.FC<AgentListCardProps> = ({
             Add to Team
           </Button>
 
-          {agent.has_audio && (
-            <Button
-              size="sm"
-              className="bg-green-500 hover:bg-green-600 border-green-500 text-white"
-              onClick={() => onPlaySample(agent)}
-            >
-              ▶︎ Play Sample
-            </Button>
+          {sampleUrl && (
+            <>
+              <Button
+                size="sm"
+                className="bg-green-500 hover:bg-green-600 border-green-500 text-white"
+                onClick={() => {
+                  audioRef.current?.play();
+                }}
+              >
+                ▶︎ Play Sample
+              </Button>
+              <audio
+                ref={audioRef}
+                src={sampleUrl}
+                preload="none"
+                className="hidden"
+              />
+            </>
           )}
         </div>
       </CardContent>

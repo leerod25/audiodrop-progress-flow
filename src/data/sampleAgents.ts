@@ -1,48 +1,90 @@
 
-// Sample agents data to display when a user is not logged in
+import { User } from '@/hooks/users/useUserFetch';
 
-// Use an existing audio URL from the user's profile
-export const sampleAudioUrl = "https://hoeprpjndjhhotccljdm.supabase.co/storage/v1/object/public/audio-bucket/recordings/80257eb7-c7d5-4874-bc38-c9cbf12727d4.webm"; 
-
-const sampleAudio = {
-  id: "sample-audio-1",
-  title: "Welcome Message",
-  audio_url: sampleAudioUrl,
-  created_at: new Date().toISOString()
-};
-
-// Create a sample agent template
-const createSampleAgent = (id: string, city: string, country: string) => {
-  return {
-    id: id,
-    email: "",  // No email shown for sample agents
-    full_name: `Agent ID: ${id.substring(0, 8)}...`,
-    avatar_url: "",
-    created_at: new Date().toISOString(),
-    audio_files: [sampleAudio],
-    country: country,
-    city: city,
-    gender: "Not specified",
-    years_experience: "3+",
-    languages: ["English", "Spanish"],
+// Sample agent data for North America (6 profiles) - REMOVED EMAIL fields
+export const sampleAgents: User[] = [
+  {
+    id: '550e8400-e29b-41d4-a716-446655440000',
+    email: '', // Removed email
+    full_name: 'Agent ID: 550e8400',
+    created_at: '2024-01-15',
+    audio_files: [],
+    country: 'United States',
+    city: 'New York',
+    gender: 'Male',
+    years_experience: '5',
+    languages: ['English', 'Spanish'],
     is_available: true,
-    role: "agent",
-    has_audio: true,
-    audioUrls: [{
-      id: "sample-audio-1",
-      title: "Welcome Message",
-      url: sampleAudioUrl,
-      updated_at: new Date().toISOString()
-    }]
-  };
-};
-
-// Create 6 sample agents with the same profile but different locations with valid UUIDs
-export const sampleAgents = [
-  createSampleAgent("3a067ecc-1234-5678-9abc-def012345678", "New York", "United States"),
-  createSampleAgent("4b178fdd-2345-6789-abcd-ef0123456789", "Los Angeles", "United States"),
-  createSampleAgent("5c289fee-3456-789a-bcde-f01234567890", "London", "United Kingdom"),
-  createSampleAgent("6d39a0ff-4567-89ab-cdef-012345678901", "Sydney", "Australia"),
-  createSampleAgent("7e4ab100-5678-9abc-def0-123456789012", "Toronto", "Canada"),
-  createSampleAgent("8f5bc201-6789-abcd-ef01-234567890123", "Berlin", "Germany")
+    role: 'agent'
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440001',
+    email: '', // Removed email
+    full_name: 'Agent ID: 550e8401',
+    created_at: '2024-02-10',
+    audio_files: [],
+    country: 'Mexico',
+    city: 'Mexico City',
+    gender: 'Female',
+    years_experience: '7',
+    languages: ['Spanish', 'English'],
+    is_available: true,
+    role: 'agent'
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440002',
+    email: '', // Removed email
+    full_name: 'Agent ID: 550e8402',
+    created_at: '2024-03-05',
+    audio_files: [],
+    country: 'Canada',
+    city: 'Toronto',
+    gender: 'Male',
+    years_experience: '3',
+    languages: ['English', 'French'],
+    is_available: false,
+    role: 'agent'
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440003',
+    email: '', // Removed email
+    full_name: 'Agent ID: 550e8403',
+    created_at: '2024-01-25',
+    audio_files: [],
+    country: 'El Salvador',
+    city: 'San Salvador',
+    gender: 'Female',
+    years_experience: '4',
+    languages: ['Spanish', 'English'],
+    is_available: true,
+    role: 'agent'
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440004',
+    email: '', // Removed email
+    full_name: 'Agent ID: 550e8404',
+    created_at: '2024-02-20',
+    audio_files: [],
+    country: 'United States',
+    city: 'Los Angeles',
+    gender: 'Male',
+    years_experience: '6',
+    languages: ['English'],
+    is_available: true,
+    role: 'agent'
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440005',
+    email: '', // Removed email
+    full_name: 'Agent ID: 550e8405',
+    created_at: '2024-03-15',
+    audio_files: [],
+    country: 'Mexico',
+    city: 'Guadalajara',
+    gender: 'Male',
+    years_experience: '8',
+    languages: ['Spanish', 'English', 'Portuguese'],
+    is_available: true,
+    role: 'agent'
+  }
 ];

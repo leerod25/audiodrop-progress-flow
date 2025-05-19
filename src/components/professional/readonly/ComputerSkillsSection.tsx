@@ -1,17 +1,33 @@
 
-import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Computer } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export interface ComputerSkillsSectionProps {
-  level: string;
+interface ComputerSkillsSectionProps {
+  skillLevel: string;
 }
 
-const ComputerSkillsSection: React.FC<ComputerSkillsSectionProps> = ({ level }) => {
+const ComputerSkillsSection = ({ skillLevel }: ComputerSkillsSectionProps) => {
+  // Format computer skill level for display
+  const formatSkillLevel = (skillLevel: string) => {
+    switch(skillLevel) {
+      case 'beginner': return 'Beginner';
+      case 'intermediate': return 'Intermediate';
+      case 'advanced': return 'Advanced';
+      case 'expert': return 'Expert';
+      default: return 'Not specified';
+    }
+  };
+
   return (
     <Card>
-      <CardContent className="pt-6">
-        <h3 className="font-medium mb-2">Computer Skills</h3>
-        <p className="text-sm">{level || 'Not specified'}</p>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Computer className="h-5 w-5" />
+          Computer Skills Level
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p>{skillLevel ? formatSkillLevel(skillLevel) : 'Not specified'}</p>
       </CardContent>
     </Card>
   );

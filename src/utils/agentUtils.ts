@@ -43,13 +43,6 @@ export const convertUserToAgent = (user: User) => {
     audioSamples: user.audio_files || [],
     isAvailable: user.is_available || false,
     avatar: user.avatar_url || '',
-    gender: user.gender || 'Not specified',
-    has_audio: user.audio_files && user.audio_files.length > 0,
-    audioUrls: user.audio_files?.map(file => ({
-      id: file.id,
-      title: file.title,
-      url: file.audio_url,
-      updated_at: file.created_at || new Date().toISOString()
-    })) || []
+    gender: user.gender || 'Not specified'
   };
 };
