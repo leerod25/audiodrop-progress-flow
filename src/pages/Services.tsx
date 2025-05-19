@@ -5,6 +5,9 @@ import { Container } from '@/components/ui/container';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import Header from '@/components/landing/Header';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import Footer from '@/components/landing/Footer';
 
 interface Service {
   id: string;
@@ -53,12 +56,37 @@ const ServicesPage = () => {
   };
 
   return (
-    <div className="py-16 bg-white">
-      <Container>
+    <div className="min-h-screen bg-white">
+      <Header />
+      
+      {/* Hero Banner - Matching landing page style */}
+      <section className="w-full relative">
+        <AspectRatio ratio={3/1} className="bg-gradient-to-r from-gray-700 to-gray-900">
+          <img 
+            src="/lovable-uploads/2e644405-88f8-49aa-8ff8-2c0429dc7cb9.png" 
+            alt="Call center services" 
+            className="w-full h-full object-cover opacity-70"
+          />
+          <div className="absolute inset-0 flex flex-col justify-center px-6 lg:px-20 text-white">
+            <h1 className="text-5xl lg:text-6xl font-extrabold leading-tight">
+              Our Services
+            </h1>
+            <p className="mt-4 text-xl lg:text-2xl max-w-2xl">
+              Professional call center solutions where <span className="font-semibold">you</span> choose your team and stay in control.
+            </p>
+            <p className="mt-4 text-lg max-w-2xl">
+              We believe in transparency and giving you the power to select the perfect agents for your business needs, 
+              guaranteeing better results through genuine collaboration.
+            </p>
+          </div>
+        </AspectRatio>
+      </section>
+
+      <Container className="py-16">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Our Services</h1>
+          <h2 className="text-3xl font-bold mb-4">Tailored Calling Solutions</h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Professional call center solutions tailored to your business needs
+            Choose from our range of specialized services and the agents that best fit your business needs
           </p>
         </div>
 
@@ -107,13 +135,41 @@ const ServicesPage = () => {
           ))}
         </div>
 
+        <div className="bg-blue-50 p-8 rounded-lg mb-16">
+          <h3 className="text-2xl font-bold mb-4 text-center">Your Team, Your Control</h3>
+          <p className="text-center mb-6">
+            Unlike traditional call centers, Out-Fons puts you in the driver's seat by letting you:
+          </p>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h4 className="font-bold mb-2">Select Your Agents</h4>
+              <p className="text-gray-600">Browse and choose agents that match your specific business needs and culture.</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h4 className="font-bold mb-2">Monitor Performance</h4>
+              <p className="text-gray-600">Track results in real-time and make adjustments to optimize your campaigns.</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h4 className="font-bold mb-2">Scale As Needed</h4>
+              <p className="text-gray-600">Easily expand or reduce your team based on your current business requirements.</p>
+            </div>
+          </div>
+        </div>
+
         <div className="text-center">
           <h2 className="text-2xl font-semibold mb-6">Ready to elevate your customer outreach?</h2>
-          <Button asChild size="lg" className="px-8">
-            <Link to="/contact">Get Started Today</Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" className="px-8">
+              <Link to="/agents">Browse Our Agents</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="px-8">
+              <Link to="/contact">Get Started Today</Link>
+            </Button>
+          </div>
         </div>
       </Container>
+      
+      <Footer />
     </div>
   );
 };

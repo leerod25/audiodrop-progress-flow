@@ -67,9 +67,9 @@ export const useUserFetch = (currentUser: any) => {
         // Process users to ensure audio files have proper URLs and add profile data
         const processedUsers = await Promise.all(response.users.map(async (user) => {
           // Try to get additional profile data from the profiles table
-          const { data: profileData } = await supabase
+          const { data: profileData, error: profileError } = await supabase
             .from('profiles')
-            .select('country, city, gender, role, salary_expectation')
+            .select('*')
             .eq('id', user.id)
             .single();
             
@@ -142,14 +142,14 @@ export const useUserFetch = (currentUser: any) => {
         }
       } else {
         // If currently unavailable, add a professional_details entry
-        // Convert salary_expectation to a string if needed
+        // Convert salary_expectation to a string since we're storing it as string
         const { error } = await supabase
           .from('professional_details')
           .insert({ 
             user_id: userId,
             years_experience: '1', // Default value
             languages: ['English'], // Default value
-            salary_expectation: '45000'  // Default value as string
+            salary_expectation: '500'  // String value
           });
         
         if (error) {
