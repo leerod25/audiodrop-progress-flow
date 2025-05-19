@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Stop, Star } from 'lucide-react';
+import { Play, Pause, Square, Star } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -88,7 +88,7 @@ const AgentAudioModal: React.FC<AgentAudioModalProps> = ({
                     onClick={stopAudio}
                     disabled={!isPlaying}
                   >
-                    <Stop className="mr-2 h-4 w-4" />
+                    <Square className="mr-2 h-4 w-4" />
                     Stop
                   </Button>
                 </div>

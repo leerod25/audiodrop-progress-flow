@@ -36,7 +36,9 @@ const ProfessionalDetailsFormReadOnly: React.FC<ProfessionalDetailsFormReadOnlyP
         additionalSkills={professionalDetails.additional_skills || []}
       />
       
-      <ComputerSkillsSection level={professionalDetails.computer_skill_level || ''} />
+      <ComputerSkillsSection 
+        computerSkillLevel={professionalDetails.computer_skill_level || ''}
+      />
       
       <AvailabilitySection 
         availability={professionalDetails.availability || []}

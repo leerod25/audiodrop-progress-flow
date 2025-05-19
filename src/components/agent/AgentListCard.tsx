@@ -3,7 +3,7 @@ import React, { useRef, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Agent } from '@/types/Agent';
-import { Play, Pause, Stop } from 'lucide-react';
+import { Play, Pause, Square } from 'lucide-react';
 import AudioPlayer from '@/components/AudioPlayer';
 
 interface AgentListCardProps {
@@ -100,7 +100,7 @@ const AgentListCard: React.FC<AgentListCardProps> = ({
                   variant="outline"
                   onClick={handleStop}
                 >
-                  <Stop className="mr-1 h-4 w-4" /> Stop
+                  <Square className="mr-1 h-4 w-4" /> Stop
                 </Button>
               )}
               
