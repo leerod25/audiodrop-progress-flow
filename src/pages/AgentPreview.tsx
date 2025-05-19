@@ -4,6 +4,7 @@ import { useUserContext } from '@/contexts/UserContext';
 import { useUsersData } from '@/hooks/useUsersData';
 import AgentDetailCard from '@/components/agent/AgentDetailCard';
 import AgentDetailsDialog from '@/components/agents/AgentDetailsDialog';
+import { Button } from "@/components/ui/button"; // Add this import
 
 const AgentPreview: React.FC = () => {
   const { user, userRole } = useUserContext();
