@@ -13,7 +13,6 @@ import ProfessionalDetailsForm from "@/components/ProfessionalDetailsForm";
 import ProfileAudioList from "@/components/profile/ProfileAudioList";
 import UserProfileHeader from "@/components/profile/UserProfileHeader";
 import BusinessProfileHeader from "@/components/profile/BusinessProfileHeader";
-import AdminPromotionButton from "@/components/profile/AdminPromotionButton";
 
 const Profile = () => {
   const { user, userRole } = useUserContext();
@@ -75,10 +74,6 @@ const Profile = () => {
       ) : (
         <UserProfileHeader profileCompleted={isProfileComplete} profile={profile} />
       )}
-
-      <div className="mt-4">
-        <AdminPromotionButton />
-      </div>
 
       <div className="mt-8 grid gap-8 grid-cols-1">
         {isAgent && !profile?.full_name && <ProfileIncompleteAlert isVisible={true} />}

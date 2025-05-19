@@ -81,57 +81,12 @@ serve(async (req) => {
       });
     }
 
-    // First, update user_metadata with admin role
-    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-      targetUserId,
-      {
-        user_metadata: { role: 'admin' },
-      }
-    );
-
-    if (updateError) {
-      return new Response(JSON.stringify({ error: 'Failed to update user', details: updateError.message }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      });
-    }
-
-    // Then update or insert into user_roles table
-    const { error: roleError } = await supabaseAdmin
-      .from('user_roles')
-      .upsert({ 
-        user_id: targetUserId, 
-        role: 'admin' 
-      })
-      .select();
-
-    if (roleError) {
-      return new Response(JSON.stringify({ error: 'Failed to update role', details: roleError.message }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      });
-    }
-
-    // Also update the profile role
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .update({ role: 'admin' })
-      .eq('id', targetUserId);
-
-    if (profileError) {
-      return new Response(JSON.stringify({ error: 'Failed to update profile', details: profileError.message }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      });
-    }
-
+    // Function is disabled - only one admin is allowed
     return new Response(JSON.stringify({ 
-      success: true, 
-      message: 'User promoted to admin successfully',
-      userId: targetUserId
+      error: 'Admin promotion functionality has been disabled. Only one admin account is allowed.'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
+      status: 403,
     });
 
   } catch (error) {

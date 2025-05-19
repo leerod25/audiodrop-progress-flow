@@ -51,22 +51,13 @@ const AdminPromotionButton = () => {
     }
   };
   
-  // Only show for your email
+  // Only show for admin user with specific email
   if (user?.email !== 'leerod25@hotmail.com') {
     return null;
   }
 
-  return (
-    <Button 
-      variant="outline" 
-      onClick={handlePromoteToAdmin} 
-      disabled={loading}
-      className="flex items-center gap-2"
-    >
-      <ShieldCheckIcon className="h-4 w-4" />
-      {loading ? 'Processing...' : 'Promote to Admin'}
-    </Button>
-  );
+  // Admin badge only, no longer showing the promotion button
+  return null;
 };
 
 export default AdminPromotionButton;
