@@ -123,7 +123,7 @@ const AudioRecordingItem = ({
               
               <DownloadButton 
                 url={audioUrl} 
-                filename={`${title}.webm`}
+                filename={`${title.replace(/\s+/g, '_')}.webm`}
               />
             </div>
           </>

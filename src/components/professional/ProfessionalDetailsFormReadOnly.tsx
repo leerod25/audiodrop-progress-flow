@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { ProfessionalDetails } from './types';
+import { ProfessionalDetailsData } from './types';
 import LanguagesSection from './readonly/LanguagesSection';
 import ExperienceSection from './readonly/ExperienceSection';
 import SkillsSection from './readonly/SkillsSection';
@@ -9,7 +9,7 @@ import ComputerSkillsSection from './readonly/ComputerSkillsSection';
 import AvailabilitySection from './readonly/AvailabilitySection';
 
 interface ProfessionalDetailsFormReadOnlyProps {
-  professionalDetails: ProfessionalDetails | null;
+  professionalDetails: ProfessionalDetailsData | null;
 }
 
 const ProfessionalDetailsFormReadOnly: React.FC<ProfessionalDetailsFormReadOnlyProps> = ({ 
@@ -27,18 +27,20 @@ const ProfessionalDetailsFormReadOnly: React.FC<ProfessionalDetailsFormReadOnlyP
 
   return (
     <div className="space-y-4">
-      <ExperienceSection yearsExperience={professionalDetails.years_experience || ''} />
+      <ExperienceSection experience={professionalDetails.years_experience || ''} />
       
       <LanguagesSection languages={professionalDetails.languages || []} />
       
       <SkillsSection skills={professionalDetails.skills || []} />
       
-      <ComputerSkillsSection computerSkills={professionalDetails.computer_skills || []} />
+      <ComputerSkillsSection skills={professionalDetails.computer_skills || []} />
       
       <AvailabilitySection 
-        availableWeekends={professionalDetails.available_weekends}
-        availableNights={professionalDetails.available_nights}
-        availableFullTime={professionalDetails.available_full_time}
+        available={{
+          weekends: professionalDetails.available_weekends,
+          nights: professionalDetails.available_nights,
+          fullTime: professionalDetails.available_full_time
+        }}
         preferredSchedule={professionalDetails.preferred_schedule || ''}
       />
     </div>

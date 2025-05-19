@@ -14,12 +14,25 @@ const DownloadButton = ({
   filename = 'recording.webm' 
 }: DownloadButtonProps) => {
   const handleDownload = () => {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    try {
+      // Create a temporary anchor element
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      // This is important to make it work on more browsers
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      // Trigger the download
+      a.click();
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(a);
+      }, 100);
+      
+      console.log(`Downloading file: ${filename} from URL: ${url}`);
+    } catch (error) {
+      console.error('Download error:', error);
+    }
   };
 
   return (

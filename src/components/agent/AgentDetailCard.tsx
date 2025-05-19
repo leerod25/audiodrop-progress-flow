@@ -117,7 +117,7 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
                       {isAdmin && (
                         <DownloadButton 
                           url={audio.url} 
-                          filename={`${agent.id}_${audio.title}.webm`} 
+                          filename={`${agent.id}_${audio.title.replace(/\s+/g, '_')}.webm`} 
                         />
                       )}
                     </div>

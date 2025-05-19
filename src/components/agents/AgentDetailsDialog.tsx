@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import AgentDetailCard from '@/components/agent/AgentDetailCard';
-import ProfessionalDetailsFormReadOnly from '@/components/ProfessionalDetailsFormReadOnly';
+import ProfessionalDetailsFormReadOnly from '@/components/professional/ProfessionalDetailsFormReadOnly';
 import { useUserContext } from '@/contexts/UserContext';
 import { Agent } from '@/types/Agent';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,6 +30,7 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
   const { userRole, user } = useUserContext();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [loading, setLoading] = useState(true);
+  const [professionalDetails, setProfessionalDetails] = useState<any>(null);
 
   // When selectedAgentId changes, fetch agent details
   useEffect(() => {
@@ -67,9 +68,11 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
         // Fetch professional details
         const { data: professionalData } = await supabase
           .from('professional_details')
-          .select('years_experience, languages, computer_skill_level')
+          .select('*')
           .eq('user_id', selectedAgentId)
           .single();
+          
+        setProfessionalDetails(professionalData || null);
 
         // Check if this agent is a favorite (if user is a business)
         let isFavorite = false;
@@ -176,9 +179,9 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
               </TabsContent>
               
               <TabsContent value="professional">
-                {selectedAgentId && (
-                  <ProfessionalDetailsFormReadOnly userId={selectedAgentId} />
-                )}
+                <ProfessionalDetailsFormReadOnly 
+                  professionalDetails={professionalDetails} 
+                />
               </TabsContent>
             </Tabs>
             
