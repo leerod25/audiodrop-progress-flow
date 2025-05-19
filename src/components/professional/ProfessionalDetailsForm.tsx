@@ -1,131 +1,57 @@
 
-import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
+import { useForm, FormProvider } from 'react-hook-form';
 import {
   Form,
-  FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
+  FormControl,
+  FormMessage
 } from '@/components/ui/form';
-import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { MultiSelect, Option } from '@/components/ui/multi-select';
-import SalarySection from '@/components/professional/SalarySection';
 
-// Define the form schema with Zod
-const professionalDetailsSchema = z.object({
-  languages: z.array(z.string()).min(1, 'Select at least one language'),
-  specialized_skills: z.array(z.string()).optional(),
-  additional_skills: z.array(z.string()).optional(),
-  years_experience: z.string().min(1, 'Please select your years of experience'),
-  computer_skill_level: z.string().min(1, 'Please select your computer skill level'),
-  availability: z.array(z.string()).optional(),
-  salary_expectation: z.string().optional(),
-});
-
-type ProfessionalDetailsValues = z.infer<typeof professionalDetailsSchema>;
-
-interface ProfessionalDetailsFormProps {
-  userId: string;
-  initialData?: any;
-  onDetailsUpdate?: (data: any) => void;
-}
-
-const languageOptions: Option[] = [
-  { value: 'English', label: 'English' },
-  { value: 'Spanish', label: 'Spanish' },
-  { value: 'French', label: 'French' },
-  { value: 'German', label: 'German' },
-  { value: 'Portuguese', label: 'Portuguese' },
-  { value: 'Italian', label: 'Italian' },
-  { value: 'Russian', label: 'Russian' },
-  { value: 'Chinese', label: 'Chinese' },
-  { value: 'Japanese', label: 'Japanese' },
-  { value: 'Korean', label: 'Korean' },
-  { value: 'Arabic', label: 'Arabic' },
-];
-
-const skillOptions: Option[] = [
-  { value: 'Customer Service', label: 'Customer Service' },
-  { value: 'Data Entry', label: 'Data Entry' },
-  { value: 'Technical Support', label: 'Technical Support' },
-  { value: 'Virtual Assistant', label: 'Virtual Assistant' },
-  { value: 'Content Creation', label: 'Content Creation' },
-  { value: 'Social Media Management', label: 'Social Media Management' },
-  { value: 'Transcription', label: 'Transcription' },
-  { value: 'Translation', label: 'Translation' },
-  { value: 'Sales', label: 'Sales' },
-  { value: 'Lead Generation', label: 'Lead Generation' },
-  { value: 'Appointment Setting', label: 'Appointment Setting' },
-  { value: 'Email Support', label: 'Email Support' },
-];
-
-const additionalSkillOptions: Option[] = [
-  { value: 'Microsoft Office', label: 'Microsoft Office' },
-  { value: 'Google Workspace', label: 'Google Workspace' },
-  { value: 'CRM Software', label: 'CRM Software' },
-  { value: 'Photoshop', label: 'Photoshop' },
-  { value: 'Video Editing', label: 'Video Editing' },
-  { value: 'WordPress', label: 'WordPress' },
-  { value: 'Bookkeeping', label: 'Bookkeeping' },
-  { value: 'Project Management', label: 'Project Management' },
-  { value: 'Research', label: 'Research' },
-  { value: 'Social Media Platforms', label: 'Social Media Platforms' },
-  { value: 'Email Marketing', label: 'Email Marketing' },
-];
-
-const availabilityOptions: Option[] = [
-  { value: 'Full-time', label: 'Full-time' },
-  { value: 'Part-time', label: 'Part-time' },
-  { value: 'Weekends', label: 'Weekends' },
-  { value: 'Weekdays', label: 'Weekdays' },
-  { value: 'Evenings', label: 'Evenings' },
-  { value: 'Mornings', label: 'Mornings' },
-  { value: 'Flexible', label: 'Flexible' },
-];
-
-const ProfessionalDetailsForm: React.FC<ProfessionalDetailsFormProps> = ({ userId, initialData, onDetailsUpdate }) => {
+const ProfessionalDetailsForm = ({ userId, initialData, onDetailsUpdate }) => {
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Define options
+  const languageOptions = [
+    'English', 'Spanish', 'French', 'German', 'Italian',
+    'Portuguese', 'Mandarin', 'Japanese', 'Arabic', 'Hindi'
+  ];
+  
+  const specializedOptions = [
+    'Customer Service', 'Data Entry', 'Technical Support', 'Virtual Assistant', 
+    'Content Creation', 'Social Media Management', 'Transcription', 'Translation', 
+    'Sales', 'Lead Generation', 'Appointment Setting', 'Email Support'
+  ];
+  
+  const additionalOptions = [
+    'Microsoft Office', 'Google Workspace', 'CRM Software', 'Photoshop', 
+    'Video Editing', 'WordPress', 'Bookkeeping', 'Project Management', 
+    'Research', 'Social Media Platforms', 'Email Marketing'
+  ];
+  
+  const availabilityOptions = ['Full-time', 'Part-time', 'Weekends', 'Evenings', 'Mornings', 'Flexible'];
 
-  // Initialize the form with react-hook-form
-  const form = useForm<ProfessionalDetailsValues>({
-    resolver: zodResolver(professionalDetailsSchema),
+  // Set up the form
+  const methods = useForm({
     defaultValues: {
-      languages: [],
-      specialized_skills: [],
-      additional_skills: [],
-      years_experience: '',
-      computer_skill_level: '',
-      availability: [],
-      salary_expectation: '',
-    },
+      languages: initialData?.languages || [],
+      specialized_skills: initialData?.specialized_skills || [],
+      additional_skills: initialData?.additional_skills || [],
+      years_experience: initialData?.years_experience || '',
+      computer_skill_level: initialData?.computer_skill_level || '',
+      availability: initialData?.availability || []
+    }
   });
 
-  // Update form values when initialData changes
-  useEffect(() => {
-    if (initialData) {
-      form.reset({
-        languages: Array.isArray(initialData.languages) ? initialData.languages : [],
-        specialized_skills: Array.isArray(initialData.specialized_skills) ? initialData.specialized_skills : [],
-        additional_skills: Array.isArray(initialData.additional_skills) ? initialData.additional_skills : [],
-        years_experience: initialData.years_experience || '',
-        computer_skill_level: initialData.computer_skill_level || '',
-        availability: Array.isArray(initialData.availability) ? initialData.availability : [],
-        salary_expectation: initialData.salary_expectation ? String(initialData.salary_expectation) : '',
-      });
-    }
-  }, [initialData, form]);
-
-  // Handle form submission
-  async function onSubmit(data: ProfessionalDetailsValues) {
+  const onSubmit = async (data) => {
     if (!userId) {
       toast.error('User ID is required to save professional details');
       return;
@@ -133,8 +59,6 @@ const ProfessionalDetailsForm: React.FC<ProfessionalDetailsFormProps> = ({ userI
 
     setIsLoading(true);
     try {
-      const salaryValue = data.salary_expectation ? parseFloat(data.salary_expectation) : null;
-      
       const payload = {
         user_id: userId,
         languages: data.languages || [],
@@ -143,7 +67,6 @@ const ProfessionalDetailsForm: React.FC<ProfessionalDetailsFormProps> = ({ userI
         years_experience: data.years_experience,
         computer_skill_level: data.computer_skill_level,
         availability: data.availability || [],
-        salary_expectation: salaryValue,
         updated_at: new Date().toISOString(),
       };
 
@@ -184,175 +107,210 @@ const ProfessionalDetailsForm: React.FC<ProfessionalDetailsFormProps> = ({ userI
         onDetailsUpdate(result.data[0]);
       }
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating professional details:', error);
       toast.error(error.message || 'Failed to update professional details');
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <Card className="w-full">
-      <CardContent className="pt-6">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Languages */}
-            <FormField
-              control={form.control}
-              name="languages"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Languages</FormLabel>
-                  <FormControl>
-                    <MultiSelect
-                      options={languageOptions}
-                      selected={field.value || []}
-                      onChange={field.onChange}
-                      placeholder="Select languages"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+    <FormProvider {...methods}>
+      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Years of Experience */}
+        <FormField
+          control={methods.control}
+          name="years_experience"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Years of Experience</FormLabel>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+                value={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select experience" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="0-1">Less than 1 year</SelectItem>
+                  <SelectItem value="1-3">1-3 years</SelectItem>
+                  <SelectItem value="3-5">3-5 years</SelectItem>
+                  <SelectItem value="5-10">5-10 years</SelectItem>
+                  <SelectItem value="10+">10+ years</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-            {/* Years of Experience */}
-            <FormField
-              control={form.control}
-              name="years_experience"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Years of Experience</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                    value={field.value || ''}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select experience" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="0-1">Less than 1 year</SelectItem>
-                      <SelectItem value="1-3">1-3 years</SelectItem>
-                      <SelectItem value="3-5">3-5 years</SelectItem>
-                      <SelectItem value="5-10">5-10 years</SelectItem>
-                      <SelectItem value="10+">10+ years</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* Computer Skill Level */}
+        <FormField
+          control={methods.control}
+          name="computer_skill_level"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Computer Skill Level</FormLabel>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+                value={field.value || ''}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select skill level" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Beginner">Beginner</SelectItem>
+                  <SelectItem value="Intermediate">Intermediate</SelectItem>
+                  <SelectItem value="Advanced">Advanced</SelectItem>
+                  <SelectItem value="Expert">Expert</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-            {/* Computer Skill Level */}
-            <FormField
-              control={form.control}
-              name="computer_skill_level"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Computer Skill Level</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                    value={field.value || ''}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select skill level" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Beginner">Beginner</SelectItem>
-                      <SelectItem value="Intermediate">Intermediate</SelectItem>
-                      <SelectItem value="Advanced">Advanced</SelectItem>
-                      <SelectItem value="Expert">Expert</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* Languages */}
+        <FormField
+          control={methods.control}
+          name="languages"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Languages Spoken</FormLabel>
+              <FormControl>
+                <div className="grid grid-cols-2 gap-2">
+                  {languageOptions.map(lang => (
+                    <div key={lang} className="flex items-center">
+                      <Checkbox
+                        checked={field.value?.includes(lang)}
+                        onCheckedChange={checked => {
+                          const next = checked
+                            ? [...(field.value || []), lang]
+                            : (field.value || []).filter((v) => v !== lang);
+                          field.onChange(next);
+                        }}
+                      />
+                      <span className="ml-2">{lang}</span>
+                    </div>
+                  ))}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-            {/* Specialized Skills */}
-            <FormField
-              control={form.control}
-              name="specialized_skills"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Specialized Skills</FormLabel>
-                  <FormControl>
-                    <MultiSelect
-                      options={skillOptions}
-                      selected={field.value || []}
-                      onChange={field.onChange}
-                      placeholder="Select your specialized skills"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* Specialized Skills */}
+        <FormField
+          control={methods.control}
+          name="specialized_skills"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Specialized Skills</FormLabel>
+              <FormControl>
+                <div className="grid grid-cols-2 gap-2">
+                  {specializedOptions.map(skill => (
+                    <div key={skill} className="flex items-center">
+                      <Checkbox
+                        checked={field.value?.includes(skill)}
+                        onCheckedChange={checked => {
+                          const next = checked
+                            ? [...(field.value || []), skill]
+                            : (field.value || []).filter((v) => v !== skill);
+                          field.onChange(next);
+                        }}
+                      />
+                      <span className="ml-2">{skill}</span>
+                    </div>
+                  ))}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-            {/* Additional Skills */}
-            <FormField
-              control={form.control}
-              name="additional_skills"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Additional Skills</FormLabel>
-                  <FormControl>
-                    <MultiSelect
-                      options={additionalSkillOptions}
-                      selected={field.value || []}
-                      onChange={field.onChange}
-                      placeholder="Select additional skills"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* Additional Skills */}
+        <FormField
+          control={methods.control}
+          name="additional_skills"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Additional Skills</FormLabel>
+              <FormControl>
+                <div className="grid grid-cols-2 gap-2">
+                  {additionalOptions.map(skill => (
+                    <div key={skill} className="flex items-center">
+                      <Checkbox
+                        checked={field.value?.includes(skill)}
+                        onCheckedChange={checked => {
+                          const next = checked
+                            ? [...(field.value || []), skill]
+                            : (field.value || []).filter((v) => v !== skill);
+                          field.onChange(next);
+                        }}
+                      />
+                      <span className="ml-2">{skill}</span>
+                    </div>
+                  ))}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-            {/* Availability */}
-            <FormField
-              control={form.control}
-              name="availability"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Availability</FormLabel>
-                  <FormControl>
-                    <MultiSelect
-                      options={availabilityOptions}
-                      selected={field.value || []}
-                      onChange={field.onChange}
-                      placeholder="Select your availability"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* Availability */}
+        <FormField
+          control={methods.control}
+          name="availability"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Availability</FormLabel>
+              <FormControl>
+                <div className="grid grid-cols-2 gap-2">
+                  {availabilityOptions.map(slot => (
+                    <div key={slot} className="flex items-center">
+                      <Checkbox
+                        checked={field.value?.includes(slot)}
+                        onCheckedChange={checked => {
+                          const next = checked
+                            ? [...(field.value || []), slot]
+                            : (field.value || []).filter((v) => v !== slot);
+                          field.onChange(next);
+                        }}
+                      />
+                      <span className="ml-2">{slot}</span>
+                    </div>
+                  ))}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-            {/* Salary Expectations */}
-            <SalarySection control={form.control} />
-
-            <Button type="submit" disabled={isLoading} className="mt-4">
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                'Save Professional Details'
-              )}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+        <div className="mt-4 text-right">
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Public Details'
+            )}
+          </Button>
+        </div>
+      </form>
+    </FormProvider>
   );
 };
 

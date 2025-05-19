@@ -82,12 +82,12 @@ const Profile = () => {
     ? Boolean(profile?.full_name && profile?.email && profile?.phone)
     : Boolean(profile?.company_name || profile?.business_name);
 
-  const handleProfileUpdate = (updatedProfile) => {
+  const handleProfileUpdate = (updatedProfile: any) => {
     setProfile({...profile, ...updatedProfile});
     toast.success("Profile information updated successfully!");
   };
   
-  const handleProfessionalDetailsUpdate = (updatedDetails) => {
+  const handleProfessionalDetailsUpdate = (updatedDetails: any) => {
     setProfessionalDetails({...professionalDetails, ...updatedDetails});
     toast.success("Professional details updated successfully!");
   };
