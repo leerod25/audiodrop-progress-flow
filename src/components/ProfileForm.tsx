@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { supabase } from "@/integrations/supabase/client";
@@ -180,7 +179,7 @@ const ProfileForm = ({ userId, initialData, onProfileUpdate }: ProfileFormProps)
       const { error } = await supabase
         .from('profiles')
         .upsert({
-          id: userId,
+          id: actualUserId,
           full_name: profileData.full_name,
           email: profileData.email,
           phone: profileData.phone,

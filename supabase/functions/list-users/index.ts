@@ -51,29 +51,6 @@ serve(async (req) => {
       }
     );
 
-    // Get the user's token from the Authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Not authorized' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 401,
-      });
-    }
-
-    // Verify the user is authenticated first
-    const token = authHeader.replace('Bearer ', '');
-    const {
-      data: { user },
-      error: authError
-    } = await supabaseAdmin.auth.getUser(token);
-
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Not authorized', details: authError?.message }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 401,
-      });
-    }
-
     // Get request parameters
     let params = {};
     try {
@@ -86,21 +63,42 @@ serve(async (req) => {
     const businessOnly = params.businessOnly === true;
     const adminMode = params.adminMode === true;
     
-    // Check user role
-    const { data: roleData } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single();
+    // Check if an authentication token was provided
+    const authHeader = req.headers.get('Authorization');
+    let currentUserRole = 'anonymous';
+    let currentUserId = null;
     
-    const currentUserRole = roleData?.role || 'agent';
+    // If auth header exists, validate the user
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+        
+        if (!authError && user) {
+          currentUserId = user.id;
+          
+          // Check user role
+          const { data: roleData } = await supabaseAdmin
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .single();
+          
+          currentUserRole = roleData?.role || 'agent';
+        }
+      } catch (authError) {
+        console.error('Auth verification error:', authError);
+        // Continue as anonymous if auth fails
+      }
+    }
+    
+    // For security, only allow admin mode if user is admin
     const isAdmin = currentUserRole === 'admin';
-    
-    // If trying to list business users or using adminMode, verify the user has admin role
     if ((businessOnly || adminMode) && !isAdmin) {
-      return new Response(JSON.stringify({ error: 'Forbidden: Insufficient permissions' }), {
+      // Just return empty list instead of error for non-admins
+      return new Response(JSON.stringify({ users: [] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 403,
+        status: 200,
       });
     }
 
@@ -151,15 +149,15 @@ serve(async (req) => {
         return role !== 'business';
       });
       
-      // If not admin, can only see their own profile
+      // If not admin or business, can only see their own profile
       if (currentUserRole !== 'business' && currentUserRole !== 'admin') {
-        filteredUsers = filteredUsers.filter(u => u.id === user.id);
+        filteredUsers = filteredUsers.filter(u => u.id === currentUserId);
       }
     }
     // If adminMode is true and user is admin, we don't filter and show all users
     
     // For each user, fetch their audio files directly from storage
-    if (filteredUsers) {
+    if (filteredUsers && filteredUsers.length > 0) {
       for (const user of filteredUsers) {
         try {
           // Get all audio files from storage for this user

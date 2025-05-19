@@ -141,7 +141,7 @@ const Agents: React.FC = () => {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
           <Button 
-            onClick={() => window.location.reload()} 
+            onClick={() => fetchAllUsers()} 
             className="mt-4"
           >
             Try Again
