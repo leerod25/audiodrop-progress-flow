@@ -9,6 +9,7 @@ import { formatDate } from '@/utils/dateUtils';
 import UserAudioFiles, { AudioFile } from './UserAudioFiles';
 import { Link } from 'react-router-dom';
 import { Switch } from '@/components/ui/switch';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface User {
   id: string;
@@ -55,27 +56,54 @@ const UserCard: React.FC<UserCardProps> = ({
     }
   };
   
+  // Helper function to get avatar image based on gender
+  const getAvatarImage = (gender: string | null | undefined) => {
+    if (gender === 'male') {
+      return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
+    } else if (gender === 'female') {
+      return '/lovable-uploads/7889d5d0-d6bd-4ccf-8dbd-62fe95fc1946.png';
+    }
+    return null;
+  };
+
+  // Helper function to get avatar fallback text
+  const getAvatarFallback = (email: string, gender: string | null | undefined) => {
+    if (email && email.length > 0) {
+      return email.charAt(0).toUpperCase();
+    }
+    return gender === 'male' ? 'M' : gender === 'female' ? 'F' : 'A';
+  };
+  
+  const avatarImage = getAvatarImage(user.gender);
+  
   return (
     <>
       <CardContent className="p-4">
         {/* User ID and Join Date */}
         <div className="flex justify-between items-start">
-          <div>
-            <div className="flex items-center gap-2">
-              <User className="h-5 w-5 text-gray-500" />
-              <h3 className="text-lg font-medium">{formatUserId(user.id)}</h3>
-              {toggleAvailability && (
-                <Badge 
-                  variant={user.is_available ? "default" : "destructive"}
-                  className="ml-2"
-                >
-                  {user.is_available ? 'Available' : 'On Project'}
-                </Badge>
-              )}
-            </div>
-            <div className="text-sm text-gray-500 mt-1 flex items-center">
-              <Clock className="h-4 w-4 mr-1" />
-              <span>Joined {formatDate(user.created_at)}</span>
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10 border">
+              {avatarImage ? (
+                <AvatarImage src={avatarImage} alt={user.gender || 'Agent'} />
+              ) : null}
+              <AvatarFallback>{getAvatarFallback(user.email, user.gender)}</AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-medium">{formatUserId(user.id)}</h3>
+                {toggleAvailability && (
+                  <Badge 
+                    variant={user.is_available ? "default" : "destructive"}
+                    className="ml-2"
+                  >
+                    {user.is_available ? 'Available' : 'On Project'}
+                  </Badge>
+                )}
+              </div>
+              <div className="text-sm text-gray-500 mt-1 flex items-center">
+                <Clock className="h-4 w-4 mr-1" />
+                <span>Joined {formatDate(user.created_at)}</span>
+              </div>
             </div>
           </div>
           <Button variant="ghost" size="sm" onClick={toggleExpand} className="p-1">

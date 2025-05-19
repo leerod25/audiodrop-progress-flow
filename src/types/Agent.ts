@@ -8,4 +8,5 @@ export interface Agent {
   city?: string | null;
   computer_skill_level?: string | null;
   is_favorite?: boolean;
+  gender?: string | null;
 }

@@ -9,6 +9,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface AudioFile {
   id: string;
@@ -26,6 +27,7 @@ interface User {
   audio_files: AudioFile[];
   country?: string | null;
   city?: string | null;
+  gender?: string | null;
 }
 
 const Agents: React.FC = () => {
@@ -60,7 +62,7 @@ const Agents: React.FC = () => {
           // Get profile data
           const { data: profileData } = await supabase
             .from('profiles')
-            .select('country, city')
+            .select('country, city, gender')
             .eq('id', user.id)
             .single();
           
@@ -75,6 +77,7 @@ const Agents: React.FC = () => {
             ...user,
             country: profileData?.country || null,
             city: profileData?.city || null,
+            gender: profileData?.gender || null,
             audio_files: audioData || []
           };
         }));
@@ -95,6 +98,24 @@ const Agents: React.FC = () => {
   const totalPages = Math.ceil(users.length / PAGE_SIZE);
   const startIndex = (page - 1) * PAGE_SIZE;
   const currentPageUsers = users.slice(startIndex, startIndex + PAGE_SIZE);
+
+  // Helper function to get avatar image based on gender
+  const getAvatarImage = (gender: string | null | undefined) => {
+    if (gender === 'male') {
+      return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
+    } else if (gender === 'female') {
+      return '/lovable-uploads/7889d5d0-d6bd-4ccf-8dbd-62fe95fc1946.png';
+    }
+    return null;
+  };
+
+  // Helper function to get avatar fallback text
+  const getAvatarFallback = (email: string, gender: string | null | undefined) => {
+    if (email && email.length > 0) {
+      return email.charAt(0).toUpperCase();
+    }
+    return gender === 'male' ? 'M' : gender === 'female' ? 'F' : 'A';
+  };
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -141,22 +162,31 @@ const Agents: React.FC = () => {
               // If user is a business or viewing their own profile, show audio
               const canSeeAudio = userRole === 'business' || u.id === user?.id;
               const audioFiles = canSeeAudio ? u.audio_files : [];
+              const avatarImage = getAvatarImage(u.gender);
               
               return (
                 <Card key={u.id} className="overflow-hidden hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="space-y-2">
                       <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-medium">ID: {u.id.substring(0, 8)}...</h3>
-                          <p className="text-sm text-gray-600">{u.email}</p>
-                          
-                          {/* Location info if available */}
-                          {(u.country || u.city) && (
-                            <p className="text-sm text-gray-500 mt-1">
-                              {[u.city, u.country].filter(Boolean).join(", ")}
-                            </p>
-                          )}
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-12 w-12 border">
+                            {avatarImage ? (
+                              <AvatarImage src={avatarImage} alt={u.gender || 'Agent'} />
+                            ) : null}
+                            <AvatarFallback>{getAvatarFallback(u.email, u.gender)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h3 className="font-medium">ID: {u.id.substring(0, 8)}...</h3>
+                            <p className="text-sm text-gray-600">{u.email}</p>
+                            
+                            {/* Location info if available */}
+                            {(u.country || u.city) && (
+                              <p className="text-sm text-gray-500 mt-1">
+                                {[u.city, u.country].filter(Boolean).join(", ")}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
                       
