@@ -142,13 +142,14 @@ export const useUserFetch = (currentUser: any) => {
         }
       } else {
         // If currently unavailable, add a professional_details entry
+        // Convert salary_expectation to a number for database storage
         const { error } = await supabase
           .from('professional_details')
           .insert({ 
             user_id: userId,
             years_experience: '1', // Default value
             languages: ['English'], // Default value
-            salary_expectation: '500' // Default value as string
+            salary_expectation: 500 // Default value as number
           });
         
         if (error) {

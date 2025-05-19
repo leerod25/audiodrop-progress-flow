@@ -45,8 +45,8 @@ const SalarySection: React.FC<SalarySectionProps> = ({
             <FormControl>
               <Select 
                 onValueChange={field.onChange} 
-                defaultValue={field.value || "500"}
-                value={field.value || "500"}
+                defaultValue={field.value?.toString() || "500"}
+                value={field.value?.toString() || "500"}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select monthly salary" />
