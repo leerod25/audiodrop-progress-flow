@@ -11,6 +11,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InfoIcon, ShieldAlert, ShieldCheck } from "lucide-react";
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
+import { useUsersData } from '@/hooks/useUsersData';
+import UsersList from '@/components/agents/UsersList';
 
 interface AudioFile {
   id: string;
@@ -38,103 +40,23 @@ interface User {
 
 const Agents: React.FC = () => {
   const { user, userRole } = useUserContext();
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { 
+    users, 
+    loading, 
+    error, 
+    expandedUser, 
+    playingAudio, 
+    fetchAllUsers, 
+    toggleUserExpand, 
+    handleAudioPlay,
+    toggleAvailability 
+  } = useUsersData(user);
+  
   const [forbidden, setForbidden] = useState(false);
   
   // Pagination state
   const PAGE_SIZE = 9;
   const [page, setPage] = useState(1);
-  
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      setForbidden(false);
-      
-      // Call our edge function to get all users
-      const { data, error } = await supabase.functions.invoke('list-users', {
-        body: { businessOnly: false }
-      });
-      
-      if (error) {
-        console.error('Error calling edge function:', error);
-        
-        // Handle 403 Forbidden responses
-        if (error.message && error.message.includes('Forbidden')) {
-          setForbidden(true);
-          toast.error("You don't have permission to view this page");
-          return;
-        }
-        
-        setError('Failed to fetch users: ' + error.message);
-        return;
-      }
-
-      // Process users and add audio data
-      const processedUsers = await Promise.all((data.users || []).map(async (user: User) => {
-        // Get profile data
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('country, city, gender, role, is_verified')
-          .eq('id', user.id)
-          .single();
-        
-        // Get audio files
-        const { data: audioData } = await supabase
-          .from('audio_metadata')
-          .select('id, title, audio_url, created_at')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-        
-        return {
-          ...user,
-          country: profileData?.country || null,
-          city: profileData?.city || null,
-          gender: profileData?.gender || null,
-          role: profileData?.role || 'agent',
-          is_verified: profileData?.is_verified || false,
-          audio_files: audioData || []
-        };
-      }));
-      
-      setUsers(processedUsers);
-    } catch (err: any) {
-      console.error('Unexpected error:', err);
-      setError('An unexpected error occurred: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Helper function to get avatar image based on gender
-  const getAvatarImage = (gender: string | null | undefined) => {
-    // Default to male avatar if gender is not specified
-    if (!gender) {
-      return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
-    }
-    
-    if (gender === 'male' || gender === 'Male') {
-      return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
-    } else if (gender === 'female' || gender === 'Female') {
-      return '/lovable-uploads/7889d5d0-d6bd-4ccf-8dbd-62fe95fc1946.png';
-    }
-    // Default to male if gender doesn't match known values
-    return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
-  };
-
-  // Helper function to get avatar fallback text
-  const getAvatarFallback = (email: string, gender: string | null | undefined) => {
-    if (email && email.length > 0) {
-      return email.charAt(0).toUpperCase();
-    }
-    return gender === 'female' || gender === 'Female' ? 'F' : 'M'; // Default to M if not female
-  };
 
   // Calculate pagination values
   const totalPages = Math.ceil(users.length / PAGE_SIZE);
@@ -163,6 +85,44 @@ const Agents: React.FC = () => {
     return null;
   };
 
+  // If the user is an admin, show the list view with availability toggle
+  if (userRole === 'admin') {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <h1 className="text-3xl font-bold mb-6">Agent Profiles ({users.length})</h1>
+        
+        {renderAdminActions()}
+        
+        {error ? (
+          <div className="text-center py-8">
+            <Alert variant="destructive">
+              <InfoIcon className="h-5 w-5" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-4"
+            >
+              Try Again
+            </Button>
+          </div>
+        ) : (
+          <UsersList
+            users={users}
+            loading={loading}
+            expandedUser={expandedUser}
+            playingAudio={playingAudio}
+            toggleUserExpand={toggleUserExpand}
+            handleAudioPlay={handleAudioPlay}
+            fetchAllUsers={fetchAllUsers}
+            toggleAvailability={toggleAvailability}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Regular non-admin view (cards)
   return (
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-6">Agent Profiles ({users.length})</h1>
@@ -229,6 +189,30 @@ const Agents: React.FC = () => {
       )}
     </div>
   );
+
+  // Helper function to get avatar image based on gender
+  function getAvatarImage(gender: string | null | undefined) {
+    // Default to male avatar if gender is not specified
+    if (!gender) {
+      return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
+    }
+    
+    if (gender === 'male' || gender === 'Male') {
+      return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
+    } else if (gender === 'female' || gender === 'Female') {
+      return '/lovable-uploads/7889d5d0-d6bd-4ccf-8dbd-62fe95fc1946.png';
+    }
+    // Default to male if gender doesn't match known values
+    return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
+  }
+
+  // Helper function to get avatar fallback text
+  function getAvatarFallback(email: string, gender: string | null | undefined) {
+    if (email && email.length > 0) {
+      return email.charAt(0).toUpperCase();
+    }
+    return gender === 'female' || gender === 'Female' ? 'F' : 'M'; // Default to M if not female
+  }
 };
 
 export default Agents;

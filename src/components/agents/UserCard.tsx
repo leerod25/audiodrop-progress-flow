@@ -10,6 +10,7 @@ import UserAudioFiles, { AudioFile } from './UserAudioFiles';
 import { Link } from 'react-router-dom';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useUserContext } from '@/contexts/UserContext';
 
 interface User {
   id: string;
@@ -47,6 +48,9 @@ const UserCard: React.FC<UserCardProps> = ({
   showLoginPrompt = false,
   toggleAvailability
 }) => {
+  const { userRole } = useUserContext();
+  const isAdmin = userRole === 'admin';
+  
   // Format the user ID to show only first 8 characters
   const formatUserId = (id: string) => `${id.substring(0, 8)}...`;
   
@@ -94,7 +98,10 @@ const UserCard: React.FC<UserCardProps> = ({
             </Avatar>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-medium">{formatUserId(user.id)}</h3>
+                {/* Show full name only for admins */}
+                <h3 className="text-lg font-medium">
+                  {isAdmin && user.full_name ? user.full_name : formatUserId(user.id)}
+                </h3>
                 {toggleAvailability && (
                   <Badge 
                     variant={user.is_available ? "default" : "destructive"}
@@ -148,7 +155,7 @@ const UserCard: React.FC<UserCardProps> = ({
             </div>
           )}
           
-          {/* Availability toggle for authenticated users */}
+          {/* Availability toggle */}
           {toggleAvailability && (
             <div className="mt-4 flex items-center justify-between border-t pt-3">
               <span className="text-sm font-medium">Availability Status:</span>
@@ -171,8 +178,15 @@ const UserCard: React.FC<UserCardProps> = ({
             {/* Full view with additional details */}
             <div className="grid grid-cols-1 gap-4 mb-4">
               <div>
-                <p className="font-medium">User ID</p>
-                <p className="text-sm text-gray-600 break-all">{user.id}</p>
+                {/* Only show full ID and email for admin */}
+                {isAdmin && (
+                  <>
+                    <p className="font-medium">User ID</p>
+                    <p className="text-sm text-gray-600 break-all">{user.id}</p>
+                    <p className="font-medium">Email</p>
+                    <p className="text-sm text-gray-600 break-all">{user.email}</p>
+                  </>
+                )}
                 <p className="font-medium">Languages Spoken</p>
                 <p className="text-sm text-gray-600">
                   {user.languages && user.languages.length > 0 
