@@ -1,7 +1,7 @@
 
 export interface Agent {
   id: string;
-  email: string; // Required but can be empty string
+  email: string; // Required field
   has_audio: boolean;
   audio_url?: string | null;
   audioUrls?: {
@@ -15,7 +15,7 @@ export interface Agent {
   computer_skill_level?: string | null;
   is_favorite?: boolean;
   gender?: string | null;
-  audio_files?: any[]; // Add this to match the structure from useUsersData
+  audio_files?: any[]; 
   
   // Fields required for User compatibility
   full_name?: string | null;
@@ -26,5 +26,5 @@ export interface Agent {
   is_available?: boolean;
   years_experience?: string | null;
   languages?: string[] | null;
-  created_at: string; // Changed from optional to required to match User interface
+  created_at: string; // Required field
 }
