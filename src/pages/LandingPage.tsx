@@ -7,14 +7,12 @@ import ServicesSection from '@/components/landing/ServicesSection';
 import AboutSection from '@/components/landing/AboutSection';
 import CtaSection from '@/components/landing/CtaSection';
 import Footer from '@/components/landing/Footer';
-import PublicWelcomeAudio from '@/components/public/PublicWelcomeAudio';
 
 const LandingPage: React.FC = () => {
   return (
     <main className="font-sans antialiased text-gray-900">
       <Header />
       <HeroBanner />
-      <PublicWelcomeAudio />
       <ActionCards />
       <ServicesSection />
       <AboutSection />

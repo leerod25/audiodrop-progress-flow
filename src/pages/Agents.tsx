@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { useUsersData } from '@/hooks/useUsersData';
@@ -15,6 +14,8 @@ import AgentListPagination from '@/components/agents/AgentListPagination';
 import { convertUserToAgent } from '@/utils/agentUtils';
 import { sampleAgents } from '@/data/sampleAgents';
 import { User } from '@/hooks/users/useUserFetch';
+import AgentListCard from '@/components/agent/AgentListCard';
+import { Agent } from '@/types/Agent';
 
 const Agents = () => {
   const { user, userRole } = useUserContext();
@@ -25,6 +26,12 @@ const Agents = () => {
 
   // Team state: store IDs of users added to team
   const [team, setTeam] = useState<string[]>([]);
+  
+  // Audio playback state
+  const [playingAgent, setPlayingAgent] = useState<{
+    id: string;
+    url: string;
+  } | null>(null);
   
   // Process users to remove any contact information and replace full_name with agent ID
   const processedApiUsers = useMemo(() => {
@@ -130,6 +137,21 @@ const Agents = () => {
     setFilters(newFilters);
   };
 
+  // New function to handle playing audio samples
+  const handlePlaySample = (agent: Agent) => {
+    // If this agent is already playing, stop it
+    if (playingAgent?.id === agent.id) {
+      setPlayingAgent(null);
+      return;
+    }
+    
+    // Otherwise, play the first available audio from this agent
+    const firstClip = agent.audioUrls?.[0]?.url;
+    if (firstClip) {
+      setPlayingAgent({ id: agent.id, url: firstClip });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -157,14 +179,38 @@ const Agents = () => {
           onFilterChange={handleFilterChange}
         />
         
-        {/* Agent Grid */}
-        <AgentsGrid 
-          loading={loading}
-          currentPageUsers={currentPageUsers}
-          viewAgentDetails={viewAgentDetails}
-          toggleTeamMember={toggleTeamMember}
-          convertToAgent={(user: User) => convertUserToAgent(user)}
-        />
+        {/* Agent Grid with audio playback */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          {currentPageUsers.map(user => {
+            const agent = convertUserToAgent(user as User);
+            return (
+              <div key={agent.id} className="flex flex-col">
+                <AgentListCard 
+                  agent={agent}
+                  onViewDetails={() => viewAgentDetails(agent.id)}
+                  onAddToTeam={() => toggleTeamMember(agent.id)}
+                  onPlaySample={() => handlePlaySample(agent)}
+                />
+                
+                {/* Show audio player only for the currently playing agent */}
+                {playingAgent?.id === agent.id && (
+                  <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                    <audio 
+                      controls 
+                      autoPlay 
+                      className="w-full"
+                      onEnded={() => setPlayingAgent(null)}
+                    >
+                      <source src={playingAgent.url} type="audio/mpeg" />
+                      <source src={playingAgent.url} type="audio/webm" />
+                      Your browser doesn't support audio playback.
+                    </audio>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
         
         {/* Pagination */}
         <AgentListPagination 
