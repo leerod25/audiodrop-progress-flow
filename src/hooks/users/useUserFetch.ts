@@ -28,6 +28,7 @@ export interface User {
   gender?: string | null;
   years_experience?: string | null;
   languages?: string[] | null;
+  is_available?: boolean;
 }
 
 interface UsersResponse {
@@ -66,7 +67,7 @@ export const useUserFetch = (currentUser: any) => {
           // Try to get additional profile data from the profiles table
           const { data: profileData } = await supabase
             .from('profiles')
-            .select('country, city, gender')
+            .select('country, city, gender, is_available')
             .eq('id', user.id)
             .single();
             
@@ -95,6 +96,7 @@ export const useUserFetch = (currentUser: any) => {
             country: profileData?.country || null,
             city: profileData?.city || null,
             gender: profileData?.gender || null,
+            is_available: profileData?.is_available || false,
             years_experience: professionalData?.years_experience || null,
             languages: professionalData?.languages || null,
             audio_files: validAudioFiles
@@ -115,10 +117,39 @@ export const useUserFetch = (currentUser: any) => {
     }
   };
 
+  const toggleAvailability = async (userId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_available: !currentStatus })
+        .eq('id', userId);
+      
+      if (error) {
+        console.error('Error updating availability:', error);
+        toast.error("Failed to update availability");
+        return;
+      }
+      
+      // Update the local state
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? { ...user, is_available: !currentStatus } 
+            : user
+        )
+      );
+      
+      toast.success(`Agent is now ${!currentStatus ? 'available' : 'unavailable'}`);
+    } catch (err: any) {
+      console.error('Unexpected error updating availability:', err);
+      toast.error("Failed to update availability");
+    }
+  };
+
   useEffect(() => {
     // Fetch users regardless of login status to allow preview mode
     fetchAllUsers();
   }, [currentUser]);
 
-  return { users, loading, error, fetchAllUsers };
+  return { users, loading, error, fetchAllUsers, toggleAvailability };
 };

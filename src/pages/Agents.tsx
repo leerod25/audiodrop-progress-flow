@@ -28,6 +28,7 @@ interface User {
   gender?: string | null;
   years_experience?: string | null;
   languages?: string[] | null;
+  is_available?: boolean;
 }
 
 interface AudioFile {
@@ -54,6 +55,7 @@ const Agents: React.FC = () => {
     fetchAllUsers,
     toggleUserExpand,
     handleAudioPlay,
+    toggleAvailability,
   } = useUsersData(user);
 
   console.log("Agents page - total agent profiles received:", users.length);
@@ -138,6 +140,7 @@ const Agents: React.FC = () => {
               handleAudioPlay={handleAudioPlay}
               fetchAllUsers={fetchAllUsers}
               showLoginPrompt={!user}
+              toggleAvailability={user ? toggleAvailability : undefined}
             />
           ) : (
             <Card>

@@ -19,6 +19,7 @@ interface User {
   gender?: string | null;
   years_experience?: string | null;
   languages?: string[] | null;
+  is_available?: boolean;
 }
 
 interface AudioFile {
@@ -37,6 +38,7 @@ interface UsersListProps {
   handleAudioPlay: (audioId: string) => void;
   fetchAllUsers: () => Promise<void>;
   showLoginPrompt?: boolean;
+  toggleAvailability?: (userId: string, currentStatus: boolean) => Promise<void>;
 }
 
 const UsersList: React.FC<UsersListProps> = ({
@@ -47,7 +49,8 @@ const UsersList: React.FC<UsersListProps> = ({
   toggleUserExpand,
   handleAudioPlay,
   fetchAllUsers,
-  showLoginPrompt = false
+  showLoginPrompt = false,
+  toggleAvailability
 }) => {
   const handleRefresh = () => {
     fetchAllUsers();
@@ -59,7 +62,8 @@ const UsersList: React.FC<UsersListProps> = ({
     country: u.country,
     city: u.city,
     years_experience: u.years_experience,
-    languages: u.languages
+    languages: u.languages,
+    is_available: u.is_available
   })), null, 2));
 
   return (
@@ -82,6 +86,7 @@ const UsersList: React.FC<UsersListProps> = ({
               toggleExpand={() => toggleUserExpand(user.id)}
               onAudioPlay={handleAudioPlay}
               showLoginPrompt={showLoginPrompt}
+              toggleAvailability={toggleAvailability}
             />
           </Card>
         ))

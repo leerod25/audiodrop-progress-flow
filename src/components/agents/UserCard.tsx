@@ -8,6 +8,7 @@ import { ChevronDown, ChevronUp, Clock, MapPin, PlayCircle, Lock, Globe, Briefca
 import { formatDate } from '@/utils/dateUtils';
 import UserAudioFiles, { AudioFile } from './UserAudioFiles';
 import { Link } from 'react-router-dom';
+import { Switch } from '@/components/ui/switch';
 
 interface User {
   id: string;
@@ -23,6 +24,7 @@ interface User {
   gender?: string | null;
   years_experience?: string | null;
   languages?: string[] | null;
+  is_available?: boolean;
 }
 
 interface UserCardProps {
@@ -32,6 +34,7 @@ interface UserCardProps {
   toggleExpand: () => void;
   onAudioPlay: (audioId: string) => void;
   showLoginPrompt?: boolean;
+  toggleAvailability?: (userId: string, currentStatus: boolean) => Promise<void>;
 }
 
 const UserCard: React.FC<UserCardProps> = ({
@@ -40,10 +43,17 @@ const UserCard: React.FC<UserCardProps> = ({
   playingAudio,
   toggleExpand,
   onAudioPlay,
-  showLoginPrompt = false
+  showLoginPrompt = false,
+  toggleAvailability
 }) => {
   // Format the user ID to show only first 8 characters
   const formatUserId = (id: string) => `${id.substring(0, 8)}...`;
+  
+  const handleAvailabilityToggle = async () => {
+    if (toggleAvailability) {
+      await toggleAvailability(user.id, !!user.is_available);
+    }
+  };
   
   return (
     <>
@@ -54,6 +64,14 @@ const UserCard: React.FC<UserCardProps> = ({
             <div className="flex items-center gap-2">
               <User className="h-5 w-5 text-gray-500" />
               <h3 className="text-lg font-medium">{formatUserId(user.id)}</h3>
+              {toggleAvailability && (
+                <Badge 
+                  variant={user.is_available ? "success" : "destructive"}
+                  className={`ml-2 ${user.is_available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                >
+                  {user.is_available ? 'Available' : 'On Project'}
+                </Badge>
+              )}
             </div>
             <div className="text-sm text-gray-500 mt-1 flex items-center">
               <Clock className="h-4 w-4 mr-1" />
@@ -94,6 +112,20 @@ const UserCard: React.FC<UserCardProps> = ({
                 {user.languages.map((lang, idx) => (
                   <Badge key={idx} variant="secondary" className="text-xs">{lang}</Badge>
                 ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Availability toggle for authenticated users */}
+          {toggleAvailability && (
+            <div className="mt-4 flex items-center justify-between border-t pt-3">
+              <span className="text-sm font-medium">Availability Status:</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">{user.is_available ? 'Available' : 'On Project'}</span>
+                <Switch
+                  checked={!!user.is_available}
+                  onCheckedChange={handleAvailabilityToggle}
+                />
               </div>
             </div>
           )}

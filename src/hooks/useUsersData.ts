@@ -5,7 +5,7 @@ import { useAudioPlayback } from './users/useAudioPlayback';
 import { User } from './users/useUserFetch';
 
 export const useUsersData = (currentUser: any) => {
-  const { users, loading, error, fetchAllUsers } = useUserFetch(currentUser);
+  const { users, loading, error, fetchAllUsers, toggleAvailability } = useUserFetch(currentUser);
   const { expandedUser, playingAudio, toggleUserExpand, handleAudioPlay } = useAudioPlayback();
 
   return {
@@ -17,5 +17,6 @@ export const useUsersData = (currentUser: any) => {
     fetchAllUsers,
     toggleUserExpand,
     handleAudioPlay,
+    toggleAvailability,
   };
 };
