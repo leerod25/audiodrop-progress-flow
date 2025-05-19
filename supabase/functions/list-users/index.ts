@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 
@@ -61,17 +62,20 @@ serve(async (req) => {
     }
 
     // Verify the user is authenticated first
+    const token = authHeader.replace('Bearer ', '');
     const {
       data: { user },
-    } = await supabaseAdmin.auth.getUser(authHeader.replace('Bearer ', ''));
+      error: authError
+    } = await supabaseAdmin.auth.getUser(token);
 
-    if (!user) {
-      return new Response(JSON.stringify({ error: 'Not authorized' }), {
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Not authorized', details: authError?.message }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
       });
     }
-    
+
+    // Check if user is trying to list business users and validate role for that operation
     // Get request parameters
     let params = {};
     try {
@@ -82,6 +86,24 @@ serve(async (req) => {
     }
     
     const businessOnly = params.businessOnly === true;
+    
+    // If trying to list business users, verify the user has business role
+    if (businessOnly) {
+      // Check user role in user_roles table
+      const { data: roleData } = await supabaseAdmin
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+        
+      // Only business or admin users can list business profiles
+      if (!(roleData?.role === 'business' || roleData?.role === 'admin')) {
+        return new Response(JSON.stringify({ error: 'Forbidden: Insufficient permissions' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403,
+        });
+      }
+    }
 
     // Fetch all users using the admin API
     const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
@@ -113,8 +135,12 @@ serve(async (req) => {
       roleMap.set(userRole.user_id, userRole.role);
     });
     
-    // Filter users based on role
+    // Filter users based on role and current user's permissions
     let filteredUsers = usersData.users;
+    
+    // Get current user's role
+    const currentUserRole = roleMap.get(user.id) || 'agent';
+    
     if (businessOnly) {
       // Keep only business users
       filteredUsers = filteredUsers.filter(user => {
@@ -128,6 +154,11 @@ serve(async (req) => {
         const role = roleMap.get(user.id);
         return role !== 'business';
       });
+      
+      // If not a business user, can only see their own profile
+      if (currentUserRole !== 'business' && currentUserRole !== 'admin') {
+        filteredUsers = filteredUsers.filter(u => u.id === user.id);
+      }
     }
     
     // For each user, fetch their audio files directly from storage

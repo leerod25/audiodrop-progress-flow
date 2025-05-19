@@ -8,7 +8,9 @@ import AgentsPagination from '@/components/agents/AgentsPagination';
 import AuthAlert from '@/components/agents/AuthAlert';
 import AgentsLoading from '@/components/agents/AgentsLoading';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, ShieldAlert } from "lucide-react";
+import { toast } from 'sonner';
+import { Navigate } from 'react-router-dom';
 
 interface AudioFile {
   id: string;
@@ -37,6 +39,7 @@ const Agents: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [forbidden, setForbidden] = useState(false);
   
   // Pagination state
   const PAGE_SIZE = 9;
@@ -50,6 +53,7 @@ const Agents: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
+      setForbidden(false);
       
       // Call our edge function to get all users
       const { data, error } = await supabase.functions.invoke('list-users', {
@@ -58,6 +62,14 @@ const Agents: React.FC = () => {
       
       if (error) {
         console.error('Error calling edge function:', error);
+        
+        // Handle 403 Forbidden responses
+        if (error.message && error.message.includes('Forbidden')) {
+          setForbidden(true);
+          toast.error("You don't have permission to view this page");
+          return;
+        }
+        
         setError('Failed to fetch users: ' + error.message);
         return;
       }
@@ -124,6 +136,11 @@ const Agents: React.FC = () => {
   const totalPages = Math.ceil(users.length / PAGE_SIZE);
   const startIndex = (page - 1) * PAGE_SIZE;
   const currentPageUsers = users.slice(startIndex, startIndex + PAGE_SIZE);
+  
+  // Redirect if forbidden
+  if (forbidden) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -148,13 +165,20 @@ const Agents: React.FC = () => {
         </div>
       ) : loading ? (
         <AgentsLoading />
+      ) : userRole !== 'business' && userRole !== 'admin' && users.length === 0 ? (
+        <Alert className="my-4">
+          <ShieldAlert className="h-5 w-5" />
+          <AlertDescription>
+            You need a business account to view all agents. You can only see your own profile.
+          </AlertDescription>
+        </Alert>
       ) : (
         <>
           {/* Display agent cards */}
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-6">
             {currentPageUsers.map((u) => {
               // If user is a business or viewing their own profile, show audio
-              const canSeeAudio = userRole === 'business' || u.id === user?.id;
+              const canSeeAudio = userRole === 'business' || userRole === 'admin' || u.id === user?.id;
               const avatarImage = getAvatarImage(u.gender);
               
               return (
@@ -170,11 +194,13 @@ const Agents: React.FC = () => {
           </div>
           
           {/* Pagination component */}
-          <AgentsPagination 
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-          />
+          {users.length > 0 && (
+            <AgentsPagination 
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          )}
         </>
       )}
     </div>
