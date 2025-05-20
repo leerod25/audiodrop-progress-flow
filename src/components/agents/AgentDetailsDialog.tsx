@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { 
   Dialog,
@@ -95,7 +94,7 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
         setAgent({
           id: selectedAgentId,
           email: profileData?.email || '',
-          created_at: profileData?.created_at || new Date().toISOString(), // Ensure created_at is included
+          created_at: profileData?.created_at || new Date().toISOString(),
           has_audio: (audioFiles?.length || 0) > 0,
           country: profileData?.country || null,
           city: profileData?.city || null,
@@ -129,6 +128,13 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
     try {
       setIsDeleteLoading(audioId);
       
+      // Make sure we're using a valid UUID format
+      if (!isValidUUID(audioId)) {
+        console.error('Error: Invalid UUID format for audio ID:', audioId);
+        toast.error('Invalid audio ID format');
+        return;
+      }
+      
       // Delete from database
       const { error } = await supabase
         .from('audio_metadata')
@@ -161,7 +167,13 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
     }
   };
 
-  // Dummy function for toggling favorite - replace with your actual implementation
+  // Helper function to validate UUID format
+  const isValidUUID = (uuid: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
+  };
+
+  // Function for toggling favorite
   const toggleFavorite = async (agentId: string, currentStatus: boolean) => {
     if (!user || userRole !== 'business') return;
     

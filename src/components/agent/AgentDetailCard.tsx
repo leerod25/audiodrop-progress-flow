@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { formatDate } from '@/utils/dateUtils';
 
 interface AgentDetailCardProps {
   agent: Agent;
@@ -51,10 +52,10 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
   const displayAudioList =
     agent.audioUrls && agent.audioUrls.length > 0
       ? agent.audioUrls.map((url, idx) => ({
-          id: String(idx),
-          title: `Recording ${idx + 1}`,
-          url,
-          updated_at: ''
+          id: String(url.id || idx),
+          title: url.title || `Recording ${idx + 1}`,
+          url: url.url,
+          updated_at: url.updated_at || ''
         }))
       : audioList;
   
@@ -125,7 +126,7 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
                         <span className="font-medium">{audio.title}</span><br />
                         {audio.updated_at && (
                           <small className="text-gray-500">
-                            {new Date(audio.updated_at).toLocaleString()}
+                            {formatDate(audio.updated_at)}
                           </small>
                         )}
                       </div>
