@@ -3,6 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Remove an agent's recording from both storage and metadata.
+ * 
+ * Note: This function is deprecated and maintained for backward compatibility.
+ * Please use the useAgentAudio hook's remove method instead.
  *
  * @param userId  the agent's user_id folder in storage
  * @param fileId  the metadata.id (UUID) OR the file name if you only know that
@@ -11,71 +14,54 @@ export async function deleteRecording(
   userId: string,
   fileIdOrName: string
 ): Promise<void> {
-  // 1) figure out the storage path & confirm existence
-  let fileName = fileIdOrName;
+  console.warn('deleteRecording is deprecated. Please use useAgentAudio hook instead');
   
-  // If this looks like a UUID, we need to fetch the actual filename from metadata
-  if (isUuid(fileIdOrName)) {
-    // Fetch metadata to discover which file.name it refers to
-    const { data: metaData, error: metaErr } = await supabase
+  try {
+    // 1) fetch that row to get the URL
+    const { data: rows, error: fetchErr } = await supabase
       .from('audio_metadata')
       .select('audio_url')
       .eq('id', fileIdOrName)
-      .single();
+      .limit(1);
       
-    if (metaErr) {
-      console.error('Error getting metadata:', metaErr);
-      throw metaErr;
+    if (fetchErr) throw fetchErr;
+    if (!rows || rows.length === 0) {
+      // If not found by ID, might be a filename
+      if (isUuid(fileIdOrName)) {
+        throw new Error("Recording not found");
+      }
+      
+      // Fall back to legacy path-based removal (direct filename)
+      const storagePath = `${userId}/${fileIdOrName}`;
+      await supabase.storage.from('audio-bucket').remove([storagePath]);
+      
+      // Delete any metadata that might match this path
+      await supabase
+        .from('audio_metadata')
+        .delete()
+        .eq('user_id', userId)
+        .like('audio_url', `%/${fileIdOrName}`);
+        
+      return;
     }
     
-    if (metaData && metaData.audio_url) {
-      // Extract the file name from the URL
-      const urlParts = metaData.audio_url.split('/');
-      fileName = urlParts[urlParts.length - 1];
-    } else {
-      console.warn('Metadata not found for ID:', fileIdOrName);
-    }
+    const row = rows[0];
+
+    // 2) derive storage path from the URL
+    const publicUrl = row!.audio_url!;
+    const urlObj = new URL(publicUrl);
+    // assume your bucket is public and the path after /object/public/ is bucketName/filepath
+    const path = urlObj.pathname.split('/object/public/')[1]!;
+
+    // 3) delete from storage
+    await supabase.storage.from('audio-bucket').remove([path]);
+
+    // 4) delete metadata row
+    await supabase.from('audio_metadata').delete().eq('id', fileIdOrName);
+  } catch (err) {
+    console.error('Error in deleteRecording:', err);
+    throw err;
   }
-
-  // Build the storage path
-  const storagePath = `${userId}/${fileName}`;
-
-  // 2) check & delete from storage
-  const { data: listData, error: listErr } = await supabase
-    .storage
-    .from('audio-bucket')
-    .list(userId, { search: fileName, limit: 1 });
-    
-  if (listErr) throw listErr;
-  
-  if (listData.length === 0) {
-    console.warn('file not found in storage, skipping remove', storagePath);
-  } else {
-    console.log('Deleting file from storage:', storagePath);
-    const { error: rmErr } = await supabase
-      .storage
-      .from('audio-bucket')
-      .remove([storagePath]);
-      
-    if (rmErr) throw rmErr;
-  }
-
-  // 3) now delete the metadata row
-  // If you passed a true UUID, use it. Otherwise find it by matching user_id + path.
-  let metadataFilter = supabase
-    .from('audio_metadata')
-    .delete();
-
-  if (isUuid(fileIdOrName)) {
-    metadataFilter = metadataFilter.eq('id', fileIdOrName);
-  } else {
-    metadataFilter = metadataFilter
-      .eq('user_id', userId)
-      .like('audio_url', `%/${fileName}`);
-  }
-
-  const { error: dbErr } = await metadataFilter;
-  if (dbErr) throw dbErr;
 }
 
 /** quick regex test */

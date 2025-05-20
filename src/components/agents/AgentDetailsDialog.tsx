@@ -8,16 +8,15 @@ import {
   DialogDescription 
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, Trash } from "lucide-react";
-import AgentDetailCard from '@/components/agent/AgentDetailCard';
-import ProfessionalDetailsFormReadOnly from '@/components/professional/ProfessionalDetailsFormReadOnly';
+import { X } from "lucide-react";
 import { useUserContext } from '@/contexts/UserContext';
 import { Agent } from '@/types/Agent';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Audio } from '@/hooks/useUserAudios';
-import { deleteRecording } from '@/utils/audioOperations';
+import AgentAudioRecordings from './AgentAudioRecordings';
+import ProfessionalDetailsFormReadOnly from '@/components/professional/ProfessionalDetailsFormReadOnly';
+import AgentBusinessActions from './AgentBusinessActions';
 
 interface AgentDetailsDialogProps {
   selectedAgentId: string | null;
@@ -34,7 +33,6 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
   const [agent, setAgent] = useState<Agent | null>(null);
   const [loading, setLoading] = useState(true);
   const [professionalDetails, setProfessionalDetails] = useState<any>(null);
-  const [isDeleteLoading, setIsDeleteLoading] = useState<string | null>(null);
 
   // Check if current user is viewing their own profile
   const isOwnProfile = user && selectedAgentId === user.id;
@@ -50,7 +48,7 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
     fetchAgentDetails();
   }, [selectedAgentId, user, userRole]);
   
-  // Extract fetchAgentDetails to its own function so we can call it again after deleting a recording
+  // Extract fetchAgentDetails to its own function so we can call it again after data changes
   const fetchAgentDetails = async () => {
     if (!selectedAgentId) return;
     
@@ -64,6 +62,7 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
         
       if (profileError) {
         console.error('Error fetching profile:', profileError);
+        toast.error("Error loading agent profile");
         return;
       }
       
@@ -75,6 +74,7 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
         
       if (audioError) {
         console.error('Error fetching audio files:', audioError);
+        toast.error("Error loading audio recordings");
       }
       
       // Fetch professional details
@@ -97,7 +97,7 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
         }
       }
       
-      // Create the agent object with proper null checks for arrays and include all required fields
+      // Create the agent object with proper null checks for arrays
       setAgent({
         id: selectedAgentId,
         email: profileData?.email || '',
@@ -120,37 +120,10 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
       });
     } catch (err) {
       console.error('Error fetching agent data:', err);
+      toast.error('Failed to load agent details');
     } finally {
       setLoading(false);
     }
-  };
-
-  // Function to handle deleting an audio recording
-  const handleDeleteRecording = async (audioId: string) => {
-    if (!user || !isOwnProfile || !selectedAgentId) return;
-    
-    try {
-      setIsDeleteLoading(audioId);
-      
-      // Delete the recording using the utility function
-      await deleteRecording(selectedAgentId, audioId);
-      
-      // Refresh the agent data to update the UI
-      await fetchAgentDetails();
-      
-      toast.success('Recording deleted successfully');
-    } catch (err) {
-      console.error('Error in handleDeleteRecording:', err);
-      toast.error('An error occurred while deleting the recording');
-    } finally {
-      setIsDeleteLoading(null);
-    }
-  };
-
-  // Helper function to validate UUID format
-  const isValidUUID = (uuid: string) => {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(uuid);
   };
 
   // Function for toggling favorite
@@ -164,23 +137,32 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
           business_user_id: user.id, 
           agent_user_id: agentId 
         });
+        toast.success('Agent removed from your team');
       } else {
         // Add to favorites
         await supabase.rpc('add_business_favorite', { 
           business_user_id: user.id, 
           agent_user_id: agentId 
         });
+        toast.success('Agent added to your team');
       }
       
       // Update the agent state to reflect the change in UI
       setAgent(prev => prev ? { ...prev, is_favorite: !currentStatus } : null);
     } catch (error) {
       console.error('Error toggling favorite:', error);
+      toast.error('Failed to update team status');
     }
   };
 
   // Format user ID to show a subset
   const formatUserId = (id: string) => `${id.substring(0, 8)}...`;
+
+  // Handle successful recording deletion
+  const handleRecordingDeleted = () => {
+    toast.success("Recording deleted successfully");
+    fetchAgentDetails(); // Refresh all agent data
+  };
 
   return (
     <Dialog open={!!selectedAgentId} onOpenChange={(open) => !open && onClose()}>
@@ -208,14 +190,12 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
               </TabsList>
               
               <TabsContent value="recordings">
-                <AgentDetailCard 
+                <AgentAudioRecordings
                   agent={agent}
                   isBusinessAccount={userRole === 'business'}
                   formatUserId={formatUserId}
-                  toggleFavorite={toggleFavorite}
                   isOwnProfile={isOwnProfile}
-                  onDeleteRecording={handleDeleteRecording}
-                  deleteLoading={isDeleteLoading}
+                  onRecordingDeleted={handleRecordingDeleted}
                 />
               </TabsContent>
               
@@ -227,23 +207,10 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
             </Tabs>
             
             {userRole === 'business' && (
-              <div className="border-t pt-4">
-                <h3 className="text-lg font-medium mb-2">Your Selection</h3>
-                <p>
-                  {agent.is_favorite ? (
-                    <span className="text-green-600">✓ This agent is in your team</span>
-                  ) : (
-                    <span className="text-gray-500">This agent is not in your team</span>
-                  )}
-                </p>
-                <Button
-                  className="mt-2"
-                  variant={agent.is_favorite ? "destructive" : "default"}
-                  onClick={() => toggleFavorite(agent.id, agent.is_favorite)}
-                >
-                  {agent.is_favorite ? "Remove from Team" : "Add to Team"}
-                </Button>
-              </div>
+              <AgentBusinessActions 
+                agent={agent} 
+                toggleFavorite={toggleFavorite} 
+              />
             )}
           </div>
         ) : (
