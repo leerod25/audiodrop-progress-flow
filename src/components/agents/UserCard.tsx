@@ -36,15 +36,18 @@ const UserCard: React.FC<UserCardProps> = ({
   showLoginPrompt = false
 }) => {
   const isAdmin = userRole === 'admin';
+  const isPriorityAgent = user.id.includes('3a067ecc');
   
-  // Generate a display name that only shows the agent ID (first 8 chars)
-  const displayName = `Agent ID: ${user.id.substring(0, 8)}`;
+  // Generate a display name that shows either "Mission Statement" for the special agent or the agent ID for others
+  const displayName = isPriorityAgent 
+    ? "Mission Statement" 
+    : `Agent ID: ${user.id.substring(0, 8)}`;
   
   // Check if user has audio files
   const hasAudio = user.audio_files && user.audio_files.length > 0;
   
   return (
-    <Card className="overflow-hidden">
+    <Card className={`overflow-hidden ${isPriorityAgent ? 'border-2 border-blue-500' : ''}`}>
       <div className="relative">
         {/* Availability Badge */}
         {user.is_available && (
@@ -54,14 +57,14 @@ const UserCard: React.FC<UserCardProps> = ({
         )}
         
         {/* User Header with Avatar */}
-        <div className="p-4 bg-muted/30">
+        <div className={`p-4 ${isPriorityAgent ? 'bg-blue-50' : 'bg-muted/30'}`}>
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-600">
-              {user.id.substring(0, 1).toUpperCase()}
+            <div className={`w-12 h-12 rounded-full ${isPriorityAgent ? 'bg-blue-200 text-blue-700' : 'bg-gray-200 text-gray-600'} flex items-center justify-center text-xl font-bold`}>
+              {isPriorityAgent ? "MS" : user.id.substring(0, 1).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center">
-                <h3 className="text-lg font-semibold truncate">
+                <h3 className={`text-lg font-semibold truncate ${isPriorityAgent ? 'text-blue-700' : ''}`}>
                   {displayName}
                 </h3>
                 {/* Audio indicator */}

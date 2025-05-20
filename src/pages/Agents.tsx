@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { useUsersData } from '@/hooks/useUsersData';
@@ -110,11 +111,24 @@ const Agents = () => {
     });
   }, [users, filters]);
 
+  // Sort users: priority agent (3a067ecc) first, then the rest
+  const sortedUsers = useMemo(() => {
+    // Clone the array to avoid mutating the original
+    const sorted = [...filteredUsers];
+    
+    // Sort function: move priority agent to the top
+    return sorted.sort((a, b) => {
+      if (a.id.includes('3a067ecc')) return -1;
+      if (b.id.includes('3a067ecc')) return 1;
+      return 0;
+    });
+  }, [filteredUsers]);
+  
   // Calculate pagination
   const PAGE_SIZE = 9;
-  const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE);
+  const totalPages = Math.ceil(sortedUsers.length / PAGE_SIZE);
   const startIndex = (page - 1) * PAGE_SIZE;
-  const currentPageUsers = filteredUsers.slice(startIndex, startIndex + PAGE_SIZE);
+  const currentPageUsers = sortedUsers.slice(startIndex, startIndex + PAGE_SIZE);
   
   // Reset page when filter changes
   useEffect(() => {

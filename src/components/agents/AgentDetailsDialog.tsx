@@ -1,222 +1,155 @@
 
-import React, { useEffect, useState } from 'react';
-import { 
-  Dialog,
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription 
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
-import { useUserContext } from '@/contexts/UserContext';
-import { Agent } from '@/types/Agent';
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
+import { User } from '@/hooks/users/useUserFetch';
+import { useUserContext } from '@/contexts/UserContext';
+import AgentDetailsHeader from './AgentDetailsHeader';
 import AgentAudioRecordings from './AgentAudioRecordings';
-import ProfessionalDetailsFormReadOnly from '@/components/professional/ProfessionalDetailsFormReadOnly';
 import AgentBusinessActions from './AgentBusinessActions';
+import AgentDetailsInfo from './AgentDetailsInfo';
+import { Agent } from '@/types/Agent';
+import { toast } from 'sonner';
 
 interface AgentDetailsDialogProps {
   selectedAgentId: string | null;
   onClose: () => void;
-  defaultTab?: "recordings" | "professional";
 }
 
-const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({ 
-  selectedAgentId, 
-  onClose,
-  defaultTab = "recordings" 
-}) => {
-  const { userRole, user } = useUserContext();
+const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({ selectedAgentId, onClose }) => {
   const [agent, setAgent] = useState<Agent | null>(null);
   const [loading, setLoading] = useState(true);
-  const [professionalDetails, setProfessionalDetails] = useState<any>(null);
+  const { user, userRole } = useUserContext();
+  const isPriorityAgent = selectedAgentId?.includes('3a067ecc');
 
-  // Check if current user is viewing their own profile
-  const isOwnProfile = user && selectedAgentId === user.id;
-
-  // When selectedAgentId changes, fetch agent details
-  useEffect(() => {
-    if (!selectedAgentId) {
-      setAgent(null);
-      return;
-    }
-    
-    setLoading(true);
-    fetchAgentDetails();
-  }, [selectedAgentId, user, userRole]);
-  
-  // Extract fetchAgentDetails to its own function so we can call it again after data changes
   const fetchAgentDetails = async () => {
-    if (!selectedAgentId) return;
-    
     try {
-      // Fetch agent profile data
-      const { data: profileData, error: profileError } = await supabase
+      if (!selectedAgentId) return;
+      setLoading(true);
+
+      // Get agent profile
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', selectedAgentId)
         .single();
-        
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        toast.error("Error loading agent profile");
+
+      if (error) {
+        console.error('Error fetching agent:', error);
         return;
       }
-      
-      // Fetch agent's audio files
-      const { data: audioFiles, error: audioError } = await supabase
-        .from('audio_metadata')
-        .select('*')
-        .eq('user_id', selectedAgentId);
-        
-      if (audioError) {
-        console.error('Error fetching audio files:', audioError);
-        toast.error("Error loading audio recordings");
-      }
-      
-      // Fetch professional details
+
+      // Get agent's professional details
       const { data: professionalData } = await supabase
         .from('professional_details')
         .select('*')
         .eq('user_id', selectedAgentId)
         .single();
-        
-      setProfessionalDetails(professionalData || null);
 
-      // Check if this agent is a favorite (if user is a business)
+      // Check if user is in business favorites
       let isFavorite = false;
       if (user && userRole === 'business') {
-        const { data: favorites } = await supabase
+        const { data: favoriteData } = await supabase
           .rpc('get_business_favorites', { business_user_id: user.id });
-        
-        if (favorites && Array.isArray(favorites)) {
-          isFavorite = favorites.includes(selectedAgentId);
-        }
+          
+        isFavorite = Array.isArray(favoriteData) && favoriteData.includes(selectedAgentId);
       }
-      
-      // Create the agent object with proper null checks for arrays
+
+      // Create agent object
       setAgent({
         id: selectedAgentId,
-        email: profileData?.email || '',
-        created_at: profileData?.created_at || new Date().toISOString(),
-        has_audio: (audioFiles?.length || 0) > 0,
-        country: profileData?.country || null,
-        city: profileData?.city || null,
-        computer_skill_level: professionalData?.computer_skill_level || profileData?.computer_skill_level || null,
+        email: data?.email || '',
+        created_at: data?.created_at || new Date().toISOString(),
+        has_audio: true, // We'll set this to true and let the audio component handle actual check
+        audio_url: null,
+        country: data?.country || null,
+        city: data?.city || null,
+        computer_skill_level: data?.computer_skill_level || null,
+        years_experience: professionalData?.years_experience || null,
+        languages: professionalData?.languages || [],
         is_favorite: isFavorite,
-        audioUrls: Array.isArray(audioFiles) ? audioFiles.map(file => ({
-          id: file.id || '',
-          title: file.title || `Recording`,
-          url: file.audio_url || '',
-          updated_at: file.created_at || ''
-        })) : [],
-        // Add private fields for admin users
-        full_name: profileData?.full_name || null,
-        phone: profileData?.phone || null,
-        bio: profileData?.bio || null
+        is_available: !!professionalData
       });
     } catch (err) {
-      console.error('Error fetching agent data:', err);
+      console.error('Error fetching agent details:', err);
       toast.error('Failed to load agent details');
     } finally {
       setLoading(false);
     }
   };
 
-  // Function for toggling favorite
+  // Toggle favorite status
   const toggleFavorite = async (agentId: string, currentStatus: boolean) => {
-    if (!user || userRole !== 'business') return;
-    
     try {
-      if (currentStatus) {
-        // Remove from favorites
-        await supabase.rpc('remove_business_favorite', { 
+      if (!user) return;
+      
+      const functionName = currentStatus ? 'remove_business_favorite' : 'add_business_favorite';
+      
+      const { error } = await supabase.rpc(
+        functionName, 
+        { 
           business_user_id: user.id, 
           agent_user_id: agentId 
-        });
-        toast.success('Agent removed from your team');
-      } else {
-        // Add to favorites
-        await supabase.rpc('add_business_favorite', { 
-          business_user_id: user.id, 
-          agent_user_id: agentId 
-        });
-        toast.success('Agent added to your team');
+        }
+      );
+      
+      if (error) {
+        console.error(`Error toggling favorite:`, error);
+        toast.error('Failed to update team');
+        return;
       }
       
-      // Update the agent state to reflect the change in UI
-      setAgent(prev => prev ? { ...prev, is_favorite: !currentStatus } : null);
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
-      toast.error('Failed to update team status');
+      // Update local state
+      setAgent(prev => prev ? {
+        ...prev,
+        is_favorite: !currentStatus
+      } : null);
+      
+      toast.success(currentStatus ? 'Agent removed from team' : 'Agent added to team');
+    } catch (err) {
+      console.error('Error in toggleFavorite:', err);
+      toast.error('Failed to update team');
     }
   };
 
-  // Format user ID to show a subset
-  const formatUserId = (id: string) => `${id.substring(0, 8)}...`;
+  useEffect(() => {
+    if (selectedAgentId) {
+      fetchAgentDetails();
+    }
+  }, [selectedAgentId]);
 
-  // Handle successful recording deletion
-  const handleRecordingDeleted = () => {
-    toast.success("Recording deleted successfully");
-    fetchAgentDetails(); // Refresh all agent data
-  };
+  if (!selectedAgentId) return null;
 
   return (
     <Dialog open={!!selectedAgentId} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Agent Details</span>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
+          <DialogTitle>
+            {isPriorityAgent ? "Mission Statement" : `Agent ID: ${selectedAgentId.substring(0, 8)}...`}
           </DialogTitle>
           <DialogDescription>
-            Review this agent's professional qualifications and audio recordings
+            View agent details and audio recordings
           </DialogDescription>
         </DialogHeader>
         
         {loading ? (
-          <div className="p-8 text-center">Loading agent details...</div>
+          <div className="flex justify-center p-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
         ) : agent ? (
           <div className="space-y-6">
-            <Tabs defaultValue={defaultTab}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="recordings">Audio Recordings</TabsTrigger>
-                <TabsTrigger value="professional">Professional Details</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="recordings">
-                <AgentAudioRecordings
-                  agent={agent}
-                  isBusinessAccount={userRole === 'business'}
-                  formatUserId={formatUserId}
-                  isOwnProfile={isOwnProfile}
-                  onRecordingDeleted={handleRecordingDeleted}
-                />
-              </TabsContent>
-              
-              <TabsContent value="professional">
-                <ProfessionalDetailsFormReadOnly 
-                  professionalDetails={professionalDetails} 
-                />
-              </TabsContent>
-            </Tabs>
-            
+            <AgentDetailsHeader agent={agent} isPriorityAgent={isPriorityAgent} />
+            <AgentDetailsInfo agent={agent} />
+            <AgentAudioRecordings agentId={agent.id} />
             {userRole === 'business' && (
               <AgentBusinessActions 
-                agent={agent} 
-                toggleFavorite={toggleFavorite} 
+                agent={agent}
+                toggleFavorite={toggleFavorite}  
               />
             )}
           </div>
         ) : (
-          <div className="p-8 text-center text-red-500">
-            Failed to load agent details. Please try again.
-          </div>
+          <p className="text-center py-4">Agent not found.</p>
         )}
       </DialogContent>
     </Dialog>
