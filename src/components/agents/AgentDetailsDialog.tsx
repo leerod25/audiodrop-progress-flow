@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Audio } from '@/hooks/useUserAudios';
+import { deleteRecording } from '@/utils/audioOperations';
 
 interface AgentDetailsDialogProps {
   selectedAgentId: string | null;
@@ -123,30 +124,13 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
 
   // Function to handle deleting an audio recording
   const handleDeleteRecording = async (audioId: string) => {
-    if (!user || !isOwnProfile) return;
+    if (!user || !isOwnProfile || !selectedAgentId) return;
     
     try {
       setIsDeleteLoading(audioId);
       
-      // Make sure we're using a valid UUID format
-      if (!isValidUUID(audioId)) {
-        console.error('Error: Invalid UUID format for audio ID:', audioId);
-        toast.error('Invalid audio ID format');
-        return;
-      }
-      
-      // Delete from database
-      const { error } = await supabase
-        .from('audio_metadata')
-        .delete()
-        .eq('id', audioId)
-        .eq('user_id', user.id);
-        
-      if (error) {
-        console.error('Error deleting recording:', error);
-        toast.error('Failed to delete recording');
-        return;
-      }
+      // Delete the recording using the utility function
+      await deleteRecording(selectedAgentId, audioId);
       
       // Update the local state to remove the deleted audio
       setAgent(prev => {
