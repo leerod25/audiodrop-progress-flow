@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { 
   Dialog,
@@ -7,13 +8,15 @@ import {
   DialogDescription 
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Trash } from "lucide-react";
 import AgentDetailCard from '@/components/agent/AgentDetailCard';
 import ProfessionalDetailsFormReadOnly from '@/components/professional/ProfessionalDetailsFormReadOnly';
 import { useUserContext } from '@/contexts/UserContext';
 import { Agent } from '@/types/Agent';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { Audio } from '@/hooks/useUserAudios';
 
 interface AgentDetailsDialogProps {
   selectedAgentId: string | null;
@@ -30,6 +33,10 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
   const [agent, setAgent] = useState<Agent | null>(null);
   const [loading, setLoading] = useState(true);
   const [professionalDetails, setProfessionalDetails] = useState<any>(null);
+  const [isDeleteLoading, setIsDeleteLoading] = useState<string | null>(null);
+
+  // Check if current user is viewing their own profile
+  const isOwnProfile = user && selectedAgentId === user.id;
 
   // When selectedAgentId changes, fetch agent details
   useEffect(() => {
@@ -115,6 +122,45 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
     fetchAgentDetails();
   }, [selectedAgentId, user, userRole]);
 
+  // Function to handle deleting an audio recording
+  const handleDeleteRecording = async (audioId: string) => {
+    if (!user || !isOwnProfile) return;
+    
+    try {
+      setIsDeleteLoading(audioId);
+      
+      // Delete from database
+      const { error } = await supabase
+        .from('audio_metadata')
+        .delete()
+        .eq('id', audioId)
+        .eq('user_id', user.id);
+        
+      if (error) {
+        console.error('Error deleting recording:', error);
+        toast.error('Failed to delete recording');
+        return;
+      }
+      
+      // Update the local state to remove the deleted audio
+      setAgent(prev => {
+        if (!prev) return null;
+        
+        return {
+          ...prev,
+          audioUrls: prev.audioUrls?.filter(audio => audio.id !== audioId) || []
+        };
+      });
+      
+      toast.success('Recording deleted successfully');
+    } catch (err) {
+      console.error('Error in handleDeleteRecording:', err);
+      toast.error('An error occurred while deleting the recording');
+    } finally {
+      setIsDeleteLoading(null);
+    }
+  };
+
   // Dummy function for toggling favorite - replace with your actual implementation
   const toggleFavorite = async (agentId: string, currentStatus: boolean) => {
     if (!user || userRole !== 'business') return;
@@ -175,6 +221,9 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
                   isBusinessAccount={userRole === 'business'}
                   formatUserId={formatUserId}
                   toggleFavorite={toggleFavorite}
+                  isOwnProfile={isOwnProfile}
+                  onDeleteRecording={handleDeleteRecording}
+                  deleteLoading={isDeleteLoading}
                 />
               </TabsContent>
               

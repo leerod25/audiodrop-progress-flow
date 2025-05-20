@@ -2,25 +2,42 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star, Download } from 'lucide-react';
+import { Star, Download, Trash } from 'lucide-react';
 import { useAgentAudio } from '@/hooks/useAgentAudio';
 import { Agent } from '@/types/Agent';
 import { Skeleton } from "@/components/ui/skeleton";
 import DownloadButton from '@/components/DownloadButton';
 import { useUserContext } from '@/contexts/UserContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface AgentDetailCardProps {
   agent: Agent;
   isBusinessAccount?: boolean;
   formatUserId?: (id: string) => string;
   toggleFavorite: (agentId: string, currentStatus: boolean) => void;
+  isOwnProfile?: boolean;
+  onDeleteRecording?: (audioId: string) => Promise<void>;
+  deleteLoading?: string | null;
 }
 
 const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
   agent,
   isBusinessAccount = false,
   formatUserId = (id) => id.substring(0, 8) + '...',
-  toggleFavorite
+  toggleFavorite,
+  isOwnProfile = false,
+  onDeleteRecording,
+  deleteLoading = null
 }) => {
   const { userRole } = useUserContext();
   const isAdmin = userRole === 'admin';
@@ -113,13 +130,44 @@ const AgentDetailCard: React.FC<AgentDetailCardProps> = ({
                         )}
                       </div>
                       
-                      {/* Download button for admin users */}
-                      {isAdmin && (
-                        <DownloadButton 
-                          url={audio.url} 
-                          filename={`${agent.id}_${audio.title.replace(/\s+/g, '_')}.webm`} 
-                        />
-                      )}
+                      <div className="flex gap-1">
+                        {/* Download button for admin users */}
+                        {isAdmin && (
+                          <DownloadButton 
+                            url={audio.url} 
+                            filename={`${agent.id}_${audio.title.replace(/\s+/g, '_')}.webm`} 
+                          />
+                        )}
+                        
+                        {/* Delete button for user's own recordings */}
+                        {isOwnProfile && onDeleteRecording && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Recording</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this recording? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-red-500 hover:bg-red-600 text-white"
+                                  onClick={() => onDeleteRecording(audio.id)}
+                                  disabled={deleteLoading === audio.id}
+                                >
+                                  {deleteLoading === audio.id ? "Deleting..." : "Delete"}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="w-full">
