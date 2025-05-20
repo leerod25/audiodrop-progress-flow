@@ -46,81 +46,83 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
     }
     
     setLoading(true);
-    
-    const fetchAgentDetails = async () => {
-      try {
-        // Fetch agent profile data
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', selectedAgentId)
-          .single();
-          
-        if (profileError) {
-          console.error('Error fetching profile:', profileError);
-          return;
-        }
-        
-        // Fetch agent's audio files
-        const { data: audioFiles, error: audioError } = await supabase
-          .from('audio_metadata')
-          .select('*')
-          .eq('user_id', selectedAgentId);
-          
-        if (audioError) {
-          console.error('Error fetching audio files:', audioError);
-        }
-        
-        // Fetch professional details
-        const { data: professionalData } = await supabase
-          .from('professional_details')
-          .select('*')
-          .eq('user_id', selectedAgentId)
-          .single();
-          
-        setProfessionalDetails(professionalData || null);
-
-        // Check if this agent is a favorite (if user is a business)
-        let isFavorite = false;
-        if (user && userRole === 'business') {
-          const { data: favorites } = await supabase
-            .rpc('get_business_favorites', { business_user_id: user.id });
-          
-          if (favorites && Array.isArray(favorites)) {
-            isFavorite = favorites.includes(selectedAgentId);
-          }
-        }
-        
-        // Create the agent object with proper null checks for arrays and include all required fields
-        setAgent({
-          id: selectedAgentId,
-          email: profileData?.email || '',
-          created_at: profileData?.created_at || new Date().toISOString(),
-          has_audio: (audioFiles?.length || 0) > 0,
-          country: profileData?.country || null,
-          city: profileData?.city || null,
-          computer_skill_level: professionalData?.computer_skill_level || profileData?.computer_skill_level || null,
-          is_favorite: isFavorite,
-          audioUrls: Array.isArray(audioFiles) ? audioFiles.map(file => ({
-            id: file.id || '',
-            title: file.title || `Recording`,
-            url: file.audio_url || '',
-            updated_at: file.created_at || ''
-          })) : [],
-          // Add private fields for admin users
-          full_name: profileData?.full_name || null,
-          phone: profileData?.phone || null,
-          bio: profileData?.bio || null
-        });
-      } catch (err) {
-        console.error('Error fetching agent data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchAgentDetails();
   }, [selectedAgentId, user, userRole]);
+  
+  // Extract fetchAgentDetails to its own function so we can call it again after deleting a recording
+  const fetchAgentDetails = async () => {
+    if (!selectedAgentId) return;
+    
+    try {
+      // Fetch agent profile data
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', selectedAgentId)
+        .single();
+        
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        return;
+      }
+      
+      // Fetch agent's audio files
+      const { data: audioFiles, error: audioError } = await supabase
+        .from('audio_metadata')
+        .select('*')
+        .eq('user_id', selectedAgentId);
+        
+      if (audioError) {
+        console.error('Error fetching audio files:', audioError);
+      }
+      
+      // Fetch professional details
+      const { data: professionalData } = await supabase
+        .from('professional_details')
+        .select('*')
+        .eq('user_id', selectedAgentId)
+        .single();
+        
+      setProfessionalDetails(professionalData || null);
+
+      // Check if this agent is a favorite (if user is a business)
+      let isFavorite = false;
+      if (user && userRole === 'business') {
+        const { data: favorites } = await supabase
+          .rpc('get_business_favorites', { business_user_id: user.id });
+        
+        if (favorites && Array.isArray(favorites)) {
+          isFavorite = favorites.includes(selectedAgentId);
+        }
+      }
+      
+      // Create the agent object with proper null checks for arrays and include all required fields
+      setAgent({
+        id: selectedAgentId,
+        email: profileData?.email || '',
+        created_at: profileData?.created_at || new Date().toISOString(),
+        has_audio: (audioFiles?.length || 0) > 0,
+        country: profileData?.country || null,
+        city: profileData?.city || null,
+        computer_skill_level: professionalData?.computer_skill_level || profileData?.computer_skill_level || null,
+        is_favorite: isFavorite,
+        audioUrls: Array.isArray(audioFiles) ? audioFiles.map(file => ({
+          id: file.id || '',
+          title: file.title || `Recording`,
+          url: file.audio_url || '',
+          updated_at: file.created_at || ''
+        })) : [],
+        // Add private fields for admin users
+        full_name: profileData?.full_name || null,
+        phone: profileData?.phone || null,
+        bio: profileData?.bio || null
+      });
+    } catch (err) {
+      console.error('Error fetching agent data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Function to handle deleting an audio recording
   const handleDeleteRecording = async (audioId: string) => {
@@ -132,15 +134,8 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({
       // Delete the recording using the utility function
       await deleteRecording(selectedAgentId, audioId);
       
-      // Update the local state to remove the deleted audio
-      setAgent(prev => {
-        if (!prev) return null;
-        
-        return {
-          ...prev,
-          audioUrls: prev.audioUrls?.filter(audio => audio.id !== audioId) || []
-        };
-      });
+      // Refresh the agent data to update the UI
+      await fetchAgentDetails();
       
       toast.success('Recording deleted successfully');
     } catch (err) {
