@@ -18,6 +18,11 @@ export interface Agent {
   gender?: string | null;
   audio_files?: any[]; // Add this to match the structure from useUsersData
   
+  // Add properties that were missing
+  years_experience?: string | null;
+  languages?: string[] | null;
+  is_available?: boolean;
+  
   // Add private fields that only admins should access
   full_name?: string | null;
   phone?: string | null;

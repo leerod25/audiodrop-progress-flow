@@ -14,9 +14,10 @@ import { toast } from 'sonner';
 interface AgentDetailsDialogProps {
   selectedAgentId: string | null;
   onClose: () => void;
+  defaultTab?: string; // Make this optional
 }
 
-const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({ selectedAgentId, onClose }) => {
+const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({ selectedAgentId, onClose, defaultTab = "professional" }) => {
   const [agent, setAgent] = useState<Agent | null>(null);
   const [loading, setLoading] = useState(true);
   const { user, userRole } = useUserContext();
@@ -140,7 +141,7 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({ selectedAgentId
           <div className="space-y-6">
             <AgentDetailsHeader agent={agent} isPriorityAgent={isPriorityAgent} />
             <AgentDetailsInfo agent={agent} />
-            <AgentAudioRecordings agentId={agent.id} />
+            <AgentAudioRecordings agent={agent} />
             {userRole === 'business' && (
               <AgentBusinessActions 
                 agent={agent}

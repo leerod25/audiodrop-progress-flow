@@ -13,7 +13,7 @@ import { formatDate } from '@/utils/dateUtils';
 interface AgentAudioRecordingsProps {
   agent: Agent;
   isBusinessAccount?: boolean;
-  formatUserId: (id: string) => string;
+  formatUserId?: (id: string) => string;
   isOwnProfile?: boolean;
   onRecordingDeleted?: () => void;
 }
@@ -21,7 +21,7 @@ interface AgentAudioRecordingsProps {
 const AgentAudioRecordings: React.FC<AgentAudioRecordingsProps> = ({
   agent,
   isBusinessAccount = false,
-  formatUserId,
+  formatUserId = (id) => id.substring(0, 8) + '...',
   isOwnProfile = false,
   onRecordingDeleted
 }) => {
