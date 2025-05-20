@@ -12,52 +12,74 @@ export async function deleteRecording(
   fileIdOrName: string
 ): Promise<void> {
   // 1) figure out the storage path & confirm existence
-  const fileName = fileIdOrName.includes('-')
-    ? /* looks like a UUID → fetch the metadata row to get the actual file name */
-      (() => {
-        /* fetch metadata to discover which file.name it refers to */
-      })()
-    : fileIdOrName              // you passed a raw filename already
+  let fileName = fileIdOrName;
+  
+  // If this looks like a UUID, we need to fetch the actual filename from metadata
+  if (isUuid(fileIdOrName)) {
+    // Fetch metadata to discover which file.name it refers to
+    const { data: metaData, error: metaErr } = await supabase
+      .from('audio_metadata')
+      .select('audio_url')
+      .eq('id', fileIdOrName)
+      .single();
+      
+    if (metaErr) {
+      console.error('Error getting metadata:', metaErr);
+      throw metaErr;
+    }
+    
+    if (metaData && metaData.audio_url) {
+      // Extract the file name from the URL
+      const urlParts = metaData.audio_url.split('/');
+      fileName = urlParts[urlParts.length - 1];
+    } else {
+      console.warn('Metadata not found for ID:', fileIdOrName);
+    }
+  }
 
-  // --- example: assume fileName is now 'session1.mp3' ---
-  const storagePath = `${userId}/${fileName}`
+  // Build the storage path
+  const storagePath = `${userId}/${fileName}`;
 
   // 2) check & delete from storage
   const { data: listData, error: listErr } = await supabase
     .storage
     .from('audio-bucket')
-    .list(userId, { search: fileName, limit: 1 })
-  if (listErr) throw listErr
+    .list(userId, { search: fileName, limit: 1 });
+    
+  if (listErr) throw listErr;
+  
   if (listData.length === 0) {
-    console.warn('file not found in storage, skipping remove', storagePath)
+    console.warn('file not found in storage, skipping remove', storagePath);
   } else {
+    console.log('Deleting file from storage:', storagePath);
     const { error: rmErr } = await supabase
       .storage
       .from('audio-bucket')
-      .remove([storagePath])
-    if (rmErr) throw rmErr
+      .remove([storagePath]);
+      
+    if (rmErr) throw rmErr;
   }
 
   // 3) now delete the metadata row
   // If you passed a true UUID, use it. Otherwise find it by matching user_id + path.
   let metadataFilter = supabase
     .from('audio_metadata')
-    .delete()
+    .delete();
 
   if (isUuid(fileIdOrName)) {
-    metadataFilter = metadataFilter.eq('id', fileIdOrName)
+    metadataFilter = metadataFilter.eq('id', fileIdOrName);
   } else {
     metadataFilter = metadataFilter
       .eq('user_id', userId)
-      .like('audio_url', `%/${fileName}`)
+      .like('audio_url', `%/${fileName}`);
   }
 
-  const { error: dbErr } = await metadataFilter
-  if (dbErr) throw dbErr
+  const { error: dbErr } = await metadataFilter;
+  if (dbErr) throw dbErr;
 }
 
 /** quick regex test */
 function isUuid(str: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-    .test(str)
+    .test(str);
 }
