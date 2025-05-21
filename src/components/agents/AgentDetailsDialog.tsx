@@ -141,7 +141,11 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({ selectedAgentId
           <div className="space-y-6">
             <AgentDetailsHeader agent={agent} isPriorityAgent={isPriorityAgent} />
             <AgentDetailsInfo agent={agent} />
-            <AgentAudioRecordings agent={agent} />
+            <AgentAudioRecordings 
+              agent={agent} 
+              isOwnProfile={user?.id === agent.id} 
+              onRecordingDeleted={fetchAgentDetails}
+            />
             {userRole === 'business' && (
               <AgentBusinessActions 
                 agent={agent}

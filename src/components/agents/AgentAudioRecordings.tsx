@@ -25,8 +25,9 @@ const AgentAudioRecordings: React.FC<AgentAudioRecordingsProps> = ({
   isOwnProfile = false,
   onRecordingDeleted
 }) => {
-  const { userRole } = useUserContext();
+  const { user, userRole } = useUserContext();
   const isAdmin = userRole === 'admin';
+  const isAgentOwnProfile = user?.id === agent.id;
   
   // Use the enhanced useAgentAudio hook with delete functionality
   const { audioList, loading, error, remove } = useAgentAudio(agent.id);
@@ -117,8 +118,8 @@ const AgentAudioRecordings: React.FC<AgentAudioRecordingsProps> = ({
                           />
                         )}
                         
-                        {/* Delete button for user's own recordings */}
-                        {isOwnProfile && (
+                        {/* Delete button for user's own recordings or admin */}
+                        {(isAgentOwnProfile || isAdmin) && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button 
