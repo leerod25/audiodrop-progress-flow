@@ -44,13 +44,14 @@ const AdminRatingSection: React.FC<AdminRatingSectionProps> = ({ agent }) => {
       <CardContent>
         <div className="space-y-2">
           <p className="text-sm text-purple-700">
-            Rate this agent's performance (visible only to admins)
+            Rate this agent's performance (supports half-star ratings)
           </p>
           <StarRating
             rating={currentRating}
             onRatingChange={handleRatingChange}
             readonly={loading}
             size="lg"
+            allowHalfStars={true}
           />
           {currentRating && (
             <p className="text-xs text-purple-600">
