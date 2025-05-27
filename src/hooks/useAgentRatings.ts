@@ -57,37 +57,71 @@ export function useAgentRatings(adminId: string | null): UseAgentRatingsResult {
   const addOrUpdateRating = async (agentId: string, rating: number): Promise<void> => {
     if (!adminId) return;
 
+    setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First, check if a rating already exists
+      const { data: existingRating, error: fetchError } = await supabase
         .from('agent_ratings')
-        .upsert({
-          admin_id: adminId,
-          agent_id: agentId,
-          rating: rating,
-          updated_at: new Date().toISOString()
-        })
-        .select()
+        .select('*')
+        .eq('admin_id', adminId)
+        .eq('agent_id', agentId)
         .single();
 
-      if (error) throw error;
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        // PGRST116 is "not found" error, which is fine for new ratings
+        throw fetchError;
+      }
+
+      let result;
+      const currentTime = new Date().toISOString();
+
+      if (existingRating) {
+        // Update existing rating
+        result = await supabase
+          .from('agent_ratings')
+          .update({
+            rating: rating,
+            updated_at: currentTime
+          })
+          .eq('id', existingRating.id)
+          .select()
+          .single();
+      } else {
+        // Insert new rating
+        result = await supabase
+          .from('agent_ratings')
+          .insert({
+            admin_id: adminId,
+            agent_id: agentId,
+            rating: rating,
+            updated_at: currentTime
+          })
+          .select()
+          .single();
+      }
+
+      if (result.error) throw result.error;
 
       // Update local state
       setRatings(prev => {
         const existingIndex = prev.findIndex(r => r.agent_id === agentId);
         if (existingIndex >= 0) {
           const updated = [...prev];
-          updated[existingIndex] = data;
+          updated[existingIndex] = result.data;
           return updated;
         } else {
-          return [...prev, data];
+          return [...prev, result.data];
         }
       });
 
       toast.success('Agent rating updated successfully');
+      console.log('Rating saved successfully:', result.data);
     } catch (err: any) {
       console.error('Error updating rating:', err);
       toast.error('Failed to update rating');
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
