@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { useUsersData } from '@/hooks/useUsersData';
+import { useAgentAverageRatings } from '@/hooks/useAgentAverageRatings';
 import { Container } from '@/components/ui/container';
 import AuthAlert from '@/components/agents/AuthAlert';
 import AgentDetailsDialog from '@/components/agents/AgentDetailsDialog';
@@ -19,6 +20,7 @@ import { User } from '@/hooks/users/useUserFetch';
 const Agents = () => {
   const { user, userRole } = useUserContext();
   const { users: apiUsers, loading, error, expandedUser, playingAudio, fetchAllUsers, toggleUserExpand, handleAudioPlay, toggleAvailability } = useUsersData(user);
+  const { averageRatings, getSortedAgentIds } = useAgentAverageRatings();
   const [page, setPage] = useState(1);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const isMobile = useIsMobile();
@@ -36,9 +38,11 @@ const Agents = () => {
       full_name: `Agent ID: ${user.id.substring(0, 8)}`, // Replace name with agent ID
       // Remove any other potential contact information
       phone: undefined, 
-      whatsapp: undefined
+      whatsapp: undefined,
+      // Add average rating to user data
+      average_rating: averageRatings[user.id] || null
     }));
-  }, [apiUsers]);
+  }, [apiUsers, averageRatings]);
   
   // Use sample agents if not logged in, or processed API users if logged in
   const users = user ? processedApiUsers : sampleAgents;
@@ -111,18 +115,30 @@ const Agents = () => {
     });
   }, [users, filters]);
 
-  // Sort users: priority agent (3a067ecc) first, then the rest
+  // Sort users by star ratings (highest to lowest), then by priority agent
   const sortedUsers = useMemo(() => {
-    // Clone the array to avoid mutating the original
     const sorted = [...filteredUsers];
     
-    // Sort function: move priority agent to the top
     return sorted.sort((a, b) => {
+      // First priority: highest rated agents
+      const ratingA = averageRatings[a.id] || 0;
+      const ratingB = averageRatings[b.id] || 0;
+      
+      if (ratingA !== ratingB) {
+        return ratingB - ratingA; // Highest rating first
+      }
+      
+      // Second priority: priority agent (3a067ecc) 
       if (a.id.includes('3a067ecc')) return -1;
       if (b.id.includes('3a067ecc')) return 1;
-      return 0;
+      
+      // Third priority: agents with audio samples
+      const hasAudioA = (a.audio_files && a.audio_files.length > 0) ? 1 : 0;
+      const hasAudioB = (b.audio_files && b.audio_files.length > 0) ? 1 : 0;
+      
+      return hasAudioB - hasAudioA;
     });
-  }, [filteredUsers]);
+  }, [filteredUsers, averageRatings]);
   
   // Calculate pagination
   const PAGE_SIZE = 9;
@@ -156,6 +172,7 @@ const Agents = () => {
             <h2 className="text-2xl font-bold">Available Agents</h2>
             <p className="text-muted-foreground">
               {filteredUsers.length} agents found • {team.length} in team
+              {Object.keys(averageRatings).length > 0 && " • Sorted by ratings (highest first)"}
             </p>
           </div>
         </div>

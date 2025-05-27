@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Info, Star, StarOff, ChevronDown, ChevronUp, Play } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import UserExpandedDetails from './UserExpandedDetails';
+import StarRating from './StarRating';
 
 interface UserCardProps {
-  user: User;
+  user: User & { average_rating?: number | null };
   userRole?: string;
   canSeeAudio?: boolean;
   onViewDetails?: () => void;
@@ -80,6 +81,18 @@ const UserCard: React.FC<UserCardProps> = ({
                 <p className="text-sm text-muted-foreground">
                   {user.city ? `${user.city}, ` : ''}{user.country}
                 </p>
+              )}
+              
+              {/* Display average rating */}
+              {user.average_rating && (
+                <div className="mt-1">
+                  <StarRating
+                    rating={user.average_rating}
+                    readonly={true}
+                    size="sm"
+                    allowHalfStars={true}
+                  />
+                </div>
               )}
             </div>
             

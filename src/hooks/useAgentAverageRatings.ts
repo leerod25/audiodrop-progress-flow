@@ -12,6 +12,7 @@ interface UseAgentAverageRatingsResult {
   averageRatings: Record<string, number>;
   loading: boolean;
   error: string | null;
+  getSortedAgentIds: () => string[];
 }
 
 export function useAgentAverageRatings(): UseAgentAverageRatingsResult {
@@ -58,9 +59,17 @@ export function useAgentAverageRatings(): UseAgentAverageRatingsResult {
     fetchAverageRatings();
   }, []);
 
+  // Function to get agent IDs sorted by rating (highest to lowest)
+  const getSortedAgentIds = (): string[] => {
+    return Object.entries(averageRatings)
+      .sort(([, ratingA], [, ratingB]) => ratingB - ratingA)
+      .map(([agentId]) => agentId);
+  };
+
   return {
     averageRatings,
     loading,
-    error
+    error,
+    getSortedAgentIds
   };
 }
