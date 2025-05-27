@@ -28,4 +28,7 @@ export interface Agent {
   phone?: string | null;
   bio?: string | null;
   whatsapp?: string | null;
+  
+  // Add average rating for business users
+  average_rating?: number | null;
 }

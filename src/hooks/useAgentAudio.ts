@@ -51,7 +51,7 @@ export function useAgentAudio(agentId: string | null): AudioHookResult {
   }, [agentId]);
 
   // remove helper
-  const remove = async (fileId: string) => {
+  const remove = async (fileId: string): Promise<void> => {
     if (!agentId) return;
     setLoading(true);
     try {

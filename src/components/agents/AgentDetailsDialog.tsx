@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +9,7 @@ import AgentBusinessActions from './AgentBusinessActions';
 import AgentDetailsInfo from './AgentDetailsInfo';
 import { Agent } from '@/types/Agent';
 import { toast } from 'sonner';
+import AdminRatingSection from './AdminRatingSection';
 
 interface AgentDetailsDialogProps {
   selectedAgentId: string | null;
@@ -141,6 +141,10 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({ selectedAgentId
           <div className="space-y-6">
             <AgentDetailsHeader agent={agent} isPriorityAgent={isPriorityAgent} />
             <AgentDetailsInfo agent={agent} />
+            
+            {/* Admin Rating Section */}
+            <AdminRatingSection agent={agent} />
+            
             <AgentAudioRecordings 
               agent={agent} 
               isOwnProfile={user?.id === agent.id} 

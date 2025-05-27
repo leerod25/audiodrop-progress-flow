@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      agent_ratings: {
+        Row: {
+          admin_id: string
+          agent_id: string
+          created_at: string
+          id: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          agent_id: string
+          created_at?: string
+          id?: string
+          rating: number
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          agent_id?: string
+          created_at?: string
+          id?: string
+          rating?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audio_metadata: {
         Row: {
           audio_url: string
