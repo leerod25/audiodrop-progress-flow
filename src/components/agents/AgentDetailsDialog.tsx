@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,7 +15,7 @@ import AdminRatingSection from './AdminRatingSection';
 interface AgentDetailsDialogProps {
   selectedAgentId: string | null;
   onClose: () => void;
-  defaultTab?: string; // Make this optional
+  defaultTab?: string;
 }
 
 const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({ selectedAgentId, onClose, defaultTab = "professional" }) => {
@@ -56,12 +57,61 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({ selectedAgentId
         isFavorite = Array.isArray(favoriteData) && favoriteData.includes(selectedAgentId);
       }
 
+      // Fetch audio files from storage
+      let audioUrls: Array<{id: string, title: string, url: string, updated_at: string}> = [];
+      try {
+        const { data: filesList, error: storageError } = await supabase
+          .storage
+          .from('audio-bucket')
+          .list(selectedAgentId, {
+            sortBy: { column: 'created_at', order: 'desc' }
+          });
+
+        if (!storageError && filesList && filesList.length > 0) {
+          console.log(`Found ${filesList.length} files in storage for agent ${selectedAgentId}`);
+          
+          const audioFiles = filesList
+            .filter(file => {
+              const isAudio = file.name.endsWith('.webm') || 
+                              file.name.endsWith('.mp3') || 
+                              file.name.endsWith('.wav') ||
+                              file.name.endsWith('.m4a') ||
+                              file.name.endsWith('.ogg');
+              return isAudio;
+            })
+            .map((file) => {
+              const { data: publicURL } = supabase
+                .storage
+                .from('audio-bucket')
+                .getPublicUrl(`${selectedAgentId}/${file.name}`);
+              
+              if (publicURL && publicURL.publicUrl) {
+                const title = file.name.split('.').slice(0, -1).join('.') || file.name;
+                
+                return {
+                  id: file.id || `file-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                  title: title || 'Untitled Recording',
+                  url: publicURL.publicUrl,
+                  updated_at: file.created_at || new Date().toISOString()
+                };
+              }
+              return null;
+            })
+            .filter(Boolean) as Array<{id: string, title: string, url: string, updated_at: string}>;
+
+          audioUrls = audioFiles;
+          console.log(`Agent ${selectedAgentId} has ${audioUrls.length} valid audio files`);
+        }
+      } catch (audioError) {
+        console.error('Error fetching audio files:', audioError);
+      }
+
       // Create agent object
       setAgent({
         id: selectedAgentId,
         email: data?.email || '',
         created_at: data?.created_at || new Date().toISOString(),
-        has_audio: true, // We'll set this to true and let the audio component handle actual check
+        has_audio: audioUrls.length > 0,
         audio_url: null,
         country: data?.country || null,
         city: data?.city || null,
@@ -69,7 +119,8 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({ selectedAgentId
         years_experience: professionalData?.years_experience || null,
         languages: professionalData?.languages || [],
         is_favorite: isFavorite,
-        is_available: !!professionalData
+        is_available: !!professionalData,
+        audioUrls: audioUrls
       });
     } catch (err) {
       console.error('Error fetching agent details:', err);
