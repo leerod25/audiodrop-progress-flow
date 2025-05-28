@@ -5,6 +5,8 @@ import { PlayCircle, Lock } from 'lucide-react';
 import { formatDate } from '@/utils/dateUtils';
 import { Link } from 'react-router-dom';
 import AudioPlayer from '@/components/AudioPlayer';
+import DownloadButton from '@/components/DownloadButton';
+import { useUserContext } from '@/contexts/UserContext';
 
 export interface AudioFile {
   id: string;
@@ -26,6 +28,9 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
   onPlay,
   showLoginPrompt = false
 }) => {
+  const { userRole } = useUserContext();
+  const isAdmin = userRole === 'admin';
+
   if (!audioFiles || audioFiles.length === 0) {
     return <p className="text-sm text-gray-500">No audio samples available</p>;
   }
@@ -43,26 +48,38 @@ const UserAudioFiles: React.FC<UserAudioFilesProps> = ({
               <p className="text-xs text-gray-500">Uploaded {formatDate(file.created_at)}</p>
             </div>
             
-            {showLoginPrompt ? (
-              <Button asChild variant="outline" size="sm" className="flex items-center gap-1">
-                <Link to="/auth">
-                  <Lock className="h-3 w-3" />
-                  Login to Listen
-                </Link>
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`flex items-center gap-1 ${
-                  playingAudio === file.id ? "text-blue-600" : ""
-                }`}
-                onClick={() => onPlay(file.id)}
-              >
-                <PlayCircle className="h-4 w-4" />
-                {playingAudio === file.id ? "Playing" : "Play"}
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {showLoginPrompt ? (
+                <Button asChild variant="outline" size="sm" className="flex items-center gap-1">
+                  <Link to="/auth">
+                    <Lock className="h-3 w-3" />
+                    Login to Listen
+                  </Link>
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`flex items-center gap-1 ${
+                      playingAudio === file.id ? "text-blue-600" : ""
+                    }`}
+                    onClick={() => onPlay(file.id)}
+                  >
+                    <PlayCircle className="h-4 w-4" />
+                    {playingAudio === file.id ? "Playing" : "Play"}
+                  </Button>
+                  
+                  {/* Admin-only download button */}
+                  {isAdmin && (
+                    <DownloadButton 
+                      url={file.audio_url} 
+                      filename={`${file.title.replace(/\s+/g, '_')}.webm`}
+                    />
+                  )}
+                </>
+              )}
+            </div>
           </div>
 
           {/* Show AudioPlayer component when the audio is playing */}
