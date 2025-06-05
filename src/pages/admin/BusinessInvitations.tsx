@@ -5,7 +5,7 @@ import { Container } from '@/components/ui/container';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Clock, CheckCircle, XCircle, Calendar } from 'lucide-react';
+import { Mail, Clock, CheckCircle, XCircle, Calendar, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import BusinessInviteForm from '@/components/auth/BusinessInviteForm';
@@ -27,6 +27,7 @@ const BusinessInvitations = () => {
   const { user, userRole } = useUserContext();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Redirect if not admin
   if (userRole !== 'admin') {
@@ -56,6 +57,32 @@ const BusinessInvitations = () => {
       toast.error('Failed to load invitations');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const deleteInvitation = async (invitationId: string) => {
+    setDeletingId(invitationId);
+    
+    try {
+      const { error } = await supabase
+        .from('business_invitations')
+        .delete()
+        .eq('id', invitationId);
+
+      if (error) {
+        console.error('Error deleting invitation:', error);
+        toast.error('Failed to delete invitation');
+        return;
+      }
+
+      toast.success('Invitation deleted successfully');
+      // Refresh the invitations list
+      fetchInvitations();
+    } catch (err) {
+      console.error('Error deleting invitation:', err);
+      toast.error('Failed to delete invitation');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -180,6 +207,19 @@ const BusinessInvitations = () => {
                               Copy Link
                             </Button>
                           )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => deleteInvitation(invitation.id)}
+                            disabled={deletingId === invitation.id}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            {deletingId === invitation.id ? (
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
+                            ) : (
+                              <Trash2 className="h-3 w-3" />
+                            )}
+                          </Button>
                         </div>
                       </div>
                     );
