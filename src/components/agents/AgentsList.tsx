@@ -98,7 +98,7 @@ const AgentsList: React.FC<UsersListProps> = ({
       {/* Pagination */}
       {totalPages > 1 && (
         <AgentsPagination
-          currentPage={page}
+          page={page}
           totalPages={totalPages}
           onPageChange={setPage}
         />
