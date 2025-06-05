@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin, PlayCircle, Play, Pause, FileAudio } from 'lucide-react';
@@ -52,6 +52,7 @@ const AgentCard: React.FC<AgentCardProps> = ({
   playingAudio,
   onPlayAudio
 }) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
   const audioFiles = canSeeAudio ? user.audio_files : [];
   const hasAudio = audioFiles && audioFiles.length > 0;
   
@@ -65,7 +66,24 @@ const AgentCard: React.FC<AgentCardProps> = ({
     if (onPlayAudio) {
       onPlayAudio(audioId);
     }
+    
+    // Also control the actual audio element directly
+    if (audioRef.current) {
+      if (playingAudio === audioId) {
+        // If this audio is currently playing, pause it
+        audioRef.current.pause();
+      } else {
+        // If another audio is playing or none is playing, play this one
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(err => {
+          console.error('Error playing audio:', err);
+        });
+      }
+    }
   };
+
+  // Check if this specific audio is playing
+  const isThisAudioPlaying = playingAudio === (hasAudio ? audioFiles[0].id : null);
   
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
@@ -143,7 +161,7 @@ const AgentCard: React.FC<AgentCardProps> = ({
                         handlePlayAudio(audioFiles[0].id);
                       }}
                     >
-                      {playingAudio === audioFiles[0].id ? (
+                      {isThisAudioPlaying ? (
                         <>
                           <Pause className="mr-1 h-3 w-3" />
                           Playing
@@ -158,10 +176,23 @@ const AgentCard: React.FC<AgentCardProps> = ({
                   </div>
                   
                   <audio 
+                    ref={audioRef}
                     controls
                     preload="none"
                     className="w-full"
                     src={audioFiles[0].audio_url}
+                    onPlay={() => {
+                      // Sync the playing state when user uses the native controls
+                      if (onPlayAudio) {
+                        onPlayAudio(audioFiles[0].id);
+                      }
+                    }}
+                    onPause={() => {
+                      // Sync the paused state when user uses the native controls
+                      if (onPlayAudio) {
+                        onPlayAudio(''); // Clear playing audio
+                      }
+                    }}
                   >
                     Your browser doesn't support audio.
                   </audio>
