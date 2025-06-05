@@ -31,6 +31,8 @@ const BusinessInviteForm: React.FC = () => {
         return;
       }
 
+      console.log('Sending invitation to:', email);
+      
       const { data, error } = await supabase.functions.invoke('send-business-invitation', {
         body: { email },
         headers: {
@@ -40,16 +42,20 @@ const BusinessInviteForm: React.FC = () => {
 
       if (error) {
         console.error('Error sending invitation:', error);
-        toast.error("Failed to send invitation");
+        toast.error(`Failed to send invitation: ${error.message || 'Unknown error'}`);
         return;
       }
 
-      toast.success(`Invitation sent to ${email}`);
+      console.log('Invitation sent successfully:', data);
+      toast.success(`Invitation sent successfully to ${email}`);
       setEmail("");
+      
+      // Refresh the page to show the new invitation in the list
+      window.location.reload();
       
     } catch (error: any) {
       console.error('Error sending invitation:', error);
-      toast.error("Failed to send invitation");
+      toast.error(`Failed to send invitation: ${error.message || 'Network error'}`);
     } finally {
       setIsLoading(false);
     }
