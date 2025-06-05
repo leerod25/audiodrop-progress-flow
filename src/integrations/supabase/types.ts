@@ -84,6 +84,39 @@ export type Database = {
         }
         Relationships: []
       }
+      business_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          token: string
+          updated_at: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          invited_by: string
+          token: string
+          updated_at?: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          token?: string
+          updated_at?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       business_profiles: {
         Row: {
           business_name: string | null
@@ -270,6 +303,10 @@ export type Database = {
         Args: { business_user_id: string; agent_user_id: string }
         Returns: undefined
       }
+      generate_invitation_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_business_favorites: {
         Args: { business_user_id: string }
         Returns: string[]
@@ -277,6 +314,15 @@ export type Database = {
       remove_business_favorite: {
         Args: { business_user_id: string; agent_user_id: string }
         Returns: undefined
+      }
+      validate_invitation_token: {
+        Args: { token_param: string }
+        Returns: {
+          id: string
+          email: string
+          expires_at: string
+          is_valid: boolean
+        }[]
       }
     }
     Enums: {

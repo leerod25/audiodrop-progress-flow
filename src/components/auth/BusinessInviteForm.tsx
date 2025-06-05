@@ -3,31 +3,19 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UserPlus, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from "@/components/ui/dialog";
 
-interface TeamInviteDialogProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-const TeamInviteDialog: React.FC<TeamInviteDialogProps> = ({ 
-  isOpen, 
-  onOpenChange 
-}) => {
-  const [inviteEmail, setInviteEmail] = useState("");
+const BusinessInviteForm: React.FC = () => {
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendInvite = async () => {
-    if (!inviteEmail || !inviteEmail.includes('@')) {
+  const handleSendInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email || !email.includes('@')) {
       toast.error("Please enter a valid email address");
       return;
     }
@@ -44,7 +32,7 @@ const TeamInviteDialog: React.FC<TeamInviteDialogProps> = ({
       }
 
       const { data, error } = await supabase.functions.invoke('send-business-invitation', {
-        body: { email: inviteEmail },
+        body: { email },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -56,9 +44,8 @@ const TeamInviteDialog: React.FC<TeamInviteDialogProps> = ({
         return;
       }
 
-      toast.success(`Invitation sent to ${inviteEmail}`);
-      setInviteEmail("");
-      onOpenChange(false);
+      toast.success(`Invitation sent to ${email}`);
+      setEmail("");
       
     } catch (error: any) {
       console.error('Error sending invitation:', error);
@@ -69,32 +56,29 @@ const TeamInviteDialog: React.FC<TeamInviteDialogProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Invite Business to Preview</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Mail className="h-5 w-5" />
+          Send Business Invitation
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSendInvite} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="invite-email">Business Email Address</Label>
             <Input 
               id="invite-email" 
               type="email" 
               placeholder="business@company.com"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
           
-          <div className="bg-blue-50 p-3 rounded-lg">
-            <p className="text-sm text-blue-700">
-              <strong>Note:</strong> This will send a temporary access link that expires in 7 days. 
-              Recipients can preview agent profiles and audio recordings without creating an account.
-            </p>
-          </div>
-          
           <Button 
-            onClick={handleSendInvite} 
+            type="submit"
             disabled={isLoading}
             className="w-full flex items-center justify-center gap-2"
           >
@@ -105,10 +89,16 @@ const TeamInviteDialog: React.FC<TeamInviteDialogProps> = ({
             )}
             <span>{isLoading ? "Sending..." : "Send Invitation"}</span>
           </Button>
+        </form>
+        
+        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+          <p className="text-sm text-blue-700">
+            <strong>Note:</strong> Invitations expire in 7 days and provide temporary access to agent profiles and audio recordings without requiring account creation.
+          </p>
         </div>
-      </DialogContent>
-    </Dialog>
+      </CardContent>
+    </Card>
   );
 };
 
-export default TeamInviteDialog;
+export default BusinessInviteForm;

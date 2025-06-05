@@ -3,9 +3,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useUserContext } from '@/contexts/UserContext';
 import { useUsersData } from '@/hooks/useUsersData';
 import { useAgentAverageRatings } from '@/hooks/useAgentAverageRatings';
+import { useInviteToken } from '@/hooks/useInviteToken';
 import { Container } from '@/components/ui/container';
 import AuthAlert from '@/components/agents/AuthAlert';
 import AgentDetailsDialog from '@/components/agents/AgentDetailsDialog';
+import InviteAccessBanner from '@/components/agents/InviteAccessBanner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
@@ -24,6 +26,11 @@ const Agents = () => {
   const [page, setPage] = useState(1);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const isMobile = useIsMobile();
+
+  // Get invite token from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const inviteToken = urlParams.get('invite_token');
+  const { inviteData, isLoading: tokenLoading, isValid: tokenIsValid } = useInviteToken(inviteToken);
 
   // Team state: store IDs of users added to team
   const [team, setTeam] = useState<string[]>([]);
@@ -44,8 +51,11 @@ const Agents = () => {
     }));
   }, [apiUsers, averageRatings]);
   
-  // Use sample agents if not logged in, or processed API users if logged in
-  const users = user ? processedApiUsers : sampleAgents;
+  // Determine if user has access (logged in OR valid invite token)
+  const hasAccess = user || tokenIsValid;
+  
+  // Use sample agents if no access, or processed API users if access is granted
+  const users = hasAccess ? processedApiUsers : sampleAgents;
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -167,18 +177,27 @@ const Agents = () => {
       <AgentsHeroBanner isLoggedIn={!!user} />
       
       <Container className="py-8">
+        {/* Show invite access banner if accessing via valid invite token */}
+        {tokenIsValid && inviteData && (
+          <InviteAccessBanner 
+            email={inviteData.email} 
+            expiresAt={inviteData.expires_at} 
+          />
+        )}
+        
         <div className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-2xl font-bold">Available Agents</h2>
             <p className="text-muted-foreground">
               {filteredUsers.length} agents found • {team.length} in team
               {Object.keys(averageRatings).length > 0 && " • Sorted by ratings (highest first)"}
+              {tokenIsValid && " • Guest access active"}
             </p>
           </div>
         </div>
         
-        {/* Authentication alert */}
-        {!user && <AuthAlert />}
+        {/* Authentication alert - only show if no access */}
+        {!hasAccess && <AuthAlert />}
         
         {/* Filter component */}
         <AgentFilterBar 
