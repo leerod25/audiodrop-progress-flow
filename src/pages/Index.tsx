@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileAudio, Upload, UserCircle, Users, LogOut, Mail, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import LoginStatusBadge from '@/components/LoginStatusBadge';
 
 export default function Index() {
   const { user, setUser, userRole } = useUserContext();
@@ -50,6 +51,11 @@ export default function Index() {
 
   return (
     <div className="container mx-auto py-6 px-4">
+      {/* Login Status Badge */}
+      <div className="mb-4 flex justify-end">
+        <LoginStatusBadge />
+      </div>
+
       {/* Banner */}
       <div className="mb-8">
         <AspectRatio ratio={3/1} className="bg-gradient-to-r from-gray-700 to-gray-900 rounded-lg overflow-hidden">

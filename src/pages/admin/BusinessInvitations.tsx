@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import BusinessInviteForm from '@/components/auth/BusinessInviteForm';
 import Header from '@/components/landing/Header';
+import LoginStatusBadge from '@/components/LoginStatusBadge';
 import { Navigate } from 'react-router-dom';
 
 interface Invitation {
@@ -86,6 +87,10 @@ const BusinessInvitations = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <Container className="py-8">
+          {/* Login Status Badge */}
+          <div className="mb-4 flex justify-end">
+            <LoginStatusBadge />
+          </div>
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
@@ -98,6 +103,11 @@ const BusinessInvitations = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <Container className="py-8">
+        {/* Login Status Badge */}
+        <div className="mb-4 flex justify-end">
+          <LoginStatusBadge />
+        </div>
+
         <div className="max-w-4xl mx-auto space-y-6">
           <div>
             <h1 className="text-3xl font-bold">Business Invitations</h1>
