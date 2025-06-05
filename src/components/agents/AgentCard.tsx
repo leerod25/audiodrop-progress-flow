@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, PlayCircle } from 'lucide-react';
+import { MapPin, PlayCircle, Play, Pause, FileAudio } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +37,8 @@ interface AgentCardProps {
   onViewProfile: () => void;
   toggleAvailability?: (userId: string, currentStatus: boolean) => Promise<void>;
   isAdminView?: boolean;
+  playingAudio?: string | null;
+  onPlayAudio?: (audioId: string) => void;
 }
 
 const AgentCard: React.FC<AgentCardProps> = ({ 
@@ -46,13 +48,22 @@ const AgentCard: React.FC<AgentCardProps> = ({
   getAvatarFallback,
   onViewProfile,
   toggleAvailability,
-  isAdminView = false
+  isAdminView = false,
+  playingAudio,
+  onPlayAudio
 }) => {
   const audioFiles = canSeeAudio ? user.audio_files : [];
+  const hasAudio = audioFiles && audioFiles.length > 0;
   
   const handleAvailabilityToggle = async () => {
     if (toggleAvailability) {
       await toggleAvailability(user.id, !!user.is_available);
+    }
+  };
+
+  const handlePlayAudio = (audioId: string) => {
+    if (onPlayAudio) {
+      onPlayAudio(audioId);
     }
   };
   
@@ -71,7 +82,13 @@ const AgentCard: React.FC<AgentCardProps> = ({
                 <AvatarFallback>{getAvatarFallback(user.email, user.gender)}</AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="font-medium">ID: {user.id.substring(0, 8)}...</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-medium">ID: {user.id.substring(0, 8)}...</h3>
+                  {/* Show audio icon if user has audio */}
+                  {hasAudio && (
+                    <FileAudio className="h-4 w-4 text-green-500" />
+                  )}
+                </div>
                 {/* Location info if available */}
                 {(user.country || user.city) && (
                   <p className="text-sm text-gray-500 mt-1">
@@ -111,22 +128,50 @@ const AgentCard: React.FC<AgentCardProps> = ({
           <div className="mt-4 pt-4 border-t">
             <h4 className="text-sm font-medium mb-2">Audio Samples:</h4>
             
-            {audioFiles.length > 0 ? (
-              <div className="bg-gray-50 p-3 rounded">
-                <p className="text-xs text-gray-500 mb-2">{audioFiles[0].title}</p>
-                <audio 
-                  controls
-                  preload="none"
-                  className="w-full"
-                  src={audioFiles[0].audio_url}
-                >
-                  Your browser doesn't support audio.
-                </audio>
-                {audioFiles.length > 1 && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    +{audioFiles.length - 1} more recordings
-                  </p>
-                )}
+            {hasAudio ? (
+              <div className="space-y-2">
+                <div className="bg-gray-50 p-3 rounded">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-gray-500">{audioFiles[0].title}</p>
+                    
+                    {/* Green Play Sample Button */}
+                    <Button
+                      size="sm"
+                      className="bg-green-500 hover:bg-green-600 text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePlayAudio(audioFiles[0].id);
+                      }}
+                    >
+                      {playingAudio === audioFiles[0].id ? (
+                        <>
+                          <Pause className="mr-1 h-3 w-3" />
+                          Playing
+                        </>
+                      ) : (
+                        <>
+                          <Play className="mr-1 h-3 w-3" />
+                          Play Sample
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  
+                  <audio 
+                    controls
+                    preload="none"
+                    className="w-full"
+                    src={audioFiles[0].audio_url}
+                  >
+                    Your browser doesn't support audio.
+                  </audio>
+                  
+                  {audioFiles.length > 1 && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      +{audioFiles.length - 1} more recordings
+                    </p>
+                  )}
+                </div>
               </div>
             ) : (
               <p className="text-sm text-gray-500">

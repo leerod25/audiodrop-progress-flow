@@ -1,13 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { User } from '@/hooks/users/useUserFetch';
-import AgentsLoading from './AgentsLoading';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
+import AgentsGrid from './AgentsGrid';
 import UsersError from './UsersError';
+import AgentsLoading from './AgentsLoading';
 import AgentsPagination from './AgentsPagination';
-import { Card } from '@/components/ui/card';
-import UserCard from './UserCard';
+import AgentDetailsDialog from './AgentDetailsDialog';
 
-interface AgentsListProps {
+interface UsersListProps {
   users: User[];
   loading: boolean;
   error: string | null;
@@ -19,12 +21,10 @@ interface AgentsListProps {
   fetchAllUsers: () => Promise<void>;
   setPage: (page: number) => void;
   viewAgentDetails: (userId: string) => void;
-  toggleAvailability: (userId: string, currentStatus: boolean) => void;
-  team?: string[];
-  toggleTeamMember?: (id: string) => void;
+  toggleAvailability?: (userId: string, currentStatus: boolean) => Promise<void>;
 }
 
-const AgentsList: React.FC<AgentsListProps> = ({
+const AgentsList: React.FC<UsersListProps> = ({
   users,
   loading,
   error,
@@ -36,55 +36,78 @@ const AgentsList: React.FC<AgentsListProps> = ({
   fetchAllUsers,
   setPage,
   viewAgentDetails,
-  toggleAvailability,
-  team = [],
-  toggleTeamMember
+  toggleAvailability
 }) => {
-  // Show loading state
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+
+  const handleViewProfile = (userId: string) => {
+    console.log('View details for user:', userId);
+    setSelectedAgentId(userId);
+  };
+
+  const handleAudioPlay = (audioId: string) => {
+    if (playingAudio === audioId) {
+      setPlayingAudio(null);
+    } else {
+      setPlayingAudio(audioId);
+    }
+  };
+
+  const handleRefresh = () => {
+    fetchAllUsers();
+  };
+
   if (loading) {
     return <AgentsLoading />;
   }
 
-  // Show error state
   if (error) {
     return <UsersError error={error} onRetry={fetchAllUsers} />;
   }
 
-  // Show no results
-  if (users.length === 0) {
-    return (
-      <Card className="p-6 text-center">
-        <p className="text-lg font-medium">No agent profiles found</p>
-        <p className="text-gray-500 mt-2">
-          There are no agent profiles available at this time.
-        </p>
-      </Card>
-    );
-  }
-
   return (
-    <div>
-      {/* Agents Grid */}
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-8">
-        {currentPageUsers.map((user) => (
-          <UserCard
-            key={user.id}
-            user={user}
-            userRole={userRole}
-            canSeeAudio={canSeeAudio}
-            onViewDetails={() => viewAgentDetails(user.id)}
-            onToggleAvailability={() => toggleAvailability(user.id, user.is_available || false)}
-            inTeam={team?.includes(user.id)}
-            onToggleTeam={toggleTeamMember ? () => toggleTeamMember(user.id) : undefined}
-          />
-        ))}
+    <div className="space-y-6">
+      {/* Header with count and refresh */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">
+          {users.length} agent{users.length !== 1 ? 's' : ''} found
+        </h2>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </Button>
       </div>
 
+      {/* Agents Grid */}
+      <AgentsGrid
+        users={currentPageUsers}
+        userRole={userRole}
+        canSeeAudio={canSeeAudio}
+        onViewProfile={handleViewProfile}
+        toggleAvailability={toggleAvailability}
+        playingAudio={playingAudio}
+        onPlayAudio={handleAudioPlay}
+      />
+
       {/* Pagination */}
-      <AgentsPagination
-        page={page}
-        totalPages={totalPages}
-        onPageChange={setPage}
+      {totalPages > 1 && (
+        <AgentsPagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
+      )}
+
+      {/* Agent Details Dialog */}
+      <AgentDetailsDialog
+        selectedAgentId={selectedAgentId}
+        onClose={() => setSelectedAgentId(null)}
       />
     </div>
   );

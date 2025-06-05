@@ -1,66 +1,64 @@
 
 import React from 'react';
 import { User } from '@/hooks/users/useUserFetch';
-import { Agent } from '@/types/Agent';
-import AgentListCard from '@/components/agent/AgentListCard';
-import { useUserContext } from '@/contexts/UserContext';
-import LoginStatusBadge from '@/components/LoginStatusBadge';
+import AgentCard from './AgentCard';
 
 interface AgentsGridProps {
-  loading: boolean;
-  currentPageUsers: User[];
-  viewAgentDetails: (userId: string) => void;
-  toggleTeamMember: (id: string) => void;
-  convertToAgent: (user: User) => Agent;
+  users: User[];
+  userRole: string;
+  canSeeAudio: boolean;
+  onViewProfile: (userId: string) => void;
+  toggleAvailability?: (userId: string, currentStatus: boolean) => Promise<void>;
+  playingAudio?: string | null;
+  onPlayAudio?: (audioId: string) => void;
 }
 
 const AgentsGrid: React.FC<AgentsGridProps> = ({
-  loading,
-  currentPageUsers,
-  viewAgentDetails,
-  toggleTeamMember,
-  convertToAgent
+  users,
+  userRole,
+  canSeeAudio,
+  onViewProfile,
+  toggleAvailability,
+  playingAudio,
+  onPlayAudio
 }) => {
-  const { userRole } = useUserContext();
-  
-  if (loading) {
+  const getAvatarFallback = (email: string, gender: string | null | undefined) => {
+    if (gender === 'male') return 'M';
+    if (gender === 'female') return 'F';
+    return email.charAt(0).toUpperCase();
+  };
+
+  const getAvatarImage = (gender: string | null | undefined) => {
+    if (gender === 'male') return '/lovable-uploads/c0b61bad-4422-4420-80f6-543de749caec.png';
+    if (gender === 'female') return '/lovable-uploads/26bccfed-a9f0-4888-8b2d-7c34fdfe37ed.png';
+    return null;
+  };
+
+  if (users.length === 0) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, index) => (
-          <div key={index} className="h-48 bg-gray-100 rounded-lg animate-pulse"></div>
-        ))}
+      <div className="text-center py-12">
+        <p className="text-gray-500 text-lg">No agents found</p>
       </div>
     );
   }
 
   return (
-    <>
-      {userRole === 'admin' && (
-        <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-md">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium text-purple-800">Admin View</h3>
-            <LoginStatusBadge />
-          </div>
-          <p className="text-sm text-purple-700 mt-1">
-            You have admin privileges. You can see full agent details and download audio recordings.
-          </p>
-        </div>
-      )}
-    
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-        {currentPageUsers.map((user) => {
-          const agent = convertToAgent(user);
-          return (
-            <AgentListCard 
-              key={user.id}
-              agent={agent}
-              onViewDetails={() => viewAgentDetails(user.id)}
-              onAddToTeam={() => toggleTeamMember(user.id)}
-            />
-          );
-        })}
-      </div>
-    </>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {users.map((user) => (
+        <AgentCard
+          key={user.id}
+          user={user}
+          canSeeAudio={canSeeAudio}
+          avatarImage={getAvatarImage(user.gender)}
+          getAvatarFallback={getAvatarFallback}
+          onViewProfile={() => onViewProfile(user.id)}
+          toggleAvailability={toggleAvailability}
+          isAdminView={userRole === 'admin'}
+          playingAudio={playingAudio}
+          onPlayAudio={onPlayAudio}
+        />
+      ))}
+    </div>
   );
 };
 
