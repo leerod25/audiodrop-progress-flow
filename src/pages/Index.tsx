@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { useUserContext } from '@/contexts/UserContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileAudio, Upload, UserCircle, Users, LogOut } from 'lucide-react';
+import { FileAudio, Upload, UserCircle, Users, LogOut, Mail, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 export default function Index() {
-  const { user, setUser } = useUserContext();
+  const { user, setUser, userRole } = useUserContext();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -73,7 +73,7 @@ export default function Index() {
       {user ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <Link to="/upload">
+            <Link to="/upload-audio">
               <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Upload Audio</CardTitle>
@@ -108,6 +108,35 @@ export default function Index() {
                 </CardContent>
               </Card>
             </Link>
+
+            {/* Admin-only cards */}
+            {userRole === 'admin' && (
+              <>
+                <Link to="/admin/business-invitations">
+                  <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer border-blue-200 bg-blue-50">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <CardTitle className="text-blue-900">Send Business Invites</CardTitle>
+                      <Mail className="h-6 w-6 text-blue-600" />
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-blue-700">Send preview invitations to businesses</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+
+                <Link to="/admin/business-approvals">
+                  <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer border-green-200 bg-green-50">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <CardTitle className="text-green-900">Business Approvals</CardTitle>
+                      <Shield className="h-6 w-6 text-green-600" />
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-green-700">Review and approve business applications</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </>
+            )}
           </div>
 
           <div className="flex justify-center">
@@ -129,7 +158,7 @@ export default function Index() {
               <Link to="/auth">Login / Sign Up</Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link to="/">Back to Landing Page</Link>
+              <Link to="/landing">Back to Landing Page</Link>
             </Button>
           </div>
         </div>
