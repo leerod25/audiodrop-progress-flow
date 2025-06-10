@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
@@ -120,7 +119,12 @@ const AgentDetailsDialog: React.FC<AgentDetailsDialogProps> = ({ selectedAgentId
         languages: professionalData?.languages || [],
         is_favorite: isFavorite,
         is_available: !!professionalData,
-        audioUrls: audioUrls
+        audioUrls: audioUrls,
+        // Add private details for admin access
+        full_name: data?.full_name || null,
+        phone: data?.phone || null,
+        bio: data?.bio || null,
+        whatsapp: data?.whatsapp || null
       });
     } catch (err) {
       console.error('Error fetching agent details:', err);
